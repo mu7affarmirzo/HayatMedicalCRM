@@ -99,3 +99,9 @@ def subtract(value, arg):
             return int(value) - int(arg)
         except (ValueError, TypeError):
             return 0
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+

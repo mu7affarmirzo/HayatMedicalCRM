@@ -1,0 +1,149 @@
+{% extends 'snippets/base.html' %}
+{% load static %}
+
+{% block title %}Проверка доступности номеров - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .date-range-container {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Проверка доступности номеров</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item active">Проверка доступности</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Date Range Selection Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Выберите даты для проверки доступности</h3>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+
+                <form id="availability-form" method="post" action="{% url 'check_availability' %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mx-auto date-range-container">
+                            <div class="form-group">
+                                <label>Диапазон дат:</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" class="form-control float-right" id="reservation" name="date_range">
+                                </div>
+                                <input type="hidden" id="start_date" name="start_date">
+                                <input type="hidden" id="end_date" name="end_date">
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Проверить доступность
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-2">Загрузка данных о доступности...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results will be loaded here -->
+        <div id="availabilityResults"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize daterangepicker
+        $('#reservation').daterangepicker({
+            locale: {
+                format: 'DD.MM.YYYY',
+                applyLabel: 'Применить',
+                cancelLabel: 'Отмена',
+                fromLabel: 'С',
+                toLabel: 'По',
+                customRangeLabel: 'Указать даты',
+                daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+                monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+                firstDay: 1
+            },
+            minDate: moment().format('DD.MM.YYYY')
+        });
+
+        // Handle form submission via AJAX
+        $('#availability-form').on('submit', function(e) {
+            e.preventDefault();
+
+            // Get date range values
+            var dateRange = $('#reservation').val().split(' - ');
+            $('#start_date').val(convertDateFormat(dateRange[0]));
+            $('#end_date').val(convertDateFormat(dateRange[1]));
+
+            // Show loading spinner
+            $('#loadingSpinner').show();
+
+            // Submit form via AJAX
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'html',
+                success: function(response) {
+                    $('#loadingSpinner').hide();
+                    $('#availabilityResults').html(response);
+                },
+                error: function(xhr, status, error) {
+                    $('#loadingSpinner').hide();
+                    $('#availabilityResults').html('<div class="alert alert-danger">Произошла ошибка при загрузке данных: ' + error + '</div>');
+                }
+            });
+        });
+
+        // Helper function to convert DD.MM.YYYY to YYYY-MM-DD
+        function convertDateFormat(dateStr) {
+            var parts = dateStr.split('.');
+            return parts[2] + '-' + parts[1] + '-' + parts[0];
+        }
+    });
+</script>
+{% endblock %}

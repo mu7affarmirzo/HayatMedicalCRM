@@ -1,0 +1,315 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Доступность номеров с {{ start_date|date:"d.m.Y" }} по {{ end_date|date:"d.m.Y" }}
+        </h3>
+    </div>
+    <div class="card-body">
+        {% if not matrix %}
+            <div class="alert alert-info">Нет доступных номеров для выбранных дат.</div>
+        {% else %}
+            <div class="mb-3">
+                <button class="btn btn-sm btn-success" id="showAvailableOnly">
+                    <i class="fas fa-check-circle"></i> Показать только доступные
+                </button>
+                <button class="btn btn-sm btn-secondary" id="showAll">
+                    <i class="fas fa-list"></i> Показать все
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr class="bg-light">
+                            <th>Тип номера</th>
+                            <th>Номер</th>
+                            {% for tariff in tariffs %}
+                                <th>{{ tariff.name }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room_type in matrix %}
+                            <tr class="table-secondary">
+                                <th colspan="{{ tariffs|length|add:2 }}">
+                                    <i class="fas fa-bed"></i> {{ room_type.room_type_name }}
+                                </th>
+                            </tr>
+                            {% for room in room_type.rooms %}
+                                <tr class="room-row {% if not room.has_available %}unavailable-room{% endif %}">
+                                    <td></td>
+                                    <td>{{ room.room_name }}</td>
+                                    {% for avail in room.availability %}
+                                        <td class="text-center {% if avail.is_available %}bg-success-light{% else %}bg-danger-light{% endif %}">
+                                            {% if avail.is_available %}
+                                                <div class="price-badge">
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-check"></i> Доступно
+                                                    </span>
+                                                    <div class="mt-1">
+                                                        {% if avail.price %}
+                                                            <strong>{{ avail.price }} ₸</strong>
+                                                        {% else %}
+                                                            <span class="text-muted">Нет цены</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <button class="btn btn-xs btn-primary book-btn"
+                                                                data-room-id="{{ room.room_id }}"
+                                                                data-tariff-id="{{ avail.tariff_id }}"
+                                                                data-room-name="{{ room.room_name }}"
+                                                                data-tariff-name="{{ avail.tariff_name }}"
+                                                                data-price="{{ avail.price }}">
+                                                            <i class="fas fa-calendar-plus"></i> Забронировать
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="badge badge-danger">
+                                                    <i class="fas fa-times"></i> Занято
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <a href="{% url 'check_availability' %}" class="btn btn-default">
+                    <i class="fas fa-arrow-left"></i> Выбрать другие даты
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-calendar-plus"></i> Новое бронирование
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-details mb-3">
+                    <p><strong>Даты:</strong> <span id="bookingDates">{{ start_date|date:"d.m.Y" }} - {{ end_date|date:"d.m.Y" }}</span></p>
+                    <p><strong>Номер:</strong> <span id="bookingRoom"></span></p>
+                    <p><strong>Тариф:</strong> <span id="bookingTariff"></span></p>
+                    <p><strong>Цена:</strong> <span id="bookingPrice"></span> ₸</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Выберите клиента:</label>
+                    <select class="form-control" id="clientSelect">
+                        <option value="">-- Выберите клиента --</option>
+                        <option value="new">+ Добавить нового клиента</option>
+                    </select>
+                </div>
+
+                <div id="newClientForm" style="display: none;">
+                    <h5 class="mt-3 mb-3">Данные нового клиента</h5>
+                    <div class="form-group">
+                        <label>ФИО:</label>
+                        <input type="text" class="form-control" id="clientName">
+                    </div>
+                    <div class="form-group">
+                        <label>Телефон:</label>
+                        <input type="text" class="form-control" id="clientPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" class="form-control" id="clientEmail">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Примечания:</label>
+                    <textarea class="form-control" id="bookingNotes" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveBooking">
+                    <i class="fas fa-save"></i> Сохранить бронирование
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.15);
+    }
+    .bg-danger-light {
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+    .price-badge {
+        padding: 8px 0;
+    }
+    .unavailable-room.hidden {
+        display: none;
+    }
+</style>
+
+<script>
+    $(function() {
+        // Filter to show only available rooms
+        $('#showAvailableOnly').on('click', function() {
+            $('.unavailable-room').addClass('hidden');
+            $(this).addClass('btn-success').removeClass('btn-sm');
+            $('#showAll').addClass('btn-sm').removeClass('btn-secondary').addClass('btn-outline-secondary');
+        });
+
+        // Show all rooms
+        $('#showAll').on('click', function() {
+            $('.unavailable-room').removeClass('hidden');
+            $(this).addClass('btn-secondary').removeClass('btn-outline-secondary').removeClass('btn-sm');
+            $('#showAvailableOnly').addClass('btn-sm').removeClass('btn-success').addClass('btn-success');
+        });
+
+        // Handle booking button click
+        $('.book-btn').on('click', function() {
+            var roomId = $(this).data('room-id');
+            var tariffId = $(this).data('tariff-id');
+            var roomName = $(this).data('room-name');
+            var tariffName = $(this).data('tariff-name');
+            var price = $(this).data('price');
+
+            // Populate modal
+            $('#bookingRoom').text(roomName);
+            $('#bookingTariff').text(tariffName);
+            $('#bookingPrice').text(price);
+
+            // Store data for submission
+            $('#bookingModal').data('room-id', roomId).data('tariff-id', tariffId);
+
+            // Show modal
+            $('#bookingModal').modal('show');
+        });
+
+        // Toggle new client form
+        $('#clientSelect').on('change', function() {
+            if ($(this).val() === 'new') {
+                $('#newClientForm').slideDown();
+            } else {
+                $('#newClientForm').slideUp();
+            }
+        });
+
+        // Handle booking save
+        $('#saveBooking').on('click', function() {
+            var roomId = $('#bookingModal').data('room-id');
+            var tariffId = $('#bookingModal').data('tariff-id');
+            var clientId = $('#clientSelect').val();
+            var notes = $('#bookingNotes').val();
+            var startDate = '{{ start_date|date:"Y-m-d" }}';
+            var endDate = '{{ end_date|date:"Y-m-d" }}';
+
+            // Prepare data for new client if needed
+            var newClientData = null;
+            if (clientId === 'new') {
+                newClientData = {
+                    name: $('#clientName').val(),
+                    phone: $('#clientPhone').val(),
+                    email: $('#clientEmail').val()
+                };
+            }
+
+            // Validate form
+            if (clientId === '') {
+                alert('Пожалуйста, выберите клиента');
+                return;
+            }
+
+            if (clientId === 'new' && (!newClientData.name || !newClientData.phone)) {
+                alert('Пожалуйста, заполните обязательные поля для нового клиента');
+                return;
+            }
+
+            // Show loading
+            $('#saveBooking').html('<i class="fas fa-spinner fa-spin"></i> Сохранение...').prop('disabled', true);
+
+            // Submit booking
+            $.ajax({
+                url: '/api/bookings/create/',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    room_id: roomId,
+                    tariff_id: tariffId,
+                    client_id: clientId === 'new' ? null : clientId,
+                    new_client: newClientData,
+                    start_date: startDate,
+                    end_date: endDate,
+                    notes: notes
+                }),
+                success: function(response) {
+                    $('#bookingModal').modal('hide');
+
+                    // Show success message
+                    $('body').append(
+                        '<div class="alert alert-success alert-dismissible fade show position-fixed" ' +
+                        'style="top: 20px; right: 20px; z-index: 9999;">' +
+                        '<h5><i class="icon fas fa-check"></i> Успешно!</h5>' +
+                        'Бронирование #' + response.booking_number + ' успешно создано.' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span></button></div>'
+                    );
+
+                    // Refresh availability data
+                    setTimeout(function() {
+                        $('#availability-form').submit();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    var errorMessage = 'Произошла ошибка при сохранении бронирования';
+                    try {
+                        errorMessage = JSON.parse(xhr.responseText).error || errorMessage;
+                    } catch (e) {}
+
+                    alert(errorMessage);
+                    $('#saveBooking').html('<i class="fas fa-save"></i> Сохранить бронирование').prop('disabled', false);
+                }
+            });
+        });
+
+        // Load clients via AJAX on modal open
+        $('#bookingModal').on('show.bs.modal', function() {
+            // Reset form
+            $('#clientSelect').val('');
+            $('#newClientForm').hide();
+            $('#bookingNotes').val('');
+
+            // Load clients
+            $.ajax({
+                url: '/api/clients/',
+                type: 'GET',
+                success: function(response) {
+                    var select = $('#clientSelect');
+                    // Keep the first two options (placeholder and "add new")
+                    select.find('option:gt(1)').remove();
+
+                    $.each(response, function(i, client) {
+                        select.append($('<option>', {
+                            value: client.id,
+                            text: client.name + ' (' + client.phone + ')'
+                        }));
+                    });
+                }
+            });
+        });
+    });
+</script>

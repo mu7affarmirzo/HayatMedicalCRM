@@ -2,5 +2,6 @@ from django.urls import path, include
 
 
 urlpatterns = [
-    path('logus/', include('core.applications.logus.router')),
+    path('application/', include('core.applications.router')),
+    path('administration/', include('core.administration.logus.router')),
 ]

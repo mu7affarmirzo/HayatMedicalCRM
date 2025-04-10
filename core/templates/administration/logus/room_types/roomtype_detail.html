@@ -1,0 +1,121 @@
+{% extends 'snippets/base.html' %}
+
+{% block title %}{{ room_type.name }}{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ room_type.name }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'roomtype-list' %}">Типы комнат</a></li>
+                    <li class="breadcrumb-item active">{{ room_type.name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Детали типа комнаты</h3>
+                        <div class="card-tools">
+                            <a href="{% url 'roomtype-update' room_type.id %}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                            <a href="{% url 'roomtype-delete' room_type.id %}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Удалить
+                            </a>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-3">ID:</dt>
+                            <dd class="col-sm-9">{{ room_type.id }}</dd>
+                            <dt class="col-sm-3">Название:</dt>
+                            <dd class="col-sm-9">{{ room_type.name }}</dd>
+                            <dt class="col-sm-3">Описание:</dt>
+                            <dd class="col-sm-9">{{ room_type.description|default:"Нет описания" }}</dd>
+                        </dl>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+
+        <!-- Rooms of this type -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Комнаты этого типа</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Название</th>
+                                    <th>Цена</th>
+                                    <th>Вместимость</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in room_type.rooms.all %}
+                                <tr>
+                                    <td>{{ room.id }}</td>
+                                    <td>{{ room.name }}</td>
+                                    <td>{{ room.price }}</td>
+                                    <td>{{ room.capacity }}</td>
+                                    <td>
+                                        {% if room.is_active %}
+                                        <span class="badge bg-success">Активна</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Неактивна</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'room-detail' room.id %}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'room-update' room.id %}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'room-delete' room.id %}" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">Нет комнат этого типа</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}

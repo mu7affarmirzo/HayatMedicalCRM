@@ -1,0 +1,25 @@
+{# templates/roomtype_confirm_delete.html #}
+{% extends 'snippets/base.html' %}
+{% block title %}Delete Room Type{% endblock %}
+
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-danger">
+      <div class="card-header">
+        <h3 class="card-title">Delete Room Type</h3>
+      </div>
+      <div class="card-body">
+        <p>Are you sure you want to delete the room type "{{ object }}"?</p>
+      </div>
+      <div class="card-footer">
+        <form method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Yes, delete</button>
+        </form>
+        <a href="{% url 'roomtype_list' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

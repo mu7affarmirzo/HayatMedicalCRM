@@ -313,8 +313,134 @@
             // Show availability panel
             $('#availability-preview-panel').removeClass('d-none');
 
-            // Call the availability check function from booking.js
-            updateRoomAvailability();
+            // Define a local updateRoomAvailability function if using booking.js doesn't work
+            function localUpdateRoomAvailability() {
+                // Get dates from daterangepicker
+                const dateRangePicker = $('#date-range').data('daterangepicker');
+
+                if (!dateRangePicker) {
+                    return;
+                }
+
+                const startDate = dateRangePicker.startDate.format('DD.MM.YYYY');
+                const endDate = dateRangePicker.endDate.format('DD.MM.YYYY');
+
+                // Show loading state
+                $('#availability-loading').show();
+                $('#room-availability-table').addClass('table-loading');
+
+                // Make AJAX request
+                $.ajax({
+                    url: check_availability_url,
+                    type: 'POST',
+                    data: {
+                        'date_range': `${startDate} - ${endDate}`,
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            updateAvailabilityTable(response.data);
+                        } else {
+                            showError('Ошибка при получении данных о доступности комнат.');
+                        }
+                    },
+                    error: function() {
+                        showError('Ошибка сервера при проверке доступности комнат.');
+                    },
+                    complete: function() {
+                        // Hide loading state
+                        $('#availability-loading').hide();
+                        $('#room-availability-table').removeClass('table-loading');
+                    }
+                });
+            }
+
+            // Function to update availability table with new data
+            function updateAvailabilityTable(roomTypeAvailability) {
+                const table = $('#room-availability-table');
+                const tbody = table.find('tbody');
+                const thead = table.find('thead tr');
+
+                // Clear previous content
+                tbody.empty();
+                // Keep only the first header column
+                thead.find('th:not(:first-child)').remove();
+
+                // Get date range for headers
+                const dateRangePicker = $('#date-range').data('daterangepicker');
+                const startDate = dateRangePicker.startDate;
+                const endDate = dateRangePicker.endDate;
+                const dateRange = [];
+
+                // Generate array of dates between start and end
+                let currentDate = startDate.clone();
+                while (currentDate <= endDate) {
+                    dateRange.push(currentDate.format('YYYY-MM-DD'));
+                    currentDate = currentDate.clone().add(1, 'days');
+                }
+
+                // Add date headers
+                for (const dateStr of dateRange) {
+                    const date = moment(dateStr);
+                    thead.append(`
+                        <th class="day-header" data-date="${dateStr}">
+                            ${date.format('DD.MM')}<br>
+                            <small>${date.format('dd')}</small>
+                        </th>
+                    `);
+                }
+
+                // Build rows for each room type
+                for (const roomTypeId in roomTypeAvailability) {
+                    const roomTypeData = roomTypeAvailability[roomTypeId];
+                    const row = $('<tr></tr>');
+
+                    // Add room type name cell
+                    row.append(`<td class="room-type-header">${roomTypeData.name}</td>`);
+
+                    // Add availability cells for each date
+                    for (const dateStr of dateRange) {
+                        const availability = roomTypeData.dates[dateStr] || { available: 0, total: 0 };
+
+                        let availabilityClass = 'availability-low';
+                        if (availability.available > 5) {
+                            availabilityClass = 'availability-good';
+                        } else if (availability.available > 0) {
+                            availabilityClass = 'availability-medium';
+                        }
+
+                        row.append(`
+                            <td class="${availabilityClass}">
+                                <span class="available-count">${availability.available}</span>
+                                <small>/${availability.total}</small>
+                            </td>
+                        `);
+                    }
+
+                    tbody.append(row);
+                }
+            }
+
+            // Function to show error message
+            function showError(message) {
+                const alertHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `;
+
+                $('#alerts-container').html(alertHtml);
+            }
+
+            // Try to use the global function first, fallback to local if it doesn't exist
+            if (typeof updateRoomAvailability === 'function') {
+                updateRoomAvailability();
+            } else {
+                localUpdateRoomAvailability();
+            }
         });
     });
 </script>

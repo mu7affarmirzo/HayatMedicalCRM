@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path
 
-from core.administration.logus.views.rooms import (
+from administration.logus.views.rooms import (
     RoomTypeListView, RoomTypeCreateView, RoomTypeUpdateView,
     RoomTypeDeleteView,
     RoomListView, RoomCreateView, RoomUpdateView, RoomDeleteView

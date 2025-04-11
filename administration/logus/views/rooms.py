@@ -4,7 +4,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
 from core.models import Room, RoomType
 
-from core.administration.logus.forms.rooms import RoomForm, RoomTypeForm
+from administration.logus.forms.rooms import RoomForm, RoomTypeForm
 
 
 class RoomTypeListView(ListView):

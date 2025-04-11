@@ -1,14 +1,9 @@
 # views.py
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from datetime import datetime
-from core.applications.logus.services.rooms import get_availability_matrix
 
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from core.models import Room, RoomType, Tariff, TariffRoomPrice, Booking, BookingDetail
+from core.models import Room, RoomType, Tariff, TariffRoomPrice, BookingDetail
 
 # Dictionary for weekday names
 WEEKDAYS = {
@@ -128,7 +123,7 @@ def available_room_view(request):
                 'date_range': date_range
             })
 
-    return render(request, 'logus/available_rooms.html', context)
+    return render(request, 'application/logus/available_rooms.html', context)
 
 
 

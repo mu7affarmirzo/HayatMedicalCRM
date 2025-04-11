@@ -1,0 +1,377 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+{% block title %}Новая запись - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<!-- Tempusdominus Bootstrap 4 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Новая запись</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">Записи</a></li>
+                    <li class="breadcrumb-item active">Новая запись</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Booking Process Steps -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="progress-steps">
+                            <div class="step active">
+                                <div class="step-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="step-text">Выбор пациента и дат</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon">
+                                    <i class="fas fa-door-open"></i>
+                                </div>
+                                <div class="step-text">Выбор комнаты</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="step-text">Подтверждение</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о записи</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label for="{{ form.patient.id_for_label }}">Пациент</label>
+                                {{ form.patient }}
+                                {% if form.patient.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.patient.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <label for="{{ form.date_range.id_for_label }}">Диапазон дат:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">
+                                                    <i class="far fa-calendar-alt"></i>
+                                                </span>
+                                            </div>
+                                            {{ form.date_range }}
+                                        </div>
+                                        {% if form.date_range.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.date_range.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="{{ form.guests_count.id_for_label }}">Кол-во гостей</label>
+                                        {{ form.guests_count }}
+                                        {% if form.guests_count.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.guests_count.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Продолжить</button>
+                                <a href="#" class="btn btn-default">Отмена</a>
+                                <button id="preview-availability-btn" class="btn btn-info float-right d-none">
+                                    <i class="fas fa-search mr-1"></i> Проверить доступность
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Availability Preview Panel -->
+        <div id="availability-preview-panel" class="row d-none">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Предварительная доступность комнат за период: <span id="preview-start-date"></span> - <span id="preview-end-date"></span></h3>
+                        <div class="card-tools">
+                            <div id="availability-loading" class="spinner-border spinner-border-sm text-primary mr-2" role="status">
+                                <span class="sr-only">Загрузка...</span>
+                            </div>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="alerts-container"></div>
+
+                        <div class="room-availability-table">
+                            <table id="room-availability-table" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th class="room-type-header">Тип комнаты</th>
+                                        <!-- Date headers will be dynamically added via JS -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Room type rows will be dynamically added via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <span class="badge availability-good">&nbsp;</span> Более 5 комнат доступно
+                                <span class="badge availability-medium ml-2">&nbsp;</span> 1-5 комнат доступно
+                                <span class="badge availability-low ml-2">&nbsp;</span> Нет доступных комнат
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .room-availability-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .room-availability-table table {
+        min-width: 800px;
+    }
+
+    .room-availability-table th {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .room-availability-table td {
+        text-align: center;
+        vertical-align: middle;
+        height: 40px;
+    }
+
+    .day-header {
+        width: 80px;
+        white-space: nowrap;
+        font-size: 12px;
+    }
+
+    .room-type-header {
+        width: 150px;
+        white-space: nowrap;
+    }
+
+    .available-count {
+        font-weight: bold;
+    }
+
+    .availability-good {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .availability-medium {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .availability-low {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .table-loading {
+        opacity: 0.6;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Moment.js -->
+<script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+<!-- Date Range Picker -->
+<script src="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.js' %}"></script>
+<!-- Booking JS -->
+<script src="{% static 'adminlte3_assets/dist/js/booking.js' %}"></script>
+
+<script>
+    // Define URL for availability checking
+    const check_availability_url = "{% url 'check_room_availability' %}";
+
+    $(function () {
+        // Initialize Select2
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Initialize DateRangePicker
+        $('#date-range').daterangepicker({
+            locale: {
+                format: 'DD.MM.YYYY',
+                separator: ' - ',
+                applyLabel: 'Применить',
+                cancelLabel: 'Отмена',
+                fromLabel: 'От',
+                toLabel: 'До',
+                customRangeLabel: 'Произвольный',
+                weekLabel: 'Н',
+                daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+                monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+                firstDay: 1
+            },
+            startDate: moment().startOf('day'),
+            endDate: moment().add(7, 'days').startOf('day'),
+            minDate: moment().startOf('day'),
+            maxDate: moment().add(1, 'year'),
+            opens: 'right',
+            autoApply: true,
+            drops: 'down',
+            showCustomRangeLabel: false
+        });
+
+        // Show preview availability when date range changes
+        $('#date-range').on('apply.daterangepicker', function(ev, picker) {
+            $('#preview-availability-btn').removeClass('d-none');
+        });
+
+        // Preview availability button handler
+        $('#preview-availability-btn').on('click', function(e) {
+            e.preventDefault();
+
+            // Get the selected date range
+            const dateRangePicker = $('#date-range').data('daterangepicker');
+            const startFormatted = dateRangePicker.startDate.format('DD.MM.YYYY');
+            const endFormatted = dateRangePicker.endDate.format('DD.MM.YYYY');
+
+            // Update date range in panel header
+            $('#preview-start-date').text(startFormatted);
+            $('#preview-end-date').text(endFormatted);
+
+            // Show availability panel
+            $('#availability-preview-panel').removeClass('d-none');
+
+            // Call the availability check function from booking.js
+            updateRoomAvailability();
+        });
+    });
+</script>
+
+<style>
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+
+    .step:not(:last-child):after {
+        content: '';
+        position: absolute;
+        top: 25px;
+        left: 60%;
+        width: 80%;
+        height: 2px;
+        background-color: #e9ecef;
+        z-index: 1;
+    }
+
+    .step.active:not(:last-child):after {
+        background-color: #007bff;
+    }
+
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .step.active .step-icon {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .step-text {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .step.active .step-text {
+        color: #007bff;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

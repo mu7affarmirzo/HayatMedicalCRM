@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hayat Medical Center - CRM Navigation</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fontawesome-free/css/all.min.css' %}">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/dist/css/adminlte.min.css' %}">
+
+    <style>
+        .nav-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .module-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .logo-img {
+            height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .main-footer {
+            margin-top: 50px;
+        }
+
+        .submodule {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
+
+        .submodule:hover {
+            background-color: #e9ecef;
+        }
+
+        .module-description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body class="hold-transition layout-top-nav">
+<div class="wrapper">
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
+        <div class="container">
+
+            <a href="#" class="brand-link">
+                <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Medical Center"
+                     style="height: 40px; max-height: none; opacity: 0.9;">
+                <span class="brand-text font-weight-light"></span>
+            </a>
+
+            <div class="collapse navbar-collapse order-3" id="navbarCollapse">
+                <!-- Left navbar links -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">Главная</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/">
+                        <i class="fas fa-user-shield"></i> Вход в админ-панель
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Hayat Medical CRM <small>Навигация</small></h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                            <li class="breadcrumb-item active">Навигация</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <div class="content">
+            <div class="container">
+                <!-- Welcome Box -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Medical Center" class="logo-img">
+                        <h2>Добро пожаловать в систему управления Hayat Medical Center</h2>
+                        <p class="lead">Выберите нужный раздел системы для перехода</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Application Module -->
+                    <div class="col-lg-6">
+                        <div class="card nav-card mb-4">
+                            <div class="card-header bg-primary">
+                                <h3 class="card-title">Пользовательский интерфейс</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <i class="fas fa-hospital-user module-icon text-primary"></i>
+                                <h4>Модуль пациентов и записей</h4>
+                                <p class="module-description">Управление пациентами, записями, бронированиями комнат и операциями приема</p>
+
+                                <hr>
+
+                                <div class="text-left">
+                                    <p><strong>Доступные разделы:</strong></p>
+                                    <a href="/application/logus/booking/booking/start/" class="submodule d-block">
+                                        <i class="fas fa-calendar-plus mr-2"></i> Новая запись
+                                    </a>
+                                    <a href="/application/logus/availability/" class="submodule d-block">
+                                        <i class="fas fa-search mr-2"></i> Проверка доступности номеров
+                                    </a>
+                                </div>
+
+                                <a href="/application/logus/" class="btn btn-primary btn-lg mt-4">
+                                    <i class="fas fa-sign-in-alt mr-2"></i> Перейти
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Administration Module -->
+                    <div class="col-lg-6">
+                        <div class="card nav-card mb-4">
+                            <div class="card-header bg-success">
+                                <h3 class="card-title">Административный раздел</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <i class="fas fa-cogs module-icon text-success"></i>
+                                <h4>Модуль администрирования</h4>
+                                <p class="module-description">Управление комнатами, типами комнат, тарифами и настройка системы</p>
+
+                                <hr>
+
+                                <div class="text-left">
+                                    <p><strong>Доступные разделы:</strong></p>
+                                    <a href="/administration/logus/rooms/rooms/" class="submodule d-block">
+                                        <i class="fas fa-door-open mr-2"></i> Управление комнатами
+                                    </a>
+                                    <a href="/administration/logus/rooms/roomtypes/" class="submodule d-block">
+                                        <i class="fas fa-tags mr-2"></i> Типы комнат
+                                    </a>
+                                </div>
+
+                                <a href="/administration/" class="btn btn-success btn-lg mt-4">
+                                    <i class="fas fa-sign-in-alt mr-2"></i> Перейти
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Django Admin -->
+                    <div class="col-lg-6">
+                        <div class="card nav-card mb-4">
+                            <div class="card-header bg-warning">
+                                <h3 class="card-title">Django Admin</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-shield module-icon text-warning"></i>
+                                <h4>Панель администратора Django</h4>
+                                <p class="module-description">Стандартный интерфейс администратора Django для управления базой данных</p>
+
+                                <a href="/admin/" class="btn btn-warning btn-lg mt-4">
+                                    <i class="fas fa-sign-in-alt mr-2"></i> Перейти
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentation Link -->
+                    <div class="col-lg-6">
+                        <div class="card nav-card mb-4">
+                            <div class="card-header bg-info">
+                                <h3 class="card-title">Документация</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <i class="fas fa-book module-icon text-info"></i>
+                                <h4>Документация по системе</h4>
+                                <p class="module-description">Руководства пользователя, справочные материалы и документация API</p>
+
+                                <a href="#" class="btn btn-info btn-lg mt-4">
+                                    <i class="fas fa-sign-in-alt mr-2"></i> Перейти
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="float-right d-none d-sm-inline">
+            Keep your health!
+        </div>
+        <strong>Copyright &copy; 2014-2025 <a href="https://hayatmed.uz">Hayat Medical Center</a>.</strong> All rights reserved.
+    </footer>
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'adminlte3_assets/plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'adminlte3_assets/dist/js/adminlte.min.js' %}"></script>
+
+<script>
+    $(document).ready(function() {
+        // We could add some interactive features here if needed
+    });
+</script>
+</body>
+</html>

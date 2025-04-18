@@ -4,9 +4,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+
+from application.logus.forms.patient_form import PatientRegistrationForm
 from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType
-from logus.forms.booking import BookingInitialForm, RoomSelectionForm, BookingConfirmationForm
+from application.logus.forms.booking import BookingInitialForm, RoomSelectionForm, BookingConfirmationForm
 
 
 @login_required
@@ -285,3 +288,20 @@ def check_room_availability_ajax(request):
             'status': 'error',
             'message': str(e)
         }, status=400)
+
+
+@csrf_exempt
+def add_new_patient(request):
+    if request.method == 'POST':
+        form = PatientRegistrationForm(request.POST)
+        if form.is_valid():
+            patient = form.save(commit=False)
+            patient.created_by = request.user
+            patient.modified_by = request.user
+            patient.save()
+            return redirect('booking_start')  # Replace with your success URL
+    else:
+        return redirect('booking_start')
+    return render(request, 'application/logus/booking/booking_start.html', {'form': form})
+
+

@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'core.apps.CoreConfig',
-    'logus.apps.LogusConfig',
     'administration.apps.AdministrationConfig',
+    'application.apps.ApplicationConfig',
 
 ]
 

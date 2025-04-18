@@ -1,5 +1,5 @@
 from django.urls import path
-from logus.views import booking
+from application.logus.views import booking
 
 urlpatterns = [
     # Booking process
@@ -10,4 +10,7 @@ urlpatterns = [
 
     # AJAX endpoints
     path('booking/check-availability/', booking.check_room_availability_ajax, name='check_room_availability'),
+
+    path('add-new-patient/', booking.add_new_patient, name='add-new-patient'),
+
 ]

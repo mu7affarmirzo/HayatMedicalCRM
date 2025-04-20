@@ -1,0 +1,428 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+{% block title %}Панель управления - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .stats-card {
+        height: 100%;
+        transition: transform 0.2s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .today-checkin {
+        border-left: 4px solid #28a745;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .today-checkout {
+        border-left: 4px solid #dc3545;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .room-status {
+        height: 15px;
+        width: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    
+    .room-available {
+        background-color: #28a745;
+    }
+    
+    .room-occupied {
+        background-color: #dc3545;
+    }
+    
+    .quick-link {
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        transition: all 0.2s;
+    }
+    
+    .quick-link:hover {
+        background-color: #e9ecef;
+        transform: scale(1.02);
+    }
+    
+    .quick-link-icon {
+        font-size: 2rem;
+        color: #007bff;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Панель управления</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">Главная</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Welcome Banner -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="jumbotron bg-info text-white">
+                    <h1 class="display-4">Добро пожаловать, {{ request.user.full_name }}!</h1>
+                    <p class="lead">Система управления бронированиями Hayat Medical Center</p>
+                    <hr class="my-4 bg-white">
+                    <p>Сегодня: {{ today|date:"d.m.Y" }}</p>
+                    <a class="btn btn-light btn-lg" href="{% url 'booking_start' %}" role="button">
+                        <i class="fas fa-plus mr-2"></i> Создать новое бронирование
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <!-- Total bookings -->
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ total_bookings }}</h3>
+                        <p>Всего бронирований</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <a href="{% url 'booking_list' %}" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <!-- Active bookings -->
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ active_bookings }}</h3>
+                        <p>Активных бронирований</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <a href="{% url 'booking_list' %}?status=confirmed" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <!-- Room availability -->
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ available_rooms }} / {{ total_rooms }}</h3>
+                        <p>Свободно комнат</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        {{ occupancy_rate|floatformat:1 }}% занято
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <!-- Tomorrow checkings -->
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ tomorrow_checkins }}</h3>
+                        <p>Заездов завтра</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <a href="{% url 'booking_list' %}" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Dashboard Sections -->
+        <div class="row">
+            <!-- Today's Activity -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-day mr-1"></i> Активность на сегодня
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h5><i class="fas fa-sign-in-alt text-success mr-1"></i> Заезды ({{ today_checkins.count }})</h5>
+                            {% for booking in today_checkins %}
+                            <div class="today-checkin">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ booking.booking_number }}</strong>
+                                        {% for detail in booking.details.all %}
+                                        <span class="ml-2">{{ detail.client.full_name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <span class="badge badge-info">{{ booking.start_date|time:"H:i" }}</span>
+                                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary ml-2">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted text-center">Нет заездов на сегодня</p>
+                            {% endfor %}
+                        </div>
+                        
+                        <div>
+                            <h5><i class="fas fa-sign-out-alt text-danger mr-1"></i> Выезды ({{ today_checkouts.count }})</h5>
+                            {% for booking in today_checkouts %}
+                            <div class="today-checkout">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ booking.booking_number }}</strong>
+                                        {% for detail in booking.details.all %}
+                                        <span class="ml-2">{{ detail.client.full_name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <span class="badge badge-danger">{{ booking.end_date|time:"H:i" }}</span>
+                                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary ml-2">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted text-center">Нет выездов на сегодня</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Room Status Overview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-door-open mr-1"></i> Статус комнат
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center">
+                            <div class="position-relative" style="width: 200px; height: 200px;">
+                                <canvas id="roomStatusChart"></canvas>
+                                <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <h4 class="text-center mb-0">{{ total_rooms }}</h4>
+                                    <p class="text-center mb-0">Комнат</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <div class="d-inline-block mr-4">
+                                <span class="room-status room-available"></span> Свободно: {{ available_rooms }}
+                            </div>
+                            <div class="d-inline-block">
+                                <span class="room-status room-occupied"></span> Занято: {{ booked_rooms }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Bookings and Quick Links -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-history mr-1"></i> Последние бронирования
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>№</th>
+                                    <th>Пациент</th>
+                                    <th>Даты</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr onclick="window.location='{% url 'booking_detail' booking.id %}';" style="cursor: pointer;">
+                                    <td>{{ booking.booking_number }}</td>
+                                    <td>
+                                        {% for detail in booking.details.all %}
+                                        {% if forloop.first %}
+                                        {{ detail.client.full_name }}
+                                        {% endif %}
+                                        {% empty %}
+                                        <span class="text-muted">-</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ booking.start_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if booking.status == 'pending' %}bg-warning
+                                            {% elif booking.status == 'confirmed' %}bg-info
+                                            {% elif booking.status == 'checked_in' %}bg-success
+                                            {% elif booking.status == 'completed' %}bg-secondary
+                                            {% elif booking.status == 'cancelled' %}bg-danger{% endif %}">
+                                            {{ booking.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">Нет доступных бронирований</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-outline-primary">
+                            Посмотреть все бронирования <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-link mr-1"></i> Быстрые ссылки
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="{% url 'booking_start' %}" class="d-block quick-link text-center">
+                                    <div class="quick-link-icon">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </div>
+                                    <div>Новое бронирование</div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'booking_list' %}" class="d-block quick-link text-center">
+                                    <div class="quick-link-icon">
+                                        <i class="fas fa-list"></i>
+                                    </div>
+                                    <div>Список бронирований</div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'booking_list' %}?status=checked_in" class="d-block quick-link text-center">
+                                    <div class="quick-link-icon">
+                                        <i class="fas fa-hotel"></i>
+                                    </div>
+                                    <div>Текущие постояльцы</div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="#" class="d-block quick-link text-center">
+                                    <div class="quick-link-icon">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </div>
+                                    <div>Отчеты</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(function() {
+    // Room status chart
+    var ctx = document.getElementById('roomStatusChart').getContext('2d');
+    var roomStatusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Занято', 'Свободно'],
+            datasets: [{
+                data: [{{ booked_rooms }}, {{ available_rooms }}],
+                backgroundColor: ['#dc3545', '#28a745'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
+from core.models.role import Role
+
 
 class MyAccountManager(BaseUserManager):
     def create_user(self, email, username, password=None):
@@ -50,6 +52,8 @@ class Account(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
+    roles = models.ManyToManyField(Role, related_name='users', blank=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -57,6 +61,24 @@ class Account(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+
+    # Add methods for role checking
+    def has_role(self, role_name):
+        """Check if user has a specific role"""
+        return self.roles.filter(name=role_name, is_active=True).exists()
+
+    def get_main_role(self):
+        """Return the primary role for the user (for redirection)"""
+        # Priority order: Admin > Manager > Therapist > Receptionist
+        if self.has_role(Role.ADMIN) or self.is_superuser:
+            return Role.ADMIN
+        elif self.has_role(Role.MANAGER):
+            return Role.MANAGER
+        elif self.has_role(Role.THERAPIST):
+            return Role.THERAPIST
+        elif self.has_role(Role.RECEPTIONIST):
+            return Role.RECEPTIONIST
+        return None
 
     # For checking permissions. to keep it simple all admin have ALL permissons
     def has_perm(self, perm, obj=None):

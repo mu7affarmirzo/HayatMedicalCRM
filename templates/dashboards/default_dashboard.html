@@ -1,0 +1,236 @@
+<!-- templates/dashboards/default_dashboard.html -->
+{% extends 'snippets/base.html' %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Welcome Card -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Welcome to Hayat Medical Center</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2 text-center">
+                                <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Logo" class="img-fluid" style="max-height: 120px;">
+                            </div>
+                            <div class="col-md-10">
+                                <h4>Hello, {{ user.full_name }}!</h4>
+                                <p class="lead">Welcome to the Hayat Medical Center management system. You are currently logged in with a basic user account.</p>
+                                <p>If you need access to specific features or sections, please contact your system administrator to assign the appropriate role to your account.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Info Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>My Profile</h3>
+                        <p>View and edit your account information</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        Go to Profile <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>Notifications</h3>
+                        <p>Check your recent notifications</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Notifications <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>Help</h3>
+                        <p>How to use this system</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        Get Help <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>Support</h3>
+                        <p>Contact technical support</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        Contact Support <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Services -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-spa mr-1"></i>
+                            Available Services
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-baby"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Baby Massage</span>
+                                        <span class="info-box-number">From ₸8,500</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-success"><i class="fas fa-heart"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Postnatal Care</span>
+                                        <span class="info-box-number">From ₸12,000</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-warning"><i class="fas fa-hands"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Spa Treatment</span>
+                                        <span class="info-box-number">From ₸15,000</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-danger"><i class="fas fa-bed"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Accommodation</span>
+                                        <span class="info-box-number">From ₸25,000</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Center Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Center Information
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p><strong>Address:</strong> 123 Health Avenue, Nur-Sultan, Kazakhstan</p>
+                                <p><strong>Phone:</strong> +7 (727) 123-4567</p>
+                                <p><strong>Email:</strong> info@hayatmed.uz</p>
+                                <p><strong>Working Hours:</strong> Monday to Saturday: 8:00 AM - 8:00 PM</p>
+                                <hr>
+                                <div class="text-center">
+                                    <a href="#" class="btn btn-primary">
+                                        <i class="fas fa-map-marker-alt mr-1"></i> View on Map
+                                    </a>
+                                    <a href="#" class="btn btn-info">
+                                        <i class="fas fa-phone mr-1"></i> Contact Us
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Announcements -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bullhorn mr-1"></i>
+                            Announcements
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table m-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Announcement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Apr 15, 2025</td>
+                                        <td>New therapist joining our team next month</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Apr 10, 2025</td>
+                                        <td>System maintenance scheduled for April 25</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Apr 5, 2025</td>
+                                        <td>New spa services now available</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="javascript:void(0)">View All Announcements</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

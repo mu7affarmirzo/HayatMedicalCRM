@@ -1,0 +1,283 @@
+<!-- templates/dashboards/therapist_dashboard.html -->
+{% extends 'snippets/base.html' %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">Therapist Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Today's Stats -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>5</h3>
+                        <p>Today's Sessions</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Schedule <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>2</h3>
+                        <p>Completed Today</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>3</h3>
+                        <p>Upcoming Sessions</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>28</h3>
+                        <p>This Month's Sessions</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Sessions -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar mr-1"></i>
+                            Today's Schedule
+                        </h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Service</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-light">
+                                    <td>09:00 - 09:45</td>
+                                    <td>Aisha Nurmagambetova</td>
+                                    <td>Baby Massage</td>
+                                    <td>Room 102</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-info">Notes</button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-light">
+                                    <td>10:15 - 11:00</td>
+                                    <td>Maxim Petrov</td>
+                                    <td>Postnatal Care</td>
+                                    <td>Room 205</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-info">Notes</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td>12:30 - 13:15</td>
+                                    <td>Aigul Kenzhetayeva</td>
+                                    <td>Baby Massage</td>
+                                    <td>Room 103</td>
+                                    <td><span class="badge bg-warning">Next Up</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-primary">Start</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>14:00 - 14:45</td>
+                                    <td>Nurlan Bazarbayev</td>
+                                    <td>Spa Treatment</td>
+                                    <td>Room 301</td>
+                                    <td><span class="badge bg-info">Scheduled</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-secondary">Details</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>16:30 - 17:15</td>
+                                    <td>Dilnaz Kulmanova</td>
+                                    <td>Baby Massage</td>
+                                    <td>Room 102</td>
+                                    <td><span class="badge bg-info">Scheduled</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-secondary">Details</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Patient Notes Quick Entry -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-notes-medical mr-1"></i>
+                            Quick Patient Notes
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label>Select Patient</label>
+                                <select class="form-control">
+                                    <option>Aigul Kenzhetayeva (Next Session)</option>
+                                    <option>Aisha Nurmagambetova</option>
+                                    <option>Maxim Petrov</option>
+                                    <option>Nurlan Bazarbayev</option>
+                                    <option>Dilnaz Kulmanova</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Session Notes</label>
+                                <textarea class="form-control" rows="5" placeholder="Enter session notes here..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Notes</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Weekly Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            Weekly Service Breakdown
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="serviceChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bell mr-1"></i>
+                            Recent Notifications
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table m-0">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Message</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Today, 10:45</td>
+                                        <td>New patient assigned to you: Dilnaz Kulmanova</td>
+                                        <td><span class="badge badge-info">New</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Today, 09:30</td>
+                                        <td>Completed session with Maxim Petrov</td>
+                                        <td><span class="badge badge-success">Processed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Today, 08:15</td>
+                                        <td>Schedule update: Session with Aigul moved to 12:30</td>
+                                        <td><span class="badge badge-info">Processed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="javascript:void(0)">View All Notifications</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Weekly service breakdown chart
+        var serviceCanvas = document.getElementById('serviceChart').getContext('2d');
+        var serviceChart = new Chart(serviceCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Baby Massage', 'Postnatal Care', 'Spa Treatment', 'Other'],
+                datasets: [{
+                    data: [12, 5, 3, 2],
+                    backgroundColor: ['#00c0ef', '#00a65a', '#f39c12', '#f56954'],
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+            }
+        });
+    });
+</script>
+{% endblock %}

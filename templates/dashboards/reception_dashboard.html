@@ -1,0 +1,394 @@
+<!-- templates/dashboards/reception_dashboard.html -->
+{% extends 'snippets/base.html' %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">Reception Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Quick Stats -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>8</h3>
+                        <p>Today's Check-ins</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>5</h3>
+                        <p>Expected Check-ins</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>3</h3>
+                        <p>Check-outs Today</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>12</h3>
+                        <p>Available Rooms</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Rooms <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6">
+                                <a href="#" class="btn btn-primary btn-lg btn-block mb-3">
+                                    <i class="fas fa-calendar-plus mr-2"></i> New Booking
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <a href="#" class="btn btn-success btn-lg btn-block mb-3">
+                                    <i class="fas fa-user-plus mr-2"></i> New Patient
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <a href="#" class="btn btn-warning btn-lg btn-block mb-3">
+                                    <i class="fas fa-search mr-2"></i> Find Booking
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <a href="#" class="btn btn-info btn-lg btn-block mb-3">
+                                    <i class="fas fa-calendar-day mr-2"></i> Today's Schedule
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Check-ins -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Today's Arrivals & Departures</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Room</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-light">
+                                    <td>08:00</td>
+                                    <td>Aliya Karimbayeva</td>
+                                    <td>Room 201</td>
+                                    <td><span class="badge bg-success">Check-in</span></td>
+                                    <td><span class="badge bg-secondary">Completed</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-xs btn-info">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr class="bg-light">
+                                    <td>09:15</td>
+                                    <td>Timur Asanov</td>
+                                    <td>Room 105</td>
+                                    <td><span class="badge bg-success">Check-in</span></td>
+                                    <td><span class="badge bg-secondary">Completed</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-xs btn-info">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td>10:30</td>
+                                    <td>Asel Muratova</td>
+                                    <td>Room 302</td>
+                                    <td><span class="badge bg-danger">Check-out</span></td>
+                                    <td><span class="badge bg-warning">Pending</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-xs btn-danger">
+                                            <i class="fas fa-sign-out-alt"></i> Check-out
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td>11:00</td>
+                                    <td>Nurlan Bazarbayev</td>
+                                    <td>Room 204</td>
+                                    <td><span class="badge bg-success">Check-in</span></td>
+                                    <td><span class="badge bg-warning">Pending</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-xs btn-success">
+                                            <i class="fas fa-sign-in-alt"></i> Check-in
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>14:00</td>
+                                    <td>Gulnara Tashkentova</td>
+                                    <td>Room 103</td>
+                                    <td><span class="badge bg-success">Check-in</span></td>
+                                    <td><span class="badge bg-info">Expected</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-xs btn-secondary">
+                                            <i class="fas fa-clock"></i> Awaiting
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>15:30</td>
+                                    <td>Marat Baitov</td>
+                                    <td>Room 205</td>
+                                    <td><span class="badge bg-danger">Check-out</span></td>
+                                    <td><span class="badge bg-info">Expected</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-xs btn-secondary">
+                                            <i class="fas fa-clock"></i> Awaiting
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Room Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Room Status</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Floor</th>
+                                        <th>Available</th>
+                                        <th>Occupied</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>First Floor</td>
+                                        <td><span class="badge bg-success">4</span></td>
+                                        <td><span class="badge bg-danger">2</span></td>
+                                        <td>6</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Second Floor</td>
+                                        <td><span class="badge bg-success">3</span></td>
+                                        <td><span class="badge bg-danger">3</span></td>
+                                        <td>6</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Third Floor</td>
+                                        <td><span class="badge bg-success">5</span></td>
+                                        <td><span class="badge bg-danger">1</span></td>
+                                        <td>6</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Total</th>
+                                        <th>12</th>
+                                        <th>6</th>
+                                        <th>18</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Therapist Schedule Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Therapist Status</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="users-list clearfix">
+                            <li>
+                                <img src="{% static 'adminlte3_assets/dist/img/user1-128x128.jpg' %}" alt="User Image">
+                                <a class="users-list-name" href="#">Anar Aliyeva</a>
+                                <span class="badge bg-success">Available</span>
+                            </li>
+                            <li>
+                                <img src="{% static 'adminlte3_assets/dist/img/user8-128x128.jpg' %}" alt="User Image">
+                                <a class="users-list-name" href="#">Marat Baitov</a>
+                                <span class="badge bg-warning">In Session</span>
+                            </li>
+                            <li>
+                                <img src="{% static 'adminlte3_assets/dist/img/user7-128x128.jpg' %}" alt="User Image">
+                                <a class="users-list-name" href="#">Dinara Satpayeva</a>
+                                <span class="badge bg-warning">In Session</span>
+                            </li>
+                            <li>
+                                <img src="{% static 'adminlte3_assets/dist/img/user6-128x128.jpg' %}" alt="User Image">
+                                <a class="users-list-name" href="#">Erlan Temirov</a>
+                                <span class="badge bg-success">Available</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="javascript:void(0)">View All Therapists</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bookings -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Bookings</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Patient</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>HMC-20250420-5673</td>
+                                    <td>Aliya Karimbayeva</td>
+                                    <td>Apr 20, 2025</td>
+                                    <td>Apr 25, 2025</td>
+                                    <td>Room 201</td>
+                                    <td><span class="badge bg-success">Confirmed</span></td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-xs btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-primary">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>HMC-20250419-7842</td>
+                                    <td>Timur Asanov</td>
+                                    <td>Apr 19, 2025</td>
+                                    <td>Apr 22, 2025</td>
+                                    <td>Room 105</td>
+                                    <td><span class="badge bg-warning">Pending</span></td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-xs btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-primary">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>HMC-20250418-2341</td>
+                                    <td>Gulnara Tashkentova</td>
+                                    <td>Apr 18, 2025</td>
+                                    <td>Apr 24, 2025</td>
+                                    <td>Room 302</td>
+                                    <td><span class="badge bg-info">Checked In</span></td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-xs btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-primary">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer clearfix">
+                        <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">New Booking</a>
+                        <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">View All Bookings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

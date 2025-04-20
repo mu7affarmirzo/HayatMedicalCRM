@@ -1,0 +1,529 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+{% block title %}Список бронирований - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
+<style>
+    .booking-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .status-confirmed {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .status-checked_in {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-completed {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .status-cancelled {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .booking-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .booking-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .stat-card {
+        border-left: 4px solid #007bff;
+    }
+    
+    .stat-card.pending {
+        border-left-color: #ffc107;
+    }
+    
+    .stat-card.confirmed {
+        border-left-color: #17a2b8;
+    }
+    
+    .stat-card.checked_in {
+        border-left-color: #28a745;
+    }
+    
+    .stat-card.completed {
+        border-left-color: #6c757d;
+    }
+    
+    .stat-card.cancelled {
+        border-left-color: #dc3545;
+    }
+    
+    .upcoming-check-in {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .upcoming-check-in:hover {
+        background-color: #e9ecef;
+    }
+    
+    .filter-container {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Список бронирований</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Бронирования</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Statistics Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <!-- Total bookings -->
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ stats.total }}</h3>
+                        <p>Всего бронирований</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <!-- Active bookings -->
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ stats.confirmed|add:stats.checked_in }}</h3>
+                        <p>Активных бронирований</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <!-- Today's check-ins -->
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ stats.today }}</h3>
+                        <p>Заездов сегодня</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <!-- Tomorrow's check-ins -->
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ stats.tomorrow }}</h3>
+                        <p>Заездов завтра</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters and Actions -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Фильтры и действия</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" id="filter-form">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Диапазон дат:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">
+                                                    <i class="far fa-calendar-alt"></i>
+                                                </span>
+                                            </div>
+                                            <input type="text" class="form-control float-right" id="reservation" name="date_range" 
+                                                   value="{% if filter_date_from %}{{ filter_date_from }} - {{ filter_date_to }}{% endif %}">
+                                            <input type="hidden" id="date_from" name="date_from" value="{{ filter_date_from }}">
+                                            <input type="hidden" id="date_to" name="date_to" value="{{ filter_date_to }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Статус:</label>
+                                        <select class="form-control" name="status">
+                                            <option value="">Все статусы</option>
+                                            {% for status_value, status_name in status_choices %}
+                                            <option value="{{ status_value }}" {% if filter_status == status_value %}selected{% endif %}>
+                                                {{ status_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Поиск:</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Номер бронирования или имя пациента" 
+                                                   name="search" value="{{ filter_search }}">
+                                            <div class="input-group-append">
+                                                <button type="submit" class="btn btn-default">
+                                                    <i class="fa fa-search"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-filter mr-1"></i> Применить
+                                            </button>
+                                            <a href="{% url 'booking_list' %}" class="btn btn-default">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div class="row mt-2">
+                            <div class="col-md-12 text-right">
+                                <a href="{% url 'booking_start' %}" class="btn btn-success">
+                                    <i class="fas fa-plus mr-1"></i> Новое бронирование
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main bookings list -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Список бронирований ({{ bookings.count }})</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>№</th>
+                                        <th>Пациент</th>
+                                        <th>Комната</th>
+                                        <th>Даты</th>
+                                        <th>Статус</th>
+                                        <th>Тариф</th>
+                                        <th>Цена</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr class="booking-row" data-booking-id="{{ booking.id }}">
+                                        <td>
+                                            <strong>{{ booking.booking_number }}</strong><br>
+                                            <small class="text-muted">{{ booking.created_at|date:"d.m.Y" }}</small>
+                                        </td>
+                                        <td>
+                                            {% for detail in booking.details.all %}
+                                            <div>{{ detail.client.full_name }}</div>
+                                            {% empty %}
+                                            <span class="text-muted">Нет данных</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for detail in booking.details.all %}
+                                            <div>{{ detail.room.name }}</div>
+                                            {% empty %}
+                                            <span class="text-muted">Нет данных</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <i class="fas fa-sign-in-alt text-success"></i> 
+                                                {{ booking.start_date|date:"d.m.Y H:i" }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-sign-out-alt text-danger"></i> 
+                                                {{ booking.end_date|date:"d.m.Y H:i" }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="booking-status status-{{ booking.status }}">
+                                                {{ booking.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% for detail in booking.details.all %}
+                                            <div>{{ detail.tariff.name }}</div>
+                                            {% empty %}
+                                            <span class="text-muted">Нет данных</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">{{ booking.total_price }} Сум</strong>
+                                        </td>
+                                        <td class="booking-actions">
+                                            <div class="btn-group">
+                                                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-info btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                
+                                                <button type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown">
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                
+                                                <div class="dropdown-menu">
+                                                    {% if booking.status == 'pending' %}
+                                                    <a class="dropdown-item status-action" href="#" data-booking-id="{{ booking.id }}" data-status="confirmed">
+                                                        <i class="fas fa-check text-success mr-2"></i> Подтвердить
+                                                    </a>
+                                                    <a class="dropdown-item status-action" href="#" data-booking-id="{{ booking.id }}" data-status="cancelled">
+                                                        <i class="fas fa-times text-danger mr-2"></i> Отменить
+                                                    </a>
+                                                    {% elif booking.status == 'confirmed' %}
+                                                    <a class="dropdown-item status-action" href="#" data-booking-id="{{ booking.id }}" data-status="checked_in">
+                                                        <i class="fas fa-sign-in-alt text-success mr-2"></i> Заселить
+                                                    </a>
+                                                    <a class="dropdown-item status-action" href="#" data-booking-id="{{ booking.id }}" data-status="cancelled">
+                                                        <i class="fas fa-times text-danger mr-2"></i> Отменить
+                                                    </a>
+                                                    {% elif booking.status == 'checked_in' %}
+                                                    <a class="dropdown-item status-action" href="#" data-booking-id="{{ booking.id }}" data-status="completed">
+                                                        <i class="fas fa-sign-out-alt text-success mr-2"></i> Выселить
+                                                    </a>
+                                                    {% endif %}
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item" href="#" onclick="printBooking({{ booking.id }})">
+                                                        <i class="fas fa-print text-secondary mr-2"></i> Печать
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fas fa-search mr-2"></i> Бронирования не найдены
+                                            </div>
+                                            <div class="mt-3">
+                                                <a href="{% url 'booking_start' %}" class="btn btn-primary">
+                                                    <i class="fas fa-plus mr-1"></i> Создать бронирование
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status counts -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Статистика по статусам</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="small-box bg-white stat-card pending">
+                                    <div class="inner">
+                                        <h3>{{ stats.pending }}</h3>
+                                        <p>Ожидающие</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small-box bg-white stat-card confirmed">
+                                    <div class="inner">
+                                        <h3>{{ stats.confirmed }}</h3>
+                                        <p>Подтвержденные</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small-box bg-white stat-card checked_in">
+                                    <div class="inner">
+                                        <h3>{{ stats.checked_in }}</h3>
+                                        <p>Заселенные</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small-box bg-white stat-card completed">
+                                    <div class="inner">
+                                        <h3>{{ stats.completed }}</h3>
+                                        <p>Завершенные</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small-box bg-white stat-card cancelled">
+                                    <div class="inner">
+                                        <h3>{{ stats.cancelled }}</h3>
+                                        <p>Отмененные</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.js' %}"></script>
+
+<script>
+$(function() {
+    // Initialize date range picker
+    $('#reservation').daterangepicker({
+        locale: {
+            format: 'DD.MM.YYYY',
+            separator: ' - ',
+            applyLabel: 'Применить',
+            cancelLabel: 'Отмена',
+            fromLabel: 'От',
+            toLabel: 'До',
+            customRangeLabel: 'Произвольный',
+            weekLabel: 'Н',
+            daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+            monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+            firstDay: 1
+        }
+    });
+    
+    // Update hidden fields when date range changes
+    $('#reservation').on('apply.daterangepicker', function(ev, picker) {
+        $('#date_from').val(picker.startDate.format('DD.MM.YYYY'));
+        $('#date_to').val(picker.endDate.format('DD.MM.YYYY'));
+    });
+    
+    // Handle status change actions
+    $('.status-action').on('click', function(e) {
+        e.preventDefault();
+        
+        const bookingId = $(this).data('booking-id');
+        const newStatus = $(this).data('status');
+        
+        if (confirm('Вы уверены, что хотите изменить статус бронирования?')) {
+            // Make AJAX request to update status
+            $.ajax({
+                url: `/bookings/status/${bookingId}/`,
+                type: 'POST',
+                data: {
+                    'status': newStatus,
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update the status badge
+                        const row = $(`.booking-row[data-booking-id="${bookingId}"]`);
+                        row.find('.booking-status')
+                           .removeClass('status-pending status-confirmed status-checked_in status-completed status-cancelled')
+                           .addClass(`status-${newStatus}`)
+                           .text(response.status_display);
+                        
+                        // Reload the page after a delay to refresh the actions
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                },
+                error: function() {
+                    alert('Произошла ошибка при обновлении статуса');
+                }
+            });
+        }
+    });
+});
+
+function printBooking(bookingId) {
+    // Open the booking detail page in a new window for printing
+    window.open(`/booking/${bookingId}/?print=1`, '_blank');
+}
+</script>
+{% endblock %}

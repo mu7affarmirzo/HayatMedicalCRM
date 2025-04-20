@@ -20,7 +20,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
+from core.views import login_view, logout_view, admin_dashboard, manager_dashboard, therapist_dashboard, \
+    reception_dashboard, default_dashboard
+
 urlpatterns = [
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+
     path('', TemplateView.as_view(template_name='index.html'), name='home'),
     path('modules/apps', TemplateView.as_view(template_name='application.html'), name='apps'),
 
@@ -28,6 +34,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('application/', include('application.router')),
     path('administration/', include('administration.router')),
+
+    path('admin-dash/', admin_dashboard, name='admin_dashboard'),
+    path('manager/', manager_dashboard, name='manager_dashboard'),
+    path('therapist/', therapist_dashboard, name='therapist_dashboard'),
+    path('reception/', reception_dashboard, name='reception_dashboard'),
+    path('dashboard/', default_dashboard, name='default_dashboard'),
 ]
 
 

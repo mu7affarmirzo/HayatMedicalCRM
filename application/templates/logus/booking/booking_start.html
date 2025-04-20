@@ -7,8 +7,9 @@
     <!-- Select2 -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
     <!-- Tempusdominus Bootstrap 4 -->
-    <link rel="stylesheet"
-          href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <!-- DateRangePicker -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -83,30 +84,29 @@
                                     </div>
                                 {% endif %}
 
-                                {#                            <div class="form-group">#}
-                                {#                                <label for="{{ form.patient.id_for_label }}">Пациент</label>#}
-                                {#                                {{ form.patient }}#}
-                                {#                                {% if form.patient.errors %}#}
-                                {#                                <div class="text-danger">#}
-                                {#                                    {% for error in form.patient.errors %}#}
-                                {#                                    {{ error }}#}
-                                {#                                    {% endfor %}#}
-                                {#                                </div>#}
-                                {#                                {% endif %}#}
-                                {#                            </div>#}
-                                <h5>Пациент</h5>
+{#                                <h5>Пациент</h5>#}
                                 <div class="row">
                                     <div class="col-12 col-sm-6">
                                         <div class="form-group">
-
-                                            <select class="form-control select2 select2-primary" id="patient-select"
-                                                    name="patient" data-dropdown-css-class="select2-primary"
-                                                    style="width: 100%;">
-                                                {% for patient in patients %}
-                                                    <option value="{{ patient.id }}">{{ patient.full_name }}</option>
+                                            <label for="{{ form.patient.id_for_label }}">Пациент</label>
+                                            {{ form.patient }}
+                                            {% if form.patient.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.patient.errors %}
+                                                {{ error }}
                                                 {% endfor %}
-                                            </select>
+                                            </div>
+                                            {% endif %}
                                         </div>
+{#                                        <div class="form-group">#}
+{#                                            <select class="form-control select2 select2-primary" id="patient-select"#}
+{#                                                    name="patient" data-dropdown-css-class="select2-primary"#}
+{#                                                    style="width: 100%;">#}
+{#                                                {% for patient in patients %}#}
+{#                                                    <option value="{{ patient.id }}">{{ patient.full_name }}</option>#}
+{#                                                {% endfor %}#}
+{#                                            </select>#}
+{#                                        </div>#}
                                         <!-- /.form-group -->
                                     </div>
                                     <!-- /.col -->
@@ -284,12 +284,9 @@
 
                                 <div class="form-group">
                                     <label>Дата рождения:</label>
-                                    <div class="input-group date" id="reservationdate" data-target-input="nearest">
-                                        <input name="date_of_birth" type="text"
-                                               class="form-control datetimepicker-input"
-                                               data-target="#reservationdate"/>
-                                        <div class="input-group-append" data-target="#reservationdate"
-                                             data-toggle="datetimepicker">
+                                    <div class="input-group date" id="birthdatepicker" data-target-input="nearest">
+                                        <input name="date_of_birth" type="text" class="form-control datetimepicker-input" data-target="#birthdatepicker"/>
+                                        <div class="input-group-append" data-target="#birthdatepicker" data-toggle="datetimepicker">
                                             <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                         </div>
                                     </div>
@@ -375,6 +372,8 @@
     <script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
     <!-- Date Range Picker -->
     <script src="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.js' %}"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
     <!-- Booking JS -->
     <script src="{% static 'adminlte3_assets/dist/js/booking.js' %}"></script>
 
@@ -411,6 +410,25 @@
                 autoApply: true,
                 drops: 'down',
                 showCustomRangeLabel: false
+            });
+
+            // Initialize the date picker for birthdate
+            $('#birthdatepicker').datetimepicker({
+                format: 'DD.MM.YYYY',
+                locale: 'ru',
+                useCurrent: false,
+                maxDate: moment(), // Ensures dates in the future can't be selected
+                icons: {
+                    time: 'far fa-clock',
+                    date: 'far fa-calendar',
+                    up: 'fas fa-chevron-up',
+                    down: 'fas fa-chevron-down',
+                    previous: 'fas fa-chevron-left',
+                    next: 'fas fa-chevron-right',
+                    today: 'fas fa-calendar-check',
+                    clear: 'far fa-trash-alt',
+                    close: 'fas fa-times'
+                }
             });
 
             // Show preview availability when date range changes
@@ -562,6 +580,16 @@
                 } else {
                     localUpdateRoomAvailability();
                 }
+            });
+
+            // Make sure clicking on the calendar icon triggers the date picker
+            $(document).on('click', '.fa-calendar, .input-group-text', function() {
+                $(this).closest('.input-group').find('.datetimepicker-input').focus();
+            });
+
+            // Initialize modal elements properly when the modal is shown
+            $('#modal-default').on('shown.bs.modal', function () {
+                $('#birthdatepicker').datetimepicker('update');
             });
         });
     </script>

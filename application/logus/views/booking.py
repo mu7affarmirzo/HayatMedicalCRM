@@ -37,7 +37,7 @@ def booking_start(request):
     else:
         form = BookingInitialForm(initial={'date_range': default_date_range})
 
-    return render(request, 'application/logus/booking/booking_start.html', {
+    return render(request, 'logus/booking/booking_start.html', {
         'form': form,
         'step': 1,
         'total_steps': 3
@@ -82,7 +82,7 @@ def booking_select_rooms(request):
     # Get room type availability data for the table display
     room_type_availability = get_room_type_availability(start_date, end_date)
 
-    return render(request, 'application/logus/booking/booking_select_rooms.html', {
+    return render(request, 'logus/booking/booking_select_rooms.html', {
         'form': form,
         'step': 2,
         'total_steps': 3,
@@ -151,7 +151,7 @@ def booking_confirm(request):
     else:
         form = BookingConfirmationForm()
 
-    return render(request, 'application/logus/booking/booking_confirm.html', {
+    return render(request, 'logus/booking/booking_confirm.html', {
         'form': form,
         'step': 3,
         'total_steps': 3,
@@ -168,7 +168,7 @@ def booking_detail(request, booking_id):
     View booking details after creation
     """
     booking = get_object_or_404(Booking, id=booking_id)
-    return render(request, 'application/logus/booking/booking_detail.html', {
+    return render(request, 'logus/booking/booking_detail.html', {
         'booking': booking
     })
 
@@ -300,8 +300,9 @@ def add_new_patient(request):
             patient.modified_by = request.user
             patient.save()
             return redirect('booking_start')  # Replace with your success URL
+        print(form.errors)
     else:
         return redirect('booking_start')
-    return render(request, 'application/logus/booking/booking_start.html', {'form': form})
+    return render(request, 'logus/booking/booking_start.html', {'form': form})
 
 

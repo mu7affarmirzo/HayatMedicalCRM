@@ -123,7 +123,7 @@ def available_room_view(request):
                 'date_range': date_range
             })
 
-    return render(request, 'application/logus/available_rooms.html', context)
+    return render(request, 'logus/available_rooms.html', context)
 
 
 

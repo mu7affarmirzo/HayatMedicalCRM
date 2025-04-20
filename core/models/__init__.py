@@ -6,3 +6,4 @@ from .notifications import *
 from .rooms import *
 from .services import *
 from .tariffs import *
+from .illness_history import *

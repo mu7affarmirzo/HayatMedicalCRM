@@ -1,12 +1,10 @@
 from django.urls import path, include
 
-from application.logus.views.rooms import available_room_view
+from application.sanatorium.views import assigned_patients
+
 
 urlpatterns = [
-    path('', include('application.logus.urls.booking_list')),
-    path('availability/', available_room_view, name='check_availability'),
-    path('booking/', include('application.logus.urls.booking')),
-    # path('booking/', include('core.reception.urls.registration')),
-    # path('adminstration/', include('core.adminstration.urls.adminstration')),
-    # path('adminstration/services/', include('core.adminstration.urls.services')),
+    path('dashboard/', assigned_patients.assigned_patients_list, name='doctor_dashboard'),
+    path('patient/<int:history_id>/', assigned_patients.patient_detail, name='patient_detail'),
+    path('patient/<int:history_id>/edit/', assigned_patients.patient_edit, name='patient_edit'),
 ]

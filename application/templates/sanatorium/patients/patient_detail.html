@@ -1,0 +1,309 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+{% block title %}Информация о пациенте - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Карта пациента</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'doctor_dashboard' %}">Панель врача</a></li>
+                    <li class="breadcrumb-item active">Карта пациента</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Profile Image -->
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Patient profile picture">
+                        </div>
+
+                        <h3 class="profile-username text-center">{{ patient.full_name }}</h3>
+                        <p class="text-muted text-center">
+                            История болезни #{{ history.series_number }}
+                        </p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Возраст</b> <a class="float-right">{{ patient.age }} лет</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Пол</b> <a class="float-right">{{ patient.formatted_gender }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Телефон</b> <a class="float-right">{{ patient.mobile_phone_number|default:"Не указан" }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Дата рождения</b> <a class="float-right">{{ patient.date_of_birth|date:"d.m.Y" }}</a>
+                            </li>
+                        </ul>
+
+                        <a href="{% url 'patient_edit' history.id %}" class="btn btn-primary btn-block">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </a>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+
+                <!-- About Box -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о пациенте</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <strong><i class="fas fa-map-marker-alt mr-1"></i> Адрес</strong>
+                        <p class="text-muted">{{ patient.address|default:"Не указан" }}</p>
+                        <hr>
+
+                        <strong><i class="fas fa-id-card mr-1"></i> Документ</strong>
+                        <p class="text-muted">
+                            {{ patient.doc_type|default:"" }} {{ patient.doc_number|default:"Не указан" }}
+                        </p>
+                        <hr>
+
+                        <strong><i class="fas fa-envelope mr-1"></i> Email</strong>
+                        <p class="text-muted">{{ patient.email|default:"Не указан" }}</p>
+                        <hr>
+
+                        <strong><i class="fas fa-globe mr-1"></i> Страна</strong>
+                        <p class="text-muted">{{ patient.country|default:"Не указана" }}</p>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.col -->
+            
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header p-2">
+                        <ul class="nav nav-pills">
+                            <li class="nav-item"><a class="nav-link active" href="#history" data-toggle="tab">История болезни</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#visits" data-toggle="tab">Визиты</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#documents" data-toggle="tab">Документы</a></li>
+                        </ul>
+                    </div><!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- History tab -->
+                            <div class="active tab-pane" id="history">
+                                <div class="row">
+                                    <div class="col-12 col-md-6">
+                                        <div class="info-box">
+                                            <span class="info-box-icon bg-info"><i class="fas fa-clipboard-list"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Тип лечения</span>
+                                                <span class="info-box-number">{{ history.get_type_display }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="info-box">
+                                            <span class="info-box-icon bg-success"><i class="fas fa-stethoscope"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Статус</span>
+                                                <span class="info-box-number">{{ history.get_state_display }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card card-primary card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Диагнозы</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Первичный диагноз:</dt>
+                                            <dd class="col-sm-8">{{ history.initial_diagnosis.name|default:"Не установлен" }}</dd>
+                                            <dt class="col-sm-4">Диагноз при поступлении:</dt>
+                                            <dd class="col-sm-8">{{ history.at_arrival_diagnosis.name|default:"Не установлен" }}</dd>
+                                            <dt class="col-sm-4">Текущий диагноз:</dt>
+                                            <dd class="col-sm-8">{{ history.diagnosis.name|default:"Не установлен" }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+
+                                <div class="card card-primary card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Дополнительная информация</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Профессия:</dt>
+                                            <dd class="col-sm-8">{{ history.profession.name|default:"Не указана" }}</dd>
+                                            
+                                            <dt class="col-sm-4">Токсические факторы:</dt>
+                                            <dd class="col-sm-8">
+                                                {% if history.toxic_factors.all %}
+                                                    {% for factor in history.toxic_factors.all %}
+                                                        <span class="badge badge-info">{{ factor.name }}</span>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    Не указаны
+                                                {% endif %}
+                                            </dd>
+                                            
+                                            <dt class="col-sm-4">Теги:</dt>
+                                            <dd class="col-sm-8">
+                                                {% if history.tags %}
+                                                    <span class="badge badge-primary">{{ history.tags.name }}</span>
+                                                {% else %}
+                                                    Не указаны
+                                                {% endif %}
+                                            </dd>
+                                            
+                                            <dt class="col-sm-4">Больничный лист:</dt>
+                                            <dd class="col-sm-8">
+                                                {% if history.is_sick_leave %}
+                                                    <span class="badge badge-success">Да</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">Нет</span>
+                                                {% endif %}
+                                            </dd>
+                                        </dl>
+                                        
+                                        <h5>Примечания</h5>
+                                        <p>{{ history.notes|default:"Нет примечаний"|linebreaks }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /.tab-pane -->
+                            
+                            <!-- Visits tab -->
+                            <div class="tab-pane" id="visits">
+                                <div class="card card-primary card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Информация о записях</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Номер бронирования:</dt>
+                                            <dd class="col-sm-8">{{ booking.booking_number }}</dd>
+                                            <dt class="col-sm-4">Дата заезда:</dt>
+                                            <dd class="col-sm-8">{{ booking.start_date|date:"d.m.Y H:i" }}</dd>
+                                            <dt class="col-sm-4">Дата выезда:</dt>
+                                            <dd class="col-sm-8">{{ booking.end_date|date:"d.m.Y H:i" }}</dd>
+                                            <dt class="col-sm-4">Статус бронирования:</dt>
+                                            <dd class="col-sm-8">
+                                                <span class="badge 
+                                                {% if booking.status == 'pending' %}bg-warning
+                                                {% elif booking.status == 'confirmed' %}bg-primary
+                                                {% elif booking.status == 'checked_in' %}bg-info
+                                                {% elif booking.status == 'completed' %}bg-success
+                                                {% elif booking.status == 'cancelled' %}bg-danger
+                                                {% endif %}">
+                                                {{ booking.get_status_display }}
+                                                </span>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                                
+                                <!-- Room information -->
+                                <div class="card card-primary card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Размещение</h3>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Комната</th>
+                                                    <th>Тип комнаты</th>
+                                                    <th>Тариф</th>
+                                                    <th>Цена</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for detail in booking.details.all %}
+                                                {% if detail.client.id == patient.id %}
+                                                <tr>
+                                                    <td>{{ detail.room.name }}</td>
+                                                    <td>{{ detail.room.room_type.name }}</td>
+                                                    <td>{{ detail.tariff.name }}</td>
+                                                    <td>{{ detail.price }} ₸</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Services information if any -->
+                                {% if booking.additional_services.all %}
+                                <div class="card card-primary card-outline">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Дополнительные услуги</h3>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Услуга</th>
+                                                    <th>Кол-во</th>
+                                                    <th>Дата</th>
+                                                    <th>Цена</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for service in booking.additional_services.all %}
+                                                {% if service.booking_detail.client.id == patient.id %}
+                                                <tr>
+                                                    <td>{{ service.service.name }}</td>
+                                                    <td>{{ service.quantity }}</td>
+                                                    <td>{{ service.date_used|date:"d.m.Y" }}</td>
+                                                    <td>{{ service.price }} ₸</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <!-- /.tab-pane -->
+                            
+                            <!-- Documents tab - Placeholder for future implementation -->
+                            <div class="tab-pane" id="documents">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-file-medical fa-5x text-muted mb-3"></i>
+                                    <h5>Медицинские документы пациента будут здесь</h5>
+                                    <p class="text-muted">Функциональность находится в разработке</p>
+                                </div>
+                            </div>
+                            <!-- /.tab-pane -->
+                        </div>
+                        <!-- /.tab-content -->
+                    </div><!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div><!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+{% endblock %}

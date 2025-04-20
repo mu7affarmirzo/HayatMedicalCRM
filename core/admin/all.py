@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.models import PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService, Tariff
+from core.models import PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService, Tariff, IllnessHistory
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -50,4 +50,8 @@ class TariffServiceAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 @admin.register(Tariff)
 class TariffAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = [field.name for field in Tariff._meta.fields]
-# admin.site.register(PatientModel)
+
+
+@admin.register(IllnessHistory)
+class IllnessHistoryAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in IllnessHistory._meta.fields]

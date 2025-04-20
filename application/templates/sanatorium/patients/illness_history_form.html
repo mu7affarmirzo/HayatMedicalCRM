@@ -1,0 +1,297 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'doctor_dashboard' %}">Панель врача</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_list' %}">Истории болезни</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ title }}</h3>
+                    </div>
+                    <!-- /.card-header -->
+
+                    <!-- form start -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            {% if patient %}
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="info-box bg-light">
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Пациент</span>
+                                            <span class="info-box-number">{{ patient.full_name }}</span>
+                                            <span class="info-box-text">{{ patient.age }} лет, {{ patient.formatted_gender }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="form-group">
+                                <label for="id_patient">Пациент</label>
+                                <select name="patient" id="id_patient" class="form-control select2" required>
+                                    <option value="">-- Выберите пациента --</option>
+                                    {% for patient in form.fields.patient.queryset %}
+                                    <option value="{{ patient.id }}">{{ patient.full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.patient.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.patient.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_booking">Бронирование</label>
+                                <select name="booking" id="id_booking" class="form-control select2" required>
+                                    <option value="">-- Выберите бронирование --</option>
+                                    {% for booking in form.fields.booking.queryset %}
+                                    <option value="{{ booking.id }}">{{ booking.booking_number }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.booking.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.booking.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.type.id_for_label }}">{{ form.type.label }}</label>
+                                        {{ form.type }}
+                                        {% if form.type.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.type.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.state.id_for_label }}">{{ form.state.label }}</label>
+                                        {{ form.state }}
+                                        {% if form.state.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.state.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.profession.id_for_label }}">{{ form.profession.label }}</label>
+                                        {{ form.profession }}
+                                        {% if form.profession.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.profession.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}</label>
+                                        {{ form.tags }}
+                                        {% if form.tags.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.tags.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.toxic_factors.id_for_label }}">{{ form.toxic_factors.label }}</label>
+                                {{ form.toxic_factors }}
+                                {% if form.toxic_factors.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.toxic_factors.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Выберите один или несколько токсических факторов</small>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    {{ form.is_sick_leave }}
+                                    <label class="custom-control-label" for="{{ form.is_sick_leave.id_for_label }}">{{ form.is_sick_leave.label }}</label>
+                                </div>
+                            </div>
+
+                            <div class="card card-info card-outline">
+                                <div class="card-header">
+                                    <h3 class="card-title">Диагнозы</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="{{ form.initial_diagnosis.id_for_label }}">{{ form.initial_diagnosis.label }}</label>
+                                                {{ form.initial_diagnosis }}
+                                                {% if form.initial_diagnosis.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.initial_diagnosis.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="{{ form.at_arrival_diagnosis.id_for_label }}">{{ form.at_arrival_diagnosis.label }}</label>
+                                                {{ form.at_arrival_diagnosis }}
+                                                {% if form.at_arrival_diagnosis.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.at_arrival_diagnosis.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="{{ form.diagnosis.id_for_label }}">{{ form.diagnosis.label }}</label>
+                                                {{ form.diagnosis }}
+                                                {% if form.diagnosis.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.diagnosis.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.notes.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <a href="{% url 'illness_history_list' %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+  $(function () {
+    //Initialize Select2 Elements
+    $('.select2').select2({
+      theme: 'bootstrap4'
+    });
+
+    // If patient dropdown changes, update booking options
+    $('#id_patient').on('change', function() {
+      var patientId = $(this).val();
+      if (patientId) {
+        // AJAX call to get bookings for this patient
+        $.ajax({
+          url: '{% url "get_patient_bookings" %}',
+          data: {
+            'patient_id': patientId
+          },
+          dataType: 'json',
+          success: function(data) {
+            var bookingSelect = $('#id_booking');
+            bookingSelect.empty();
+            bookingSelect.append('<option value="">-- Выберите бронирование --</option>');
+            $.each(data.bookings, function(index, booking) {
+              bookingSelect.append('<option value="' + booking.id + '">' + booking.booking_number + '</option>');
+            });
+          }
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}

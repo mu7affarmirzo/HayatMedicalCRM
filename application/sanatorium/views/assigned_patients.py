@@ -1,9 +1,10 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
 from application.sanatorium.forms.patients import IllnessHistoryForm
-from core.models import IllnessHistory
+from core.models import IllnessHistory, PatientModel
 
 
 @login_required
@@ -86,3 +87,29 @@ def patient_edit(request, history_id):
 
     return render(request, 'sanatorium/patients/patient_edit.html', context)
 
+
+# Ajax view to get bookings for a patient
+def get_patient_bookings(request):
+    patient_id = request.GET.get('patient_id')
+    bookings = []
+
+    if patient_id:
+        try:
+            patient = PatientModel.objects.get(id=patient_id)
+            booking_details = patient.bookings.select_related('booking')
+
+            # Get unique bookings
+            booking_ids = set()
+            for detail in booking_details:
+                booking = detail.booking
+                if booking.id not in booking_ids:
+                    booking_ids.add(booking.id)
+                    bookings.append({
+                        'id': booking.id,
+                        'booking_number': booking.booking_number,
+                        'start_date': booking.start_date.strftime('%d.%m.%Y')
+                    })
+        except PatientModel.DoesNotExist:
+            pass
+
+    return JsonResponse({'bookings': bookings})

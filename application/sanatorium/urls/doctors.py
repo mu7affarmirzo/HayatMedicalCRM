@@ -5,10 +5,11 @@ from application.sanatorium.views.illness_history import (
     IllnessHistoryDetailView,
     IllnessHistoryUpdateView,
     IllnessHistoryDeleteView,
-    IllnessHistoryCloseView,
+    IllnessHistoryCloseView, assigned_patients_list,
 )
 
 urlpatterns = [
+    path('main_screen/', assigned_patients_list, name='doctors_main_screen'),
     path('histories/', IllnessHistoryListView.as_view(), name='illness_history_list'),
     path('histories/create/', IllnessHistoryCreateView.as_view(), name='illness_history_create'),
     path('histories/<int:pk>/', IllnessHistoryDetailView.as_view(), name='illness_history_detail'),

@@ -1,7 +1,9 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 
@@ -15,6 +17,37 @@ class DoctorRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         # return self.request.user.is_therapist
         return self.request.user
+
+
+@login_required
+def assigned_patients_list(request):
+    # # Check if user is a doctor
+    # if not request.user.is_therapist:
+    #     return redirect('home')  # Redirect non-doctors
+
+    # Get all illness histories where the current user is the assigned doctor
+    patient_histories = IllnessHistory.objects.filter(doctor=request.user)
+
+    # Get today's appointments
+    today = timezone.now().date()
+    today_appointments = IllnessHistory.objects.filter(
+        doctor=request.user,
+        booking__start_date__date=today
+    ).count()
+
+    # Get statistics
+    stationary_count = patient_histories.filter(type='stationary').count()
+    ambulatory_count = patient_histories.filter(type='ambulatory').count()
+
+    context = {
+        'patient_histories': patient_histories,
+        'today_appointments': today_appointments,
+        'stationary_count': stationary_count,
+        'ambulatory_count': ambulatory_count,
+        'total_patients': patient_histories.count(),
+    }
+
+    return render(request, 'sanatorium/patients/doctors_dashboard.html', context)
 
 
 class IllnessHistoryListView(LoginRequiredMixin, DoctorRequiredMixin, ListView):

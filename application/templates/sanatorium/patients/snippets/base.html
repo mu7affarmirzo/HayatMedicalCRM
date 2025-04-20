@@ -1,31 +1,41 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Hayat Medical Center{% endblock %}</title>
+    <title>{% block title %}Hayat Medical Center - Портал пациента{% endblock %}</title>
 
     <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fontawesome-free/css/all.min.css' %}">
     <!-- Ionicons -->
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <!-- Tempusdominus Bootstrap 4 -->
-    <link rel="stylesheet"
-          href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
     <!-- iCheck -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
     <!-- Theme style -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/dist/css/adminlte.min.css' %}">
     <!-- overlayScrollbars -->
-    <link rel="stylesheet"
-          href="{% static 'adminlte3_assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
     <!-- Daterange picker -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
-
+    <!-- Custom Styles -->
+    <style>
+        .badge-appointment {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .appointment-upcoming {
+            border-left: 4px solid #28a745;
+        }
+        .appointment-past {
+            border-left: 4px solid #6c757d;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -39,32 +49,36 @@
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url 'doctors_main_screen' %}" class="nav-link">Главная</a>
+                <a href="#" class="nav-link">Главная</a>
             </li>
-            {% if request.user.is_superuser %}
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a href="#" class="nav-link">Статистика</a>
-                </li>
-            {% endif %}
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="#" class="nav-link">Мои записи</a>
+            </li>
         </ul>
 
         <!-- Right navbar links -->
         <ul class="navbar-nav ml-auto">
-            <!-- User Dropdown Menu -->
+            <!-- Notifications Dropdown Menu -->
             <li class="nav-item dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#">
-                    <i class="fas fa-user-circle"></i> {{ request.user.full_name }}
+                    <i class="far fa-bell"></i>
+                    <span class="badge badge-warning navbar-badge">{{ notifications|length }}</span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-right">
-                    <span class="dropdown-item dropdown-header">Управление аккаунтом</span>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <span class="dropdown-item dropdown-header">{{ notifications|length }} уведомлений</span>
                     <div class="dropdown-divider"></div>
+                    {% for notification in notifications %}
                     <a href="#" class="dropdown-item">
-                        <i class="fas fa-user-cog mr-2"></i> Профиль
+                        <i class="fas fa-envelope mr-2"></i> {{ notification.message }}
+                        <span class="float-right text-muted text-sm">{{ notification.created_at|naturaltime }}</span>
                     </a>
                     <div class="dropdown-divider"></div>
+                    {% empty %}
                     <a href="#" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Выйти
+                        <i class="fas fa-info-circle mr-2"></i> Нет новых уведомлений
                     </a>
+                    {% endfor %}
+                    <a href="#" class="dropdown-item dropdown-footer">Смотреть все уведомления</a>
                 </div>
             </li>
             <li class="nav-item">
@@ -72,17 +86,33 @@
                     <i class="fas fa-expand-arrows-alt"></i>
                 </a>
             </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#">
+                    <i class="fas fa-user-circle"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <span class="dropdown-item dropdown-header">Настройки профиля</span>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user mr-2"></i> Мой профиль
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Выйти
+                    </a>
+                </div>
+            </li>
         </ul>
     </nav>
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <aside class="main-sidebar sidebar-dark-blue elevation-4">
         <!-- Brand Logo -->
         <a href="{% url 'doctors_main_screen' %}" class="brand-link">
-            <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Medical Center"
-                 style="height: 40px; max-height: none; opacity: 0.9;">
-            <span class="brand-text font-weight-light"></span>
+            <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Logo" class="brand-image"
+                 style="opacity: .8">
+            <span class="brand-text font-weight-light">Портал пациента</span>
         </a>
 
         <!-- Sidebar -->
@@ -210,59 +240,41 @@
                         </ul>
                     </li>
 
-                    <!-- Treatment Plan -->
+                    <!-- Основной лист назначений -->
                     <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.treatment_plan }}">
-                            <i class="nav-icon fas fa-clipboard-list"></i>
-                            <p>План лечения</p>
-                        </a>
-                    </li>
-
-                    <!-- Procedures -->
-                    <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.procedures }}">
-                            <i class="nav-icon fas fa-procedures"></i>
+                        <a href="#" class="nav-link {{ active_page.proc_main_list_page }}">
+                            <i class="nav-icon fas fa-columns"></i>
                             <p>
-                                Процедуры
+                                Основной лист назначений
                                 <i class="fas fa-angle-left right"></i>
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Предстоящие процедуры</p>
+                                    <i class="far"></i>
+                                    <p>Консультации и исследования</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Завершенные процедуры</p>
+                                    <i class="far"></i>
+                                    <p>Лечебные процедуры</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="far"></i>
+                                    <p>Медикаменты</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <!-- Medications -->
-                    <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.medications }}">
-                            <i class="nav-icon fas fa-pills"></i>
-                            <p>Мои лекарства</p>
-                        </a>
-                    </li>
-
-                    <!-- Test Results -->
-                    <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.test_results }}">
-                            <i class="nav-icon fas fa-vial"></i>
-                            <p>Результаты анализов</p>
-                        </a>
-                    </li>
-
                     <!-- Diet Plan -->
                     <li class="nav-item">
                         <a href="#" class="nav-link {{ active_page.diet_page }}">
-                            <i class="nav-icon fas fa-utensils"></i>
+                            <i class="nav-icon fas fa-chart-pie"></i>
                             <p>Питание</p>
                         </a>
                     </li>
@@ -273,6 +285,7 @@
                             <i class="nav-icon far fa-calendar-alt"></i>
                             <p>
                                 Расписание лечения
+                                <span class="badge badge-info right">2</span>
                             </p>
                         </a>
                     </li>
@@ -318,23 +331,15 @@
     </div>
     <!-- /.content-wrapper -->
 
-    <!-- Footer -->
     <footer class="main-footer">
-        <strong>Copyright &copy; 2023-{% now "Y" %} <a href="#">Hayat Baby Massage Center</a>.</strong>
+        <strong>Copyright &copy; 2023-{% now "Y" %} <a href="https://hayatmed.uz">Hayat Medical Center</a>.</strong>
         Все права защищены.
         <div class="float-right d-none d-sm-inline-block">
             <b>Версия</b> 1.0
         </div>
     </footer>
-
-    <!-- Control Sidebar -->
-    <aside class="control-sidebar control-sidebar-dark">
-        <!-- Control sidebar content goes here -->
-    </aside>
-    <!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
-
 
 <!-- jQuery -->
 <script src="{% static 'adminlte3_assets/plugins/jquery/jquery.min.js' %}"></script>
@@ -359,4 +364,3 @@
 {% block extra_js %}{% endblock %}
 </body>
 </html>
-

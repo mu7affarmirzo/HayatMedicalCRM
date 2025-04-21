@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.models import PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService, Tariff, IllnessHistory
+from core.models import Account, PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService, Tariff, IllnessHistory
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -10,6 +10,11 @@ admin.site.site_header = 'Hayat CRM Administration'
 admin.site.site_title = 'Hayat CRM Administration'
 
 admin.site.index_title = 'Welcome to Hayat CRM Administration'
+
+
+@admin.register(Account)
+class AccountAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in Account._meta.fields]
 
 
 @admin.register(PatientModel)

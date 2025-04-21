@@ -1,14 +1,13 @@
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.utils import timezone
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from django.shortcuts import redirect, render
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
 from application.sanatorium.forms.patients import IllnessHistoryForm
-from core.models import IllnessHistory, PatientModel, Booking
+from core.models import IllnessHistory, BookingDetail
 
 
 class DoctorRequiredMixin(UserPassesTestMixin):
@@ -78,20 +77,36 @@ class IllnessHistoryCreateView(LoginRequiredMixin, DoctorRequiredMixin, CreateVi
         return context
 
 
-class IllnessHistoryDetailView(LoginRequiredMixin, DoctorRequiredMixin, DetailView):
-    model = IllnessHistory
-    template_name = 'sanatorium/patients/illness_history_detail.html'
-    context_object_name = 'history'
+@login_required
+def illness_history_detail(request, pk):
+    # Get the illness history
+    history = get_object_or_404(IllnessHistory, pk=pk)
 
-    def get_queryset(self):
-        # Only allow doctors to view their own assigned histories
-        return IllnessHistory.objects.filter(doctor=self.request.user)
+    # Security check - only the assigned doctor or admin can view
+    if history.doctor != request.user and not request.user.is_admin:
+        return redirect('illness_history_list')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['patient'] = self.object.patient
-        context['booking'] = self.object.booking
-        return context
+    # Get patient data
+    patient = history.patient
+    booking = history.booking
+
+    # Get booking details for this patient
+    booking_details = BookingDetail.objects.filter(
+        booking=booking,
+        client=patient
+    ).select_related('room', 'room__room_type', 'tariff')
+
+    context = {
+        'history': history,
+        'patient': patient,
+        'booking': booking,
+        'booking_details': booking_details,
+        'active_page': {
+            'medical_records': 'active'
+        }
+    }
+
+    return render(request, 'sanatorium/patients/illness_history_detail.html', context)
 
 
 class IllnessHistoryUpdateView(LoginRequiredMixin, DoctorRequiredMixin, UpdateView):
@@ -153,4 +168,3 @@ class IllnessHistoryCloseView(LoginRequiredMixin, DoctorRequiredMixin, UpdateVie
         form.instance.state = 'closed'
         messages.success(self.request, 'История болезни закрыта')
         return super().form_valid(form)
-

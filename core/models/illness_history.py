@@ -2,6 +2,9 @@ import uuid
 from django.db import models
 from core.models import BaseAuditModel, PatientModel, Booking, Account
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 # Supporting models that should be added first
 class ProfessionModel(BaseAuditModel):
@@ -104,3 +107,24 @@ class IllnessHistory(BaseAuditModel):
         verbose_name = "История болезни"
         verbose_name_plural = "Истории болезней"
 
+
+@receiver(post_save, sender=IllnessHistory)
+def create_initial_appointment(sender, instance, created, **kwargs):
+    from core.models import InitialAppointmentWithDoctorModel
+    """
+    Create an initial appointment record when an illness history is created
+    """
+    if created:
+        # Get the assigned doctor from the illness history if it exists
+        assigned_doctor = getattr(instance, 'assigned_doctor', None)
+
+        # Create the initial appointment with default values
+        InitialAppointmentWithDoctorModel.objects.create(
+            illness_history=instance,
+            doctor=assigned_doctor,
+            state='in_progress',  # Default to "in progress"
+            # Set other default values as needed
+            general_state="удовлетворительное",
+            temperature=36.6,
+            contact_with_infectious='на протяжении максимального срока инкубации: не было',
+        )

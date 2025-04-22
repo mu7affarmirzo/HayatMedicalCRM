@@ -1,130 +1,77 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy, reverse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404
-
-from application.sanatorium.forms.init_appointment_form import InitialAppointmentForm
+from django.urls import reverse
 from core.models import InitialAppointmentWithDoctorModel, IllnessHistory
+from ..forms.init_appointment_form import InitialAppointmentForm
 
 
-class AssignedDoctorRequiredMixin(LoginRequiredMixin):
-    """
-    Mixin to ensure only the doctor assigned to the illness_history can access the view
-    """
+@login_required
+def initial_appointment_detail(request, history_id):
+    """View for displaying the initial appointment details."""
+    history = get_object_or_404(IllnessHistory, id=history_id)
 
-    def dispatch(self, request, *args, **kwargs):
-        # First check if user is logged in
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
+    # Get or create initial appointment for this history
+    initial_appointment, created = InitialAppointmentWithDoctorModel.objects.get_or_create(
+        illness_history=history,
+        defaults={'doctor': request.user, 'created_by': request.user}
+    )
 
-        # Get the appointment if it exists
-        if 'pk' in kwargs:
-            appointment = get_object_or_404(InitialAppointmentWithDoctorModel, pk=kwargs['pk'])
+    context = {
+        'history': history,
+        'appointment': initial_appointment,
+        'active_page': {'initial_appointment': 'active'},
+    }
 
-            # Allow access only if current user is the assigned doctor
-            if appointment.doctor == request.user:
-                return super().dispatch(request, *args, **kwargs)
-            else:
-                raise PermissionDenied("You are not the assigned doctor for this appointment.")
+    # Add all appointments for sidebar
+    context.update(get_sidebar_appointments(history))
 
-        # For creation views (no pk), check if user is assigned to illness_history
-        if 'illness_history_id' in kwargs:
-            illness_history = get_object_or_404(IllnessHistory, pk=kwargs['illness_history_id'])
-
-            # Check if user is assigned to the illness_history
-            # This depends on your specific model relations, adjust as needed
-            if getattr(illness_history, 'assigned_doctor', None) == request.user:
-                return super().dispatch(request, *args, **kwargs)
-            else:
-                raise PermissionDenied("You are not assigned to this patient's history.")
-
-        return super().dispatch(request, *args, **kwargs)
+    return render(request, 'sanatorium/doctors/init_appointment/appointment_detail.html', context)
 
 
-class AppointmentListView(AssignedDoctorRequiredMixin, ListView):
-    model = InitialAppointmentWithDoctorModel
-    template_name = 'sanatorium/patients/appointments/init_app/appointment_list.html'
-    context_object_name = 'appointments'
+@login_required
+def initial_appointment_update(request, history_id):
+    """View for updating the initial appointment."""
+    history = get_object_or_404(IllnessHistory, id=history_id)
 
-    def get_queryset(self):
-        # Show only appointments where the logged-in user is the doctor
-        return InitialAppointmentWithDoctorModel.objects.filter(
-            doctor=self.request.user
-        ).select_related('illness_history', 'diagnosis')
+    # Get or create initial appointment for this history
+    initial_appointment, created = InitialAppointmentWithDoctorModel.objects.get_or_create(
+        illness_history=history,
+        defaults={'doctor': request.user, 'created_by': request.user}
+    )
 
+    if request.method == 'POST':
+        form = InitialAppointmentForm(request.POST, instance=initial_appointment)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.modified_by = request.user
+            appointment.save()
+            messages.success(request, 'Первичный прием успешно обновлен')
+            return redirect('initial_appointment_detail', history_id=history_id)
+    else:
+        form = InitialAppointmentForm(instance=initial_appointment)
 
-class AppointmentDetailView(AssignedDoctorRequiredMixin, DetailView):
-    model = InitialAppointmentWithDoctorModel
-    template_name = 'sanatorium/patients/appointments/init_app/appointment_detail.html'
-    context_object_name = 'appointment'
+    context = {
+        'history': history,
+        'appointment': initial_appointment,
+        'form': form,
+        'active_page': {'initial_appointment': 'active'},
+    }
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['fieldsets'] = InitialAppointmentForm.Meta.fieldsets
-        return context
+    # Add all appointments for sidebar
+    context.update(get_sidebar_appointments(history))
 
-
-class AppointmentCreateView(CreateView):
-    model = InitialAppointmentWithDoctorModel
-    form_class = InitialAppointmentForm
-    template_name = 'sanatorium/patients/appointments/init_app/appointment_form.html'
-
-    def get_initial(self):
-        initial = super().get_initial()
-        # Pre-populate with illness_history if provided
-        if 'illness_history_id' in self.kwargs:
-            initial['illness_history'] = self.kwargs['illness_history_id']
-        return initial
-
-    def form_valid(self, form):
-        # Set the doctor to current user
-        form.instance.doctor = self.request.user
-        # Set created_by to current user
-        form.instance.created_by = self.request.user
-
-        messages.success(self.request, _("Appointment record created successfully."))
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('appointment-detail', kwargs={'pk': self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['action'] = _('Create')
-        context['fieldsets'] = self.form_class.Meta.fieldsets
-        return context
+    return render(request, 'sanatorium/doctors/init_appointment/appointment_form.html', context)
 
 
-class AppointmentUpdateView(AssignedDoctorRequiredMixin, UpdateView):
-    model = InitialAppointmentWithDoctorModel
-    form_class = InitialAppointmentForm
-    template_name = 'sanatorium/patients/appointments/init_app/appointment_form.html'
-
-    def form_valid(self, form):
-        # Set modified_by to current user
-        form.instance.modified_by = self.request.user
-
-        messages.success(self.request, _("Appointment record updated successfully."))
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('appointment-detail', kwargs={'pk': self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['action'] = _('Update')
-        context['fieldsets'] = self.form_class.Meta.fieldsets
-        return context
-
-
-class AppointmentDeleteView(AssignedDoctorRequiredMixin, DeleteView):
-    model = InitialAppointmentWithDoctorModel
-    template_name = 'sanatorium/patients/appointments/init_app/appointment_confirm_delete.html'
-    success_url = reverse_lazy('appointment-list')
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, _("Appointment record deleted successfully."))
-        return super().delete(request, *args, **kwargs)
+def get_sidebar_appointments(history):
+    """Helper function to get all appointments for the sidebar."""
+    return {
+        'cardiologist_appointments': [],  # Query these as needed
+        'neurologist_appointments': [],
+        'on_arrival_appointments': [],
+        'repeated_appointments': [],
+        'with_doc_on_duty_appointments': [],
+        'ekg_appointments': [],
+        'final_appointment': None,
+    }

@@ -1,0 +1,684 @@
+{% extends "sanatorium/doctors/snippets/base.html" %}
+
+{% load i18n %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Редактирование первичного приема | {{ appointment.illness_history.patient.full_name }}{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+{% endblock %}
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Редактирование первичного приема</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История
+                            болезни</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'initial_appointment_detail' history.id %}">Первичный
+                            прием</a></li>
+                        <li class="breadcrumb-item active">Редактирование</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <form method="post">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <h5><i class="icon fas fa-ban"></i> Ошибка!</h5>
+                        Пожалуйста, исправьте ошибки в форме.
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Left column -->
+                    <div class="col-md-6">
+                        <!-- Basic Information -->
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">Основная информация</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+
+                                <div class="form-group">
+                                    <label for="{{ form.state.id_for_label }}">Состояние приема</label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                        <div class="text-danger">{{ form.state.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Complaints and Anamnesis -->
+                        <div class="card card-info">
+                            <div class="card-header">
+                                <h3 class="card-title">Жалобы и анамнез</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="{{ form.complaint.id_for_label }}">Жалобы</label>
+                                    {{ form.complaint }}
+                                    {% if form.complaint.errors %}
+                                        <div class="text-danger">{{ form.complaint.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.anamnesis_morbi.id_for_label }}">Anamnesis morbi</label>
+                                    {{ form.anamnesis_morbi }}
+                                    {% if form.anamnesis_morbi.errors %}
+                                        <div class="text-danger">{{ form.anamnesis_morbi.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.anamnesis_vitae.id_for_label }}">Anamnesis vitae</label>
+                                    {{ form.anamnesis_vitae }}
+                                    {% if form.anamnesis_vitae.errors %}
+                                        <div class="text-danger">{{ form.anamnesis_vitae.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.contact_with_infectious.id_for_label }}">Контакт с инфекционными
+                                        заболеваниями</label>
+                                    {{ form.contact_with_infectious }}
+                                    {% if form.contact_with_infectious.errors %}
+                                        <div class="text-danger">{{ form.contact_with_infectious.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                {{ form.contact_with_orvi }}
+                                                <label for="{{ form.contact_with_orvi.id_for_label }}"
+                                                       class="custom-control-label">Контакт с ОРВИ</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                {{ form.is_away_two_month }}
+                                                <label for="{{ form.is_away_two_month.id_for_label }}"
+                                                       class="custom-control-label">Выезд за пределы страны в последние
+                                                    2 месяца</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.transferred_infectious.id_for_label }}">Перенесенные
+                                        инфекционные заболевания</label>
+                                    {{ form.transferred_infectious }}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.staying_hospital.id_for_label }}">Пребывание в больнице</label>
+                                    {{ form.staying_hospital }}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.receiving_blood_transfusions.id_for_label }}">Переливания
+                                        крови</label>
+                                    {{ form.receiving_blood_transfusions }}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.surgical_massive_interventions_six_months.id_for_label }}">Хирургические
+                                        вмешательства за последние 6 месяцев</label>
+                                    {{ form.surgical_massive_interventions_six_months }}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.dentist_visits_last_six_months.id_for_label }}">Посещения
+                                        стоматолога за последние 6 месяцев</label>
+                                    {{ form.dentist_visits_last_six_months }}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.profession_toxics.id_for_label }}">Профессиональные токсические
+                                        воздействия</label>
+                                    {{ form.profession_toxics }}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.additional_data.id_for_label }}">Дополнительные данные</label>
+                                    {{ form.additional_data }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right column -->
+                    <div class="col-md-6">
+                        <!-- Status praesens objectivus -->
+                        <div class="card card-success">
+                            <div class="card-header">
+                                <h3 class="card-title">Status praesens objectivus</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.general_state.id_for_label }}">Общее состояние</label>
+                                            {{ form.general_state }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.consciousness.id_for_label }}">Сознание</label>
+                                            {{ form.consciousness }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.constitution.id_for_label }}">Конституция</label>
+                                            {{ form.constitution }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.skin.id_for_label }}">Кожные покровы</label>
+                                            {{ form.skin }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.skin_moisture.id_for_label }}">Влажность кожи</label>
+                                            {{ form.skin_moisture }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.skin_turgor.id_for_label }}">Тургор кожи</label>
+                                            {{ form.skin_turgor }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.temperature.id_for_label }}">Температура (°C)</label>
+                                            {{ form.temperature }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.height.id_for_label }}">Рост (см)</label>
+                                            {{ form.height }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.weight.id_for_label }}">Вес (кг)</label>
+                                            {{ form.weight }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.heart_beat.id_for_label }}">Сердцебиение
+                                                (уд/мин)</label>
+                                            {{ form.heart_beat }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.arterial_high.id_for_label }}">АД верхнее</label>
+                                            {{ form.arterial_high }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.arterial_low.id_for_label }}">АД нижнее</label>
+                                            {{ form.arterial_low }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.imt.id_for_label }}">ИМТ</label>
+                                            {{ form.imt }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.extra_weight.id_for_label }}">Избыточный вес
+                                                (кг)</label>
+                                            {{ form.extra_weight }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.swelling_pastiness.id_for_label }}">Отеки,
+                                                пастозность</label>
+                                            {{ form.swelling_pastiness }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.lymph_nodes.id_for_label }}">Лимфатические узлы</label>
+                                            {{ form.lymph_nodes }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Systems Examination -->
+                        <div class="card card-warning">
+                            <div class="card-header">
+                                <h3 class="card-title">Системы органов</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Tabs for different systems -->
+                                <ul class="nav nav-tabs" id="systemTabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="musculoskeletal-tab" data-toggle="pill"
+                                           href="#musculoskeletal" role="tab">
+                                            Костно-мыш.
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="respiratory-tab" data-toggle="pill" href="#respiratory"
+                                           role="tab">
+                                            Дыхательная
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="cardiovascular-tab" data-toggle="pill"
+                                           href="#cardiovascular" role="tab">
+                                            Сердечно-сосуд.
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="digestive-tab" data-toggle="pill" href="#digestive"
+                                           role="tab">
+                                            Пищеварит.
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="urinary-tab" data-toggle="pill" href="#urinary"
+                                           role="tab">
+                                            Мочевыдел.
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content p-2" id="systemTabsContent">
+                                    <!-- Musculoskeletal System -->
+                                    <div class="tab-pane fade show active" id="musculoskeletal" role="tabpanel">
+                                        <div class="form-group">
+                                            <label for="{{ form.deformations.id_for_label }}">Деформации</label>
+                                            {{ form.deformations }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.contractures.id_for_label }}">Контрактуры</label>
+                                            {{ form.contractures }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.movement_restrictions.id_for_label }}">Ограничения
+                                                движений</label>
+                                            {{ form.movement_restrictions }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Respiratory System -->
+                                    <div class="tab-pane fade" id="respiratory" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.respiratory_frequency.id_for_label }}">Частота
+                                                        дыхания</label>
+                                                    {{ form.respiratory_frequency }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.breathing_type.id_for_label }}">Тип
+                                                        дыхания</label>
+                                                    {{ form.breathing_type }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.auscultative_breathing.id_for_label }}">Аускультативное
+                                                дыхание</label>
+                                            {{ form.auscultative_breathing }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.wheezing.id_for_label }}">Хрипы</label>
+                                            {{ form.wheezing }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.coughing.id_for_label }}">Кашель</label>
+                                            {{ form.coughing }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.lungs_percussion.id_for_label }}">Перкуссия
+                                                легких</label>
+                                            {{ form.lungs_percussion }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Cardiovascular System -->
+                                    <div class="tab-pane fade" id="cardiovascular" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.heart_edge.id_for_label }}">Границы
+                                                        сердца</label>
+                                                    {{ form.heart_edge }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.heart_tones.id_for_label }}">Тоны сердца</label>
+                                                    {{ form.heart_tones }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.ad_left.id_for_label }}">АД левая рука</label>
+                                                    {{ form.ad_left }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.ad_right.id_for_label }}">АД правая рука</label>
+                                                    {{ form.ad_right }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.ps_left.id_for_label }}">Пульс левая
+                                                        рука</label>
+                                                    {{ form.ps_left }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.ps_right.id_for_label }}">Пульс правая
+                                                        рука</label>
+                                                    {{ form.ps_right }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.pulse_noise_on_arteria.id_for_label }}">Шум на
+                                                артериях</label>
+                                            {{ form.pulse_noise_on_arteria }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Digestive System -->
+                                    <div class="tab-pane fade" id="digestive" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.appetit.id_for_label }}">Аппетит</label>
+                                                    {{ form.appetit }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.tongue.id_for_label }}">Язык</label>
+                                                    {{ form.tongue }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.stomach.id_for_label }}">Живот</label>
+                                            {{ form.stomach }}
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.liver.id_for_label }}">Печень</label>
+                                                    {{ form.liver }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.liver_edge.id_for_label }}">Край печени</label>
+                                                    {{ form.liver_edge }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.spleen.id_for_label }}">Селезенка</label>
+                                                    {{ form.spleen }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.spleen_edge.id_for_label }}">Край
+                                                        селезенки</label>
+                                                    {{ form.spleen_edge }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.stool.id_for_label }}">Стул</label>
+                                                    {{ form.stool }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ form.stool_frequency.id_for_label }}">Частота
+                                                        стула</label>
+                                                    {{ form.stool_frequency }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Urinary System -->
+                                    <div class="tab-pane fade" id="urinary" role="tabpanel">
+                                        <div class="form-group">
+                                            <label for="{{ form.urinary_system.id_for_label }}">Мочевыделение</label>
+                                            {{ form.urinary_system }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.effleurage_symptoms.id_for_label }}">Симптом
+                                                поколачивания</label>
+                                            {{ form.effleurage_symptoms }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.thyroid.id_for_label }}">Щитовидная железа</label>
+                                            {{ form.thyroid }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.nerve_system.id_for_label }}">Нервная система</label>
+                                            {{ form.nerve_system }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagnosis and Summary -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">Диагноз и заключение</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.diagnosis.id_for_label }}">Диагноз</label>
+                                            {{ form.diagnosis }}
+                                            {% if form.diagnosis.errors %}
+                                                <div class="text-danger">{{ form.diagnosis.errors }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                {{ form.cito }}
+                                                <label for="{{ form.cito.id_for_label }}" class="custom-control-label">CITO
+                                                    (срочно)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.summary.id_for_label }}">Заключение</label>
+                                            {{ form.summary }}
+                                            {% if form.summary.errors %}
+                                                <div class="text-danger">{{ form.summary.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Сохранить
+                                </button>
+                                <a href="{% url 'initial_appointment_detail' history.id %}"
+                                   class="btn btn-default float-right">
+                                    <i class="fas fa-times"></i> Отмена
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    <script>
+        $(function () {
+            //Initialize Select2 Elements
+            $('.select2').select2({
+                theme: 'bootstrap4'
+            });
+
+            // Auto-calculate IMT when height or weight changes
+            $('#{{ form.height.id_for_label }}, #{{ form.weight.id_for_label }}').on('change', function () {
+                var height = parseFloat($('#{{ form.height.id_for_label }}').val());
+                var weight = parseFloat($('#{{ form.weight.id_for_label }}').val());
+
+                if (height && weight) {
+                    // Convert height from cm to meters
+                    var heightInMeters = height / 100;
+                    // Calculate IMT (weight divided by height squared)
+                    var imt = weight / (heightInMeters * heightInMeters);
+                    // Round to 1 decimal place
+                    $('#{{ form.imt.id_for_label }}').val(imt.toFixed(1));
+
+                    // Calculate excess weight based on normal BMI range (18.5-24.9)
+                    var normalWeightMax = 24.9 * heightInMeters * heightInMeters;
+                    var excessWeight = weight > normalWeightMax ? (weight - normalWeightMax).toFixed(1) : 0;
+                    $('#{{ form.extra_weight.id_for_label }}').val(excessWeight);
+                }
+            });
+        });
+    </script>
+{% endblock %}

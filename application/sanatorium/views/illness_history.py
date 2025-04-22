@@ -46,12 +46,12 @@ def assigned_patients_list(request):
         'total_patients': patient_histories.count(),
     }
 
-    return render(request, 'sanatorium/patients/doctors_dashboard.html', context)
+    return render(request, 'sanatorium/doctors/doctors_dashboard.html', context)
 
 
 class IllnessHistoryListView(LoginRequiredMixin, DoctorRequiredMixin, ListView):
     model = IllnessHistory
-    template_name = 'sanatorium/patients/illness_history_list.html'
+    template_name = 'sanatorium/doctors/illness_history_list.html'
     context_object_name = 'histories'
 
     def get_queryset(self):
@@ -62,7 +62,7 @@ class IllnessHistoryListView(LoginRequiredMixin, DoctorRequiredMixin, ListView):
 class IllnessHistoryCreateView(LoginRequiredMixin, DoctorRequiredMixin, CreateView):
     model = IllnessHistory
     form_class = IllnessHistoryForm
-    template_name = 'sanatorium/patients/illness_history_form.html'
+    template_name = 'sanatorium/doctors/illness_history_form.html'
     success_url = reverse_lazy('illness_history_list')
 
     def form_valid(self, form):
@@ -106,13 +106,13 @@ def illness_history_detail(request, pk):
         }
     }
 
-    return render(request, 'sanatorium/patients/illness_history_detail.html', context)
+    return render(request, 'sanatorium/doctors/illness_history_detail.html', context)
 
 
 class IllnessHistoryUpdateView(LoginRequiredMixin, DoctorRequiredMixin, UpdateView):
     model = IllnessHistory
     form_class = IllnessHistoryForm
-    template_name = 'sanatorium/patients/illness_history_form.html'
+    template_name = 'sanatorium/doctors/illness_history_form.html'
 
     def get_queryset(self):
         # Only allow doctors to update their own assigned histories
@@ -157,7 +157,7 @@ class IllnessHistoryDeleteView(LoginRequiredMixin, DoctorRequiredMixin, DeleteVi
 class IllnessHistoryCloseView(LoginRequiredMixin, DoctorRequiredMixin, UpdateView):
     """Special view to mark an illness history as closed"""
     model = IllnessHistory
-    template_name = 'sanatorium/patients/illness_history_confirm_close.html'
+    template_name = 'sanatorium/doctors/illness_history_confirm_close.html'
     fields = []
     success_url = reverse_lazy('illness_history_list')
 

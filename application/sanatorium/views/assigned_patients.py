@@ -35,7 +35,7 @@ def assigned_patients_list(request):
         'total_patients': patient_histories.count(),
     }
 
-    return render(request, 'sanatorium/patients/doctors_dashboard.html', context)
+    return render(request, 'sanatorium/patients/../../templates/sanatorium/doctors/doctors_dashboard.html', context)
 
 
 @login_required
@@ -57,7 +57,7 @@ def patient_detail(request, history_id):
         'booking': booking,
     }
 
-    return render(request, 'sanatorium/patients/patient_detail.html', context)
+    return render(request, 'sanatorium/patients/../../templates/sanatorium/doctors/patient_detail.html', context)
 
 
 @login_required
@@ -85,7 +85,7 @@ def patient_edit(request, history_id):
         'patient': history.patient,
     }
 
-    return render(request, 'sanatorium/patients/patient_edit.html', context)
+    return render(request, 'sanatorium/patients/../../templates/sanatorium/doctors/patient_edit.html', context)
 
 
 # Ajax view to get bookings for a patient

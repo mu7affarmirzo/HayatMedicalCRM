@@ -1,9 +1,11 @@
+from dataclasses import field
+
 from django.contrib import admin
 
-from core.models import Account, PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService, Tariff, IllnessHistory
+from core.models import (Account, PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService,
+                         Tariff, IllnessHistory, InitialAppointmentWithDoctorModel, DiagnosisTemplate)
 
 from import_export.admin import ImportExportModelAdmin
-
 
 admin.site.site_header = 'Hayat CRM Administration'
 
@@ -60,3 +62,11 @@ class TariffAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 @admin.register(IllnessHistory)
 class IllnessHistoryAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = [field.name for field in IllnessHistory._meta.fields]
+
+
+@admin.register(InitialAppointmentWithDoctorModel)
+class InitialAppointmentWithDoctorAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in InitialAppointmentWithDoctorModel._meta.fields]
+
+
+admin.site.register(DiagnosisTemplate)

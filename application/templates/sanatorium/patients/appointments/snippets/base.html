@@ -26,7 +26,10 @@
     <!-- Daterange picker -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
 
-    {% block extra_css %}{% endblock %}
+    {% block extra_css %}
+
+        <link rel="stylesheet" href="{% static 'css/appointments.css' %}">
+    {% endblock %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -118,7 +121,7 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                     data-accordion="false">
                     <li class="nav-item">
-                        <a href="{% url 'illness_history_detail' history.id %}" class="nav-link">
+                        <a href=#" class="nav-link">
                             <i class="nav-icon fas fa-home"></i>
                             <p>Титульная страница</p>
                         </a>
@@ -395,7 +398,10 @@
 <!-- AdminLTE App -->
 <script src="{% static 'adminlte3_assets/dist/js/adminlte.js' %}"></script>
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'js/appointments.js' %}"></script>
+
+{% endblock %}
 </body>
 </html>
 

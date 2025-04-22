@@ -7,3 +7,4 @@ from .rooms import *
 from .services import *
 from .tariffs import *
 from .illness_history import *
+from .appointments import *

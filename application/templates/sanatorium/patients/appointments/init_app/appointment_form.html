@@ -1,0 +1,113 @@
+{% extends "sanatorium/patients/appointments/snippets/base.html" %}
+
+{% load i18n %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="appointment-form">
+    <h1>
+        {% if action == 'Create' %}
+            {% trans "Create New Appointment" %}
+        {% else %}
+            {% trans "Edit Appointment" %}
+        {% endif %}
+    </h1>
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="appointmentFormTabs" role="tablist">
+                    {% for fieldset_name, fieldset_data in fieldsets %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if forloop.first %}active{% endif %}"
+                           id="form-tab-{{ forloop.counter }}" data-toggle="tab"
+                           href="#form-content-{{ forloop.counter }}" role="tab">
+                            {{ fieldset_name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="appointmentFormTabsContent">
+                    {% for fieldset_name, fieldset_data in fieldsets %}
+                    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+                         id="form-content-{{ forloop.counter }}" role="tabpanel">
+                        <h4>{{ fieldset_name }}</h4>
+
+                        <div class="row">
+                            {% for field_name in fieldset_data.fields %}
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ form.fields|get_id_for_field:field_name }}">
+                                        {{ form.fields|get_label_for_field:field_name }}
+                                    </label>
+                                    {{ form|render_field:field_name }}
+
+                                    {% if form.errors|field_has_error:field_name %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.errors|get_error_for_field:field_name }}
+                                    </div>
+                                    {% endif %}
+
+                                    {% if form.fields|field_has_help_text:field_name %}
+                                    <small class="form-text text-muted">
+                                        {{ form.fields|get_help_text:field_name }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    {% if action == 'Create' %}
+                        <i class="fas fa-save"></i> {% trans "Create Appointment" %}
+                    {% else %}
+                        <i class="fas fa-save"></i> {% trans "Update Appointment" %}
+                    {% endif %}
+                </button>
+                <a href="{% if appointment %}{% url 'appointment-detail' appointment.id %}{% else %}{% url 'appointment-list' %}{% endif %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> {% trans "Cancel" %}
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+    $(document).ready(function(){
+        // Handle tab navigation
+        $('#appointmentFormTabs a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+
+        // Form validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    });
+</script>
+{% endblock %}

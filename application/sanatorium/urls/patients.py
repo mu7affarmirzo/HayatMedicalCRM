@@ -8,4 +8,6 @@ urlpatterns = [
     path('<int:history_id>/edit/', assigned_patients.patient_edit, name='patient_edit'),
     path('<int:history_id>/edit/', assigned_patients.patient_edit, name='patient_edit'),
     path('get-patient-booking/', assigned_patients.get_patient_bookings, name='get_patient_bookings'),
+
+    path('appointments/', include('application.sanatorium.urls.appointments')),
 ]

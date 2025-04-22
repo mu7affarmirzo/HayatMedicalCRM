@@ -1,0 +1,92 @@
+{% extends "sanatorium/patients/appointments/snippets/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title">{% trans "Appointment Details" %}</h3>
+        <div class="card-tools">
+            <a href="{% url 'appointment-update' appointment.id %}" class="btn btn-warning btn-sm">
+                <i class="fas fa-edit"></i> {% trans "Edit" %}
+            </a>
+            <a href="{% url 'appointment-list' %}" class="btn btn-light btn-sm">
+                <i class="fas fa-arrow-left"></i> {% trans "Back" %}
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>{% trans "Basic Information" %}</h5>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>{% trans "Patient" %}</th>
+                        <td>
+                            {% if appointment.illness_history.patient %}
+                                {{ appointment.illness_history.patient.full_name }}
+                            {% else %}
+                                {% trans "Unknown Patient" %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Date" %}</th>
+                        <td>{{ appointment.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Status" %}</th>
+                        <td>{{ appointment.get_state_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Doctor" %}</th>
+                        <td>{{ appointment.doctor.full_name }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>{% trans "Diagnosis & Assessment" %}</h5>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>{% trans "Diagnosis" %}</th>
+                        <td>
+                            {% if appointment.diagnosis %}
+                                {{ appointment.diagnosis.name }}
+                            {% else %}
+                                {% trans "No diagnosis" %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Urgent" %}</th>
+                        <td>
+                            {% if appointment.cito %}
+                                <span class="badge badge-danger">{% trans "Yes" %}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{% trans "No" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <h5>{% trans "Complaint" %}</h5>
+                <div class="p-3 bg-light">
+                    {{ appointment.complaint|default:_("No complaint provided") }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <h5>{% trans "Summary" %}</h5>
+                <div class="p-3 bg-light">
+                    {{ appointment.summary|default:_("No summary provided") }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

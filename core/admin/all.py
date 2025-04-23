@@ -3,7 +3,9 @@ from dataclasses import field
 from django.contrib import admin
 
 from core.models import (Account, PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService,
-                         Tariff, IllnessHistory, InitialAppointmentWithDoctorModel, DiagnosisTemplate)
+                         Tariff, IllnessHistory, InitialAppointmentWithDoctorModel, DiagnosisTemplate,
+                         ConsultingWithCardiologistModel
+                         )
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -70,3 +72,4 @@ class InitialAppointmentWithDoctorAdmin(ImportExportModelAdmin, admin.ModelAdmin
 
 
 admin.site.register(DiagnosisTemplate)
+admin.site.register(ConsultingWithCardiologistModel)

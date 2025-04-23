@@ -45,8 +45,7 @@ class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('cardiologist_consulting_detail',
-                            kwargs={'history_id': self.object.illness_history_id,
-                                    'pk': self.object.pk})
+                            kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
         form.instance.illness_history_id = self.kwargs.get('history_id')

@@ -22,14 +22,14 @@ def illness_history_context(request):
     if '/appointments/init-app/' in path:
         active_page['initial_appointment'] = 'active'
     elif '/appointments/' in path and '/appointments/init-app/' not in path:
-        active_page['consulting_services'] = 'active'
+        active_page['consulting_and_med_services_page'] = 'active'
     elif '/documents/' in path:
         active_page['documents'] = 'active'
     elif '/histories/' in path:
         active_page['title_page'] = 'active'
 
     if 'appointments/cardiologist/' in path:
-        active_page['cardiologist_consulting'] = 'active'
+        active_page['consulting_cardiologist'] = 'active'
 
     # Try to extract from URL parameters
     if 'history_id' in request.resolver_match.kwargs:

@@ -139,8 +139,8 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <li class="nav-item {{ active_page.consulting_cardiologist }}">
-                                <a href="#" class="nav-link">
+                            <li class="nav-item ">
+                                <a href="#" class="nav-link {{ active_page.consulting_cardiologist }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>
                                         Консультация кардиолога
@@ -148,9 +148,9 @@
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                    {% for consulting in cardiologist_appointments %}
+                                    {% for consulting in history.cardiologist_consulting.all %}
                                         <li class="nav-item">
-                                            <a href="{% url 'cardiologist_consulting_list' history.id %}"
+                                            <a href="{% url 'cardiologist_consulting_detail' consulting.id %}"
                                                class="nav-link">
                                                 <i class="far"></i>
                                                 <p>Консультация кардиолога | {{ consulting.created_at }}</p>

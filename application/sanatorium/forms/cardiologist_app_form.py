@@ -1,0 +1,58 @@
+from django import forms
+from core.models import ConsultingWithCardiologistModel
+
+
+class ConsultingWithCardiologistForm(forms.ModelForm):
+    class Meta:
+        model = ConsultingWithCardiologistModel
+        exclude = ['doctor', 'illness_history', 'created_by', 'modified_by']
+        widgets = {
+            'state': forms.Select(attrs={'class': 'form-control'}),
+            'has_cardio_complaints': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'has_nerve_complaints': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'other_complaints': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'history_of_illness': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'inheritance': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'height': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
+            'pulse_general': forms.NumberInput(attrs={'class': 'form-control'}),
+            'arterial_high_low': forms.TextInput(attrs={'class': 'form-control'}),
+            'arterial_high': forms.NumberInput(attrs={'class': 'form-control'}),
+            'arterial_low': forms.NumberInput(attrs={'class': 'form-control'}),
+            'imt': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}),
+            'imt_interpretation': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'body_figure': forms.Select(attrs={'class': 'form-control select2'}),
+            'skin': forms.Select(attrs={'class': 'form-control select2'}),
+            'sclera_visible_mucosa': forms.Select(attrs={'class': 'form-control select2'}),
+            'thyroids': forms.Select(attrs={'class': 'form-control select2'}),
+            'cervical': forms.Select(attrs={'class': 'form-control select2'}),
+            'axillary': forms.Select(attrs={'class': 'form-control select2'}),
+            'inguinal': forms.Select(attrs={'class': 'form-control select2'}),
+            'pulse_per_min': forms.NumberInput(attrs={'class': 'form-control'}),
+            'pulse': forms.Select(attrs={'class': 'form-control select2'}),
+            'fault_of_pulse': forms.TextInput(attrs={'class': 'form-control'}),
+            'heart_arterial_high': forms.NumberInput(attrs={'class': 'form-control'}),
+            'heart_arterial_low': forms.NumberInput(attrs={'class': 'form-control'}),
+            'left_heart_edges': forms.TextInput(attrs={'class': 'form-control'}),
+            'right_heart_edges': forms.TextInput(attrs={'class': 'form-control'}),
+            'upper_heart_edges': forms.TextInput(attrs={'class': 'form-control'}),
+            'heart_beat': forms.TextInput(attrs={'class': 'form-control'}),
+            'heart_tone': forms.Select(attrs={'class': 'form-control select2'}),
+            'i_tone': forms.Select(attrs={'class': 'form-control select2'}),
+            'ii_tone': forms.Select(attrs={'class': 'form-control select2'}),
+            'noise': forms.Select(attrs={'class': 'form-control select2'}),
+            'arterial_pulse_stop': forms.Select(attrs={'class': 'form-control select2'}),
+            'varicose_veins_of_superficial_veins': forms.Select(attrs={'class': 'form-control select2'}),
+            'trophic_skin_changes': forms.TextInput(attrs={'class': 'form-control'}),
+            'chdd_per_minute': forms.NumberInput(attrs={'class': 'form-control'}),
+            'chest_shape': forms.Select(attrs={'class': 'form-control select2'}),
+            'pulmonary_fields': forms.Select(attrs={'class': 'form-control select2'}),
+            'auscultation_breathing': forms.Select(attrs={'class': 'form-control select2'}),
+            'wheezing': forms.Select(attrs={'class': 'form-control select2'}),
+            'pleural_friction_rub': forms.Select(attrs={'class': 'form-control select2'}),
+            'cito': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'file': forms.FileInput(attrs={'class': 'form-control-file'}),
+            'for_sanatorium_treatment': forms.Select(attrs={'class': 'form-control select2'}),
+            'summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'recommendation': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }

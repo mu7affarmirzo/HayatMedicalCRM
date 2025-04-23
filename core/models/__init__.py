@@ -8,3 +8,4 @@ from .services import *
 from .tariffs import *
 from .illness_history import *
 from .appointments import *
+from .cardiologist_appointment import *

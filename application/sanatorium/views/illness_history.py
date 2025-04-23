@@ -101,9 +101,6 @@ def illness_history_detail(request, pk):
         'patient': patient,
         'booking': booking,
         'booking_details': booking_details,
-        'active_page': {
-            'medical_records': 'active'
-        }
     }
 
     return render(request, 'sanatorium/doctors/illness_history_detail.html', context)

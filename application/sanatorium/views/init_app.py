@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.urls import reverse
 from core.models import InitialAppointmentWithDoctorModel, IllnessHistory
 from ..forms.init_appointment_form import InitialAppointmentForm
 
@@ -20,12 +19,10 @@ def initial_appointment_detail(request, history_id):
     context = {
         'history': history,
         'appointment': initial_appointment,
-        'active_page': {'initial_appointment': 'active'},
     }
 
     # Add all appointments for sidebar
     context.update(get_sidebar_appointments(history))
-
     return render(request, 'sanatorium/doctors/init_appointment/appointment_detail.html', context)
 
 

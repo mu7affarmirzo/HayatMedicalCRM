@@ -1,0 +1,170 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+
+{% block title %}Консультация кардиолога | {{ consulting.created_at|date:"d.m.Y" }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Консультация кардиолога</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' illness_history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cardiologist_consulting_list' illness_history.id %}">Консультации кардиолога</a></li>
+                    <li class="breadcrumb-item active">{{ consulting.created_at|date:"d.m.Y" }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    {% if consulting.cito %}<span class="badge badge-danger">CITO</span>{% endif %}
+                    Пациент: {{ illness_history.patient.full_name }}
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-info">{{ consulting.state }}</span>
+                    <a href="{% url 'cardiologist_consulting_update' illness_history.id consulting.id %}" class="btn btn-warning btn-sm ml-2">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- General information section -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Дата консультации:</label>
+                            <p>{{ consulting.created_at|date:"d.m.Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Врач:</label>
+                            <p>{{ consulting.doctor.full_name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complaints section -->
+                <h4 class="mt-4">Жалобы и анамнез</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Кардиологические жалобы:</label>
+                            <p>{{ consulting.has_cardio_complaints|yesno:"Есть,Нет" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Неврологические жалобы:</label>
+                            <p>{{ consulting.has_nerve_complaints|yesno:"Есть,Нет" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Другие жалобы:</label>
+                            <p>{{ consulting.other_complaints|default:"Нет" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History section -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>История заболевания:</label>
+                            <p>{{ consulting.history_of_illness|default:"Не указана"|linebreaks }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Наследственность:</label>
+                            <p>{{ consulting.inheritance|default:"Не указана"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physical examination section -->
+                <h4 class="mt-4">Физикальное обследование</h4>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Рост:</label>
+                            <p>{{ consulting.height|default:"Не указан" }} см</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Вес:</label>
+                            <p>{{ consulting.weight|default:"Не указан" }} кг</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>ИМТ:</label>
+                            <p>{{ consulting.imt|default:"Не указан" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>АД:</label>
+                            <p>{{ consulting.arterial_high }}/{{ consulting.arterial_low }} мм рт.ст.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- More examination details would go here -->
+
+                <!-- Summary and recommendations -->
+                <h4 class="mt-4">Заключение и рекомендации</h4>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Заключение:</label>
+                            <p>{{ consulting.summary|default:"Не указано"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Рекомендации:</label>
+                            <p>{{ consulting.recommendation|default:"Не указаны"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if consulting.file %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Прикрепленный файл:</label>
+                            <p><a href="{{ consulting.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download"></i> Скачать файл
+                            </a></p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'cardiologist_consulting_list' illness_history.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+                <a href="{% url 'cardiologist_consulting_update' illness_history.id consulting.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

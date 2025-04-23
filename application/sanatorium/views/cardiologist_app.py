@@ -9,7 +9,6 @@ from ..decorators import set_active_sidebar
 from ..forms.cardiologist_app_form import ConsultingWithCardiologistForm
 
 
-@method_decorator(set_active_sidebar('consulting_services'), name='dispatch')
 class CardiologistConsultingListView(LoginRequiredMixin, ListView):
     model = ConsultingWithCardiologistModel
     template_name = 'sanatorium/doctors/cardiologist/list.html'
@@ -27,7 +26,6 @@ class CardiologistConsultingListView(LoginRequiredMixin, ListView):
         return context
 
 
-@method_decorator(set_active_sidebar('consulting_services'), name='dispatch')
 class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
     model = ConsultingWithCardiologistModel
     template_name = 'sanatorium/doctors/cardiologist/detail.html'
@@ -36,10 +34,10 @@ class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['illness_history'] = self.object.illness_history
+        context['history'] = self.object.illness_history
         return context
 
 
-@method_decorator(set_active_sidebar('consulting_services'), name='dispatch')
 class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
     model = ConsultingWithCardiologistModel
     form_class = ConsultingWithCardiologistForm
@@ -64,7 +62,6 @@ class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-@method_decorator(set_active_sidebar('consulting_services'), name='dispatch')
 class CardiologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
     model = ConsultingWithCardiologistModel
     form_class = ConsultingWithCardiologistForm
@@ -72,8 +69,7 @@ class CardiologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('cardiologist_consulting_detail',
-                            kwargs={'history_id': self.object.illness_history_id,
-                                    'pk': self.object.pk})
+                            kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
         form.instance.modified_by = self.request.user
@@ -82,4 +78,5 @@ class CardiologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['illness_history'] = self.object.illness_history
+        context['history'] = self.object.illness_history
         return context

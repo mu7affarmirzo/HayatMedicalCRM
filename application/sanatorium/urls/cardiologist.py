@@ -16,7 +16,7 @@ urlpatterns = [
          CardiologistConsultingCreateView.as_view(),
          name='cardiologist_consulting_create'),
 
-    path('illness/<int:history_id>/detail/<int:pk>/',
+    path('detail/<int:pk>/',
          CardiologistConsultingDetailView.as_view(),
          name='cardiologist_consulting_detail'),
 

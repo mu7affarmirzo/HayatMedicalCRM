@@ -40,7 +40,7 @@
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="#" class="nav-link">Главная</a>
+                <a href="{% url "doctors_main_screen" %}" class="nav-link">Главная</a>
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
@@ -48,7 +48,7 @@
                 </a>
                 <div class="dropdown-menu">
                     <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация кардиолога первичная</a>
-                    <a class="dropdown-item" tabindex="-1" href="#">Консультация невролога первичная</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация невролога первичная</a>
                     <a class="dropdown-item" tabindex="-1" href="#">Осмотр дежурного врача при поступлении</a>
                     <a class="dropdown-item" tabindex="-1" href="#">Повторный приём лечащего врача</a>
                     <a class="dropdown-item" tabindex="-1" href="#">Прием дежурного врача</a>
@@ -160,7 +160,7 @@
                                 </ul>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="#" class="nav-link {{ active_page.consulting_neurologist }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>
                                         Консультация невролога

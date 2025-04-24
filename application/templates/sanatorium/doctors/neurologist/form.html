@@ -112,16 +112,6 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="{{ form.doctor.id_for_label }}">Врач-невролог</label>
-                                    {{ form.doctor }}
-                                    {% if form.doctor.errors %}
-                                    <div class="text-danger">{{ form.doctor.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
                                     <label for="{{ form.state.id_for_label }}">Состояние приема</label>
                                     {{ form.state }}
                                     {% if form.state.errors %}

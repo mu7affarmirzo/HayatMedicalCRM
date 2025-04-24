@@ -7,11 +7,10 @@ class ConsultingWithNeurologistForm(forms.ModelForm):
 
     class Meta:
         model = ConsultingWithNeurologistModel
-        exclude = ['created_by', 'modified_by', 'created_at', 'modified_at', 'illness_history']
+        exclude = ['created_by', 'modified_by', 'created_at', 'modified_at', 'illness_history', 'doctor']
         widgets = {
             # Basic information
             'state': forms.Select(attrs={'class': 'form-control'}),
-            'doctor': forms.Select(attrs={'class': 'form-control select2', 'style': 'width: 100%;'}),
             'is_familiar_with_anamnesis': forms.CheckboxInput(attrs={'class': 'custom-control-input'}),
             'complaint': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Жалобы пациента'}),
             'anamnesis': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Анамнез'}),
@@ -74,9 +73,6 @@ class ConsultingWithNeurologistForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Filter doctors to show only neurologists
-        self.fields['doctor'].queryset = Account.objects.filter(is_therapist=True)
-
         # Set field labels
         self.fields['is_familiar_with_anamnesis'].label = "Ознакомлен с анамнезом"
         self.fields['palpebral_fissures'].label = "Глазные щели"

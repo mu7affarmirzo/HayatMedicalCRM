@@ -49,7 +49,7 @@
                 <div class="dropdown-menu">
                     <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация кардиолога первичная</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация невролога первичная</a>
-                    <a class="dropdown-item" tabindex="-1" href="#">Осмотр дежурного врача при поступлении</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр дежурного врача при поступлении</a>
                     <a class="dropdown-item" tabindex="-1" href="#">Повторный приём лечащего врача</a>
                     <a class="dropdown-item" tabindex="-1" href="#">Прием дежурного врача</a>
                     <a class="dropdown-item" tabindex="-1" href="#">ЭКГ (Электрокардиограмма)</a>
@@ -168,43 +168,38 @@
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                    {% if neurologist_appointments %}
-                                        <div class="dropdown-divider"></div>
-                                        {% for consulting in neurologist_appointments %}
-                                            <li class="nav-item">
-                                                <a href="#"
-                                                   class="nav-link">
-                                                    <i class="far"></i>
-                                                    <p>Консультация невролога | {{ consulting.created_at }}</p>
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for consulting in history.neurologist_consulting.all %}
+                                        <li class="nav-item">
+                                            <a href="{% url 'neurologist_consulting_detail' consulting.id %}"
+                                               class="nav-link">
+                                                <i class="far"></i>
+                                                <p>Консультация невролога | {{ consulting.created_at }}</p>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
                                 </ul>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>
-                                        Осмотр дежурного врача при поступлении
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                    {% if on_arrival_appointments %}
-                                        <div class="dropdown-divider"></div>
-                                        {% for consulting in on_arrival_appointments %}
+                                <li class="nav-item ">
+                                    <a href="#" class="nav-link {{ active_page.consulting_on_arrival }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>
+                                            Осмотр дежурного врача при поступлении
+                                            <i class="right fas fa-angle-left"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+                                        {% for consulting in history.on_duty_doctor_on_arr_appointment.all %}
                                             <li class="nav-item">
-                                                <a href="#"
+                                                <a href="{% url 'on_arrival_consulting_detail' consulting.id %}"
                                                    class="nav-link">
                                                     <i class="far"></i>
-                                                    <p>Осмотр дежурного врача при поступлении
-                                                        | {{ consulting.created_at }}</p>
+                                                    <p>Осмотр дежурного врача при поступлении | {{ consulting.created_at }}</p>
                                                 </a>
                                             </li>
                                         {% endfor %}
-                                    {% endif %}
-                                </ul>
+                                    </ul>
+                                </li>
                             </li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">

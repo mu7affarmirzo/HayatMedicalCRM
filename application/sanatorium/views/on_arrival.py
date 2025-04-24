@@ -1,19 +1,19 @@
+from core.models import AppointmentWithOnDutyDoctorOnArrivalModel, IllnessHistory
+from ..forms.on_arrival_form import OnDutyDoctorOnArrivalForm
+
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from core.models import ConsultingWithNeurologistModel, IllnessHistory
-from ..forms.neurologist_app_form import ConsultingWithNeurologistForm
 
-
-class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
-    model = ConsultingWithNeurologistModel
-    form_class = ConsultingWithNeurologistForm
-    template_name = 'sanatorium/doctors/neurologist/form.html'
+class AppointmentWithOnDutyDoctorOnArrivalCreateView(LoginRequiredMixin, CreateView):
+    model = AppointmentWithOnDutyDoctorOnArrivalModel
+    form_class = OnDutyDoctorOnArrivalForm
+    template_name = 'sanatorium/doctors/on_arrival/form.html'
 
     def get_success_url(self):
-        return reverse_lazy('neurologist_consulting_detail',
+        return reverse_lazy('on_arrival_consulting_detail',
                             kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
@@ -29,27 +29,27 @@ class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
         context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         return context
 
-class NeurologistConsultingListView(LoginRequiredMixin, ListView):
-    model = ConsultingWithNeurologistModel
-    template_name = 'sanatorium/doctors/neurologist/list.html'
+
+class AppointmentWithOnDutyDoctorOnArrivalListView(LoginRequiredMixin, ListView):
+    model = AppointmentWithOnDutyDoctorOnArrivalModel
+    template_name = 'sanatorium/doctors/on_arrival/list.html'
     context_object_name = 'consultings'
 
     def get_queryset(self):
         history_id = self.kwargs.get('history_id')
-        return ConsultingWithNeurologistModel.objects.filter(illness_history_id=history_id)
+        ojs = AppointmentWithOnDutyDoctorOnArrivalModel.objects.filter(illness_history_id=history_id)
+        return ojs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['illness_history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
-        context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         return context
 
 
-class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
-    model = ConsultingWithNeurologistModel
-    template_name = 'sanatorium/doctors/neurologist/detail.html'
-    context_object_name = 'consulting'
+class AppointmentWithOnDutyDoctorOnArrivalDetailView(LoginRequiredMixin, DetailView):
+    model = AppointmentWithOnDutyDoctorOnArrivalModel
+    template_name = 'sanatorium/doctors/on_arrival/detail.html'
+    context_object_name = 'appointment'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -58,13 +58,13 @@ class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class NeurologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
-    model = ConsultingWithNeurologistModel
-    form_class = ConsultingWithNeurologistForm
-    template_name = 'sanatorium/doctors/neurologist/form.html'
+class AppointmentWithOnDutyDoctorOnArrivalUpdateView(LoginRequiredMixin, UpdateView):
+    model = AppointmentWithOnDutyDoctorOnArrivalModel
+    form_class = OnDutyDoctorOnArrivalForm
+    template_name = 'sanatorium/doctors/on_arrival/form.html'
 
     def get_success_url(self):
-        return reverse_lazy('neurologist_consulting_detail',
+        return reverse_lazy('on_arrival_consulting_detail',
                             kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
@@ -73,6 +73,5 @@ class NeurologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['illness_history'] = self.object.illness_history
         context['history'] = self.object.illness_history
         return context

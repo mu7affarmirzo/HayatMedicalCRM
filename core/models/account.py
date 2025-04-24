@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
-from core.models.role import Role
+from core.models.role import RolesModel
 
 
 class MyAccountManager(BaseUserManager):
@@ -50,7 +50,7 @@ class Account(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
-    roles = models.ManyToManyField(Role, related_name='users', blank=True)
+    roles = models.ManyToManyField(RolesModel, related_name='users', blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -68,14 +68,14 @@ class Account(AbstractBaseUser):
     def get_main_role(self):
         """Return the primary role for the user (for redirection)"""
         # Priority order: Admin > Manager > Therapist > Receptionist
-        if self.has_role(Role.ADMIN) or self.is_superuser:
-            return Role.ADMIN
-        elif self.has_role(Role.MANAGER):
-            return Role.MANAGER
-        elif self.has_role(Role.THERAPIST):
-            return Role.THERAPIST
-        elif self.has_role(Role.RECEPTIONIST):
-            return Role.RECEPTIONIST
+        if self.has_role(RolesModel.ADMIN) or self.is_superuser:
+            return RolesModel.ADMIN
+        elif self.has_role(RolesModel.MANAGER):
+            return RolesModel.MANAGER
+        elif self.has_role(RolesModel.THERAPIST):
+            return RolesModel.THERAPIST
+        elif self.has_role(RolesModel.RECEPTIONIST):
+            return RolesModel.RECEPTIONIST
         return None
 
     # For checking permissions. to keep it simple all admin have ALL permissons

@@ -1,12 +1,6 @@
 from django.db import models
 
-from core.models import BaseAuditModel, Account, IllnessHistory, upload_location
-
-STATE_CHOICES = (
-        ('Приём завершён', 'Приём завершён'),
-        ('Пациент на прием не явился', 'Пациент на прием не явился'),
-        ('Не завершено', 'Не завершено'),
-    )
+from core.models import BaseAuditModel, Account, IllnessHistory, upload_location, STATE_CHOICES
 
 ST_CHOICES = (
     ('Показан', 'Показан'),
@@ -115,6 +109,9 @@ PLEURAL_FRICTION_RUB_CHOICES = (
 )
 
 class ConsultingWithCardiologistModel(BaseAuditModel):
+    class Meta:
+        verbose_name = "Appointment | Консультация кардиолога"
+        verbose_name_plural = "Appointment | Консультации кардиолога"
 
     state = models.CharField(choices=STATE_CHOICES, max_length=250, default='Приём завершён')
 

@@ -3,6 +3,15 @@ from django.conf import settings
 from django.db import models
 
 
+
+STATE_CHOICES = (
+    ('Приём завершён', 'Приём завершён'),
+    ('Пациент на прием не явился', 'Пациент на прием не явился'),
+    ('Не завершено', 'Не завершено'),
+)
+
+
+
 class UnsupportedFormat(Exception):
     pass
 

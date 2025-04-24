@@ -6,8 +6,35 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 
 from core.decorator import role_required
-from core.models.role import Role
+from core.models.role import RolesModel
 from core.forms import LoginForm  # We'll create this next
+
+# Move this to settings.py for better organization
+USER_ROLE_REDIRECTS = {
+    'warehouse': 'warehouse_v2:main_screen',
+    'logus.reception': 'logus_auth:main_screen',
+    'massage.reception': 'massage_reception:main_screen',
+    'sanatorium.staff': 'sanatorium_staff:main_screen',
+    'sanatorium.nurse': 'sanatorium_nurse:main_screen',
+    'sanatorium.admin': 'sanatorium_admin:main_screen',
+    'sanatorium.doctor': 'sanatorium_doctors:main_screen',
+    'sanatorium.dispatcher': 'sanatorium_dispatchers:main_screen',
+    'sanatorium.procedure_specs': 'sanatorium_procedure_specs:main_screen',
+}
+
+# Default if no role match is found
+DEFAULT_REDIRECT = 'warehouse_v2:main_screen'
+
+def get_redirect_url_for_role(user):
+    """Get the appropriate redirect URL based on user's role"""
+    try:
+        target_role = user.roles.first()
+        if target_role and target_role.name in USER_ROLE_REDIRECTS:
+            return USER_ROLE_REDIRECTS[target_role.role.name]
+    except Exception as e:
+        # Log the error here
+        pass
+    return DEFAULT_REDIRECT
 
 
 @csrf_protect
@@ -28,7 +55,8 @@ def login_view(request):
                 next_url = request.GET.get('next')
                 if next_url:
                     return redirect(next_url)
-                return redirect_by_role(user)
+                # return redirect_by_role(user)
+                return redirect(get_redirect_url_for_role(user))
             else:
                 messages.error(request, 'Invalid email or password.')
     else:
@@ -47,13 +75,13 @@ def redirect_by_role(user):
     """Redirect user based on their primary role"""
     main_role = user.get_main_role()
 
-    if main_role == Role.ADMIN:
+    if main_role == RolesModel.ADMIN:
         return redirect('admin_dashboard')
-    elif main_role == Role.MANAGER:
+    elif main_role == RolesModel.MANAGER:
         return redirect('manager_dashboard')
-    elif main_role == Role.THERAPIST:
+    elif main_role == RolesModel.THERAPIST:
         return redirect('therapist_dashboard')
-    elif main_role == Role.RECEPTIONIST:
+    elif main_role == RolesModel.RECEPTIONIST:
         return redirect('reception_dashboard')
 
     # Default fallback
@@ -61,7 +89,7 @@ def redirect_by_role(user):
 
 
 @login_required
-@role_required(Role.ADMIN)
+@role_required(RolesModel.ADMIN)
 def admin_dashboard(request):
     """Admin dashboard view"""
     context = {
@@ -72,7 +100,7 @@ def admin_dashboard(request):
 
 
 @login_required
-@role_required(Role.MANAGER)
+@role_required(RolesModel.MANAGER)
 def manager_dashboard(request):
     """Manager dashboard view"""
     context = {
@@ -83,7 +111,7 @@ def manager_dashboard(request):
 
 
 @login_required
-@role_required(Role.THERAPIST)
+@role_required(RolesModel.THERAPIST)
 def therapist_dashboard(request):
     """Therapist dashboard view"""
     context = {
@@ -94,7 +122,7 @@ def therapist_dashboard(request):
 
 
 @login_required
-@role_required(Role.RECEPTIONIST)
+@role_required(RolesModel.RECEPTIONIST)
 def reception_dashboard(request):
     """Reception dashboard view"""
     context = {

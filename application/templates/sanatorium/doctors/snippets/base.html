@@ -50,7 +50,7 @@
                     <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация кардиолога первичная</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация невролога первичная</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр дежурного врача при поступлении</a>
-                    <a class="dropdown-item" tabindex="-1" href="#">Повторный приём лечащего врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный приём лечащего врача</a>
                     <a class="dropdown-item" tabindex="-1" href="#">Прием дежурного врача</a>
                     <a class="dropdown-item" tabindex="-1" href="#">ЭКГ (Электрокардиограмма)</a>
                     <div class="dropdown-divider"></div>
@@ -202,7 +202,7 @@
                                 </li>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="#" class="nav-link {{ active_page.repeated_appointment }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>
                                         Повторный приём лечащего врача
@@ -210,18 +210,16 @@
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                    {% if repeated_appointments %}
                                         <div class="dropdown-divider"></div>
-                                        {% for consulting in repeated_appointments %}
+                                        {% for consulting in history.repeated_appointment.all %}
                                             <li class="nav-item">
-                                                <a href="#"
+                                                <a href="{% url 'repeated_appointment_detail' consulting.id %}"
                                                    class="nav-link">
                                                     <i class="far"></i>
                                                     <p>Повторный приём лечащего врача | {{ consulting.created_at }}</p>
                                                 </a>
                                             </li>
                                         {% endfor %}
-                                    {% endif %}
                                 </ul>
                             </li>
                             <li class="nav-item">
@@ -233,9 +231,8 @@
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                    {% if with_doc_on_duty_appointments %}
                                         <div class="dropdown-divider"></div>
-                                        {% for consulting in with_doc_on_duty_appointments %}
+                                        {% for consulting in history.with_doc_on_duty_appointments.all %}
                                             <li class="nav-item">
                                                 <a href="#"
                                                    class="nav-link">
@@ -244,7 +241,6 @@
                                                 </a>
                                             </li>
                                         {% endfor %}
-                                    {% endif %}
                                 </ul>
                             </li>
                             <li class="nav-item">
@@ -256,9 +252,8 @@
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                    {% if ekg_appointments %}
                                         <div class="dropdown-divider"></div>
-                                        {% for consulting in ekg_appointments %}
+                                        {% for consulting in history.ekg_appointments.all %}
                                             <li class="nav-item">
                                                 <a href="#"
                                                    class="nav-link">
@@ -267,7 +262,6 @@
                                                 </a>
                                             </li>
                                         {% endfor %}
-                                    {% endif %}
                                 </ul>
                             </li>
 

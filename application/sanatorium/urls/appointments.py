@@ -5,4 +5,5 @@ urlpatterns = [
     path('cardiologist/', include('application.sanatorium.urls.cardiologist')),
     path('neurologist/', include('application.sanatorium.urls.neurologist')),
     path('on-arrival/', include('application.sanatorium.urls.on_arrival')),
+    path('repeated-app/', include('application.sanatorium.urls.repeated_app')),
 ]

@@ -36,6 +36,8 @@ def illness_history_context(request):
         active_page['consulting_on_arrival'] = 'active'
     elif '/repeated-app/' in path:
         active_page['repeated_appointment'] = 'active'
+    elif '/on-duty-app/' in path:
+        active_page['on_duty_appointment'] = 'active'
 
     # Try to extract from URL parameters
     if 'history_id' in request.resolver_match.kwargs:

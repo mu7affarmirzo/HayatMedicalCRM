@@ -1,0 +1,207 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Прием у дежурного врача | {{ appointment.created_at|date:"d.m.Y" }}{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Прием у дежурного врача</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">Прием у дежурного врача</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Success messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Patient Info Card -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-md"></i>
+                            Прием у дежурного врача от {{ appointment.created_at|date:"d.m.Y H:i" }}
+                        </h3>
+                        <div class="card-tools">
+                            <span class="badge
+                                {% if appointment.state == 'Приём завершён' %}bg-success
+                                {% elif appointment.state == 'В ожидании' %}bg-warning
+                                {% elif appointment.state == 'Отменён' %}bg-danger
+                                {% else %}bg-info{% endif %}">
+                                {{ appointment.state }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-primary"><i class="fas fa-user"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Пациент</span>
+                                        <span class="info-box-number">{{ appointment.illness_history.patient.full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-user-md"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Врач</span>
+                                        <span class="info-box-number">{{ appointment.doctor.full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card card-outline card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Жалобы</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ appointment.complaints|linebreaks|default:"Не указаны" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card card-outline card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Объективные данные</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ appointment.objective_data|linebreaks|default:"Не указаны" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-warning"><i class="fas fa-heartbeat"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Артериальное давление</span>
+                                        <span class="info-box-number">
+                                            {{ appointment.arterial_high_low|default:"" }}
+                                            {% if appointment.arterial_high and appointment.arterial_low %}
+                                                ({{ appointment.arterial_high }}/{{ appointment.arterial_low }})
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-success"><i class="fas fa-weight"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">ИМТ</span>
+                                        <span class="info-box-number">{{ appointment.imt|default:"Не указан" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-danger"><i class="fas fa-stethoscope"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Диагноз</span>
+                                        <span class="info-box-number">{{ appointment.diagnosis.name|default:"Не указан" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card card-outline card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Заключение</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ appointment.summary|linebreaks|default:"Не указано" }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card card-outline card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Рекомендации</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ appointment.recommendation|linebreaks|default:"Не указаны" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-flag"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Для санаторного лечения</span>
+                                        <span class="info-box-number">{{ appointment.for_sanatorium_treatment|default:"Не указано" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon {% if appointment.cito %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Срочно (CITO)</span>
+                                        <span class="info-box-number">{{ appointment.cito|yesno:"Да,Нет" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12 text-right">
+                                <a href="{% url 'on_duty_appointment_update' appointment.id %}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Редактировать
+                                </a>
+{#                                <a href="{% url 'appointment_with_on_duty_doctor_delete' appointment.id %}" class="btn btn-danger">#}
+{#                                    <i class="fas fa-trash"></i> Удалить#}
+{#                                </a>#}
+                                <a href="{% url 'illness_history_detail' appointment.illness_history.id %}" class="btn btn-default">
+                                    <i class="fas fa-arrow-left"></i> Назад к истории болезни
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}

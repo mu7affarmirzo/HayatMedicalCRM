@@ -51,7 +51,7 @@
                     <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация невролога первичная</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр дежурного врача при поступлении</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный приём лечащего врача</a>
-                    <a class="dropdown-item" tabindex="-1" href="#">Прием дежурного врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_duty_appointment_create' history.id %}">Прием дежурного врача</a>
                     <a class="dropdown-item" tabindex="-1" href="#">ЭКГ (Электрокардиограмма)</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" tabindex="-1" href="#">Заключительный прием лечащего врача</a>
@@ -223,7 +223,7 @@
                                 </ul>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="#" class="nav-link {{ active_page.on_duty_appointment }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>
                                         Прием дежурного врача
@@ -232,9 +232,9 @@
                                 </a>
                                 <ul class="nav nav-treeview">
                                         <div class="dropdown-divider"></div>
-                                        {% for consulting in history.with_doc_on_duty_appointments.all %}
+                                        {% for consulting in history.on_duty_doctor_appointment.all %}
                                             <li class="nav-item">
-                                                <a href="#"
+                                                <a href="{% url 'on_duty_appointment_detail' consulting.id %}"
                                                    class="nav-link">
                                                     <i class="far"></i>
                                                     <p>Прием дежурного врача | {{ consulting.created_at }}</p>

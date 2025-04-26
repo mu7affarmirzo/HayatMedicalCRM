@@ -32,9 +32,11 @@ class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'consulting'
 
     def get_context_data(self, **kwargs):
+        print('--------------------')
         context = super().get_context_data(**kwargs)
         context['illness_history'] = self.object.illness_history
         context['history'] = self.object.illness_history
+        print(context)
         return context
 
 

@@ -8,4 +8,5 @@ urlpatterns = [
     path('repeated-app/', include('application.sanatorium.urls.repeated_app')),
     path('on-duty-app/', include('application.sanatorium.urls.on_duty_app')),
     path('ekg-app/', include('application.sanatorium.urls.ekg_app')),
+    path('final-app/', include('application.sanatorium.urls.final_app')),
 ]

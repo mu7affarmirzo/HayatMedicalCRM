@@ -52,7 +52,7 @@
                     <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр дежурного врача при поступлении</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный приём лечащего врача</a>
                     <a class="dropdown-item" tabindex="-1" href="{% url 'on_duty_appointment_create' history.id %}">Прием дежурного врача</a>
-                    <a class="dropdown-item" tabindex="-1" href="#">ЭКГ (Электрокардиограмма)</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'ekg_appointment_create' history.id %}">ЭКГ (Электрокардиограмма)</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" tabindex="-1" href="#">Заключительный прием лечащего врача</a>
                 </div>
@@ -244,7 +244,7 @@
                                 </ul>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="#" class="nav-link {{ active_page.ekg_appointment }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>
                                         ЭКГ (Электрокардиограмма)
@@ -253,9 +253,9 @@
                                 </a>
                                 <ul class="nav nav-treeview">
                                         <div class="dropdown-divider"></div>
-                                        {% for consulting in history.ekg_appointments.all %}
+                                        {% for consulting in history.ekg_app.all %}
                                             <li class="nav-item">
-                                                <a href="#"
+                                                <a href="{% url 'ekg_appointment_detail' consulting.id%}"
                                                    class="nav-link">
                                                     <i class="far"></i>
                                                     <p>ЭКГ (Электрокардиограмма) | {{ consulting.created_at }}</p>

@@ -1,0 +1,296 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}ЭКГ | {{ appointment.created_at|date:"d.m.Y" }}{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">ЭКГ</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">ЭКГ</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Success messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Patient Info Card -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-heartbeat"></i>
+                            ЭКГ от {{ appointment.created_at|date:"d.m.Y H:i" }}
+                        </h3>
+                        <div class="card-tools">
+                            <span class="badge
+                                {% if appointment.state == 'Приём завершён' %}bg-success
+                                {% elif appointment.state == 'В ожидании' %}bg-warning
+                                {% elif appointment.state == 'Отменён' %}bg-danger
+                                {% else %}bg-info{% endif %}">
+                                {{ appointment.state }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-primary"><i class="fas fa-user"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Пациент</span>
+                                        <span class="info-box-number">{{ appointment.illness_history.patient.full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-user-md"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Врач</span>
+                                        <span class="info-box-number">{{ appointment.doctor.full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ECG Measurements -->
+                        <div class="card card-outline card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">Измерения ЭКГ</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Ритм</span>
+                                                <span class="info-box-number">{{ appointment.rhythm|default:"Не указан" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">ЧСС (уд/мин)</span>
+                                                <span class="info-box-number">{{ appointment.heart_s_count|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">R-R (сек)</span>
+                                                <span class="info-box-number">{{ appointment.r_r|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">P-Q (сек)</span>
+                                                <span class="info-box-number">{{ appointment.p_q|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">QRS (сек)</span>
+                                                <span class="info-box-number">{{ appointment.qrs|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">V1</span>
+                                                <span class="info-box-number">{{ appointment.v1|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">V6</span>
+                                                <span class="info-box-number">{{ appointment.v6|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Q-T (сек)</span>
+                                                <span class="info-box-number">{{ appointment.q_t|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">ЛА</span>
+                                                <span class="info-box-number">{{ appointment.la|default:"Не указано" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ECG Analysis -->
+                        <div class="card card-outline card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">Анализ ЭКГ</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Зубец P</span>
+                                                <span class="info-box-number">{{ appointment.prong_p|default:"Не указан" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Комплекс QRS</span>
+                                                <span class="info-box-number">{{ appointment.complex_qrs|default:"Не указан" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Зубец T</span>
+                                                <span class="info-box-number">{{ appointment.prong_t|default:"Не указан" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Сегмент ST</span>
+                                                <span class="info-box-number">{{ appointment.segment_st|default:"Не указан" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-box bg-light">
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Электрическая ось</span>
+                                                <span class="info-box-number">{{ appointment.electric_axis|default:"Не указана" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical Assessment -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card card-outline card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Объективные данные</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ appointment.objective_data|linebreaks|default:"Не указаны" }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card card-outline card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Заключение</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ appointment.summary|linebreaks|default:"Не указано" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-danger"><i class="fas fa-stethoscope"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Диагноз</span>
+                                        <span class="info-box-number">{{ appointment.diagnosis.name|default:"Не указан" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-flag"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Для санаторного лечения</span>
+                                        <span class="info-box-number">{{ appointment.for_sanatorium_treatment|default:"Не указано" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box">
+                                    <span class="info-box-icon {% if appointment.cito %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Срочно (CITO)</span>
+                                        <span class="info-box-number">{{ appointment.cito|yesno:"Да,Нет" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12 text-right">
+                                <a href="{% url 'ekg_appointment_update' appointment.id %}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Редактировать
+                                </a>
+{#                                <a href="{% url 'ekg_appointment_delete' appointment.id %}" class="btn btn-danger">#}
+{#                                    <i class="fas fa-trash"></i> Удалить#}
+{#                                </a>#}
+                                <a href="{% url 'illness_history_detail' appointment.illness_history.id %}" class="btn btn-default">
+                                    <i class="fas fa-arrow-left"></i> Назад к истории болезни
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}

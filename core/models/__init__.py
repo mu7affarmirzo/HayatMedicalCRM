@@ -15,3 +15,4 @@ from .on_arrival_duty_doc_appointment import *
 from .repeated_appointment import *
 from .ekg_appointment import *
 from .final_appointment import *
+from .treatments import *

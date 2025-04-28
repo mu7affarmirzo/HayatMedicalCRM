@@ -67,6 +67,10 @@ class ProcedureServiceModel(BaseAuditModel):
         """
         return start_at.date() > self.illness_history.booking.end_date
 
+    class Meta:
+        verbose_name = 'Основной лист назначений | Процедуры'
+        verbose_name_plural = 'Основной лист назначений | Процедуры'
+
 
 class IndividualProcedureSessionModel(BaseAuditModel):
     """Model for tracking individual therapy sessions"""
@@ -99,9 +103,10 @@ class IndividualProcedureSessionModel(BaseAuditModel):
 
     class Meta:
         ordering = ['session_number']
-        verbose_name = 'Индивидуальный сеанс'
-        verbose_name_plural = 'Индивидуальные сеансы'
         unique_together = ['assigned_procedure', 'session_number']  # Ensure no duplicate session numbers
+
+        verbose_name = 'Основной лист назначений | Индивидуальный сеанс'
+        verbose_name_plural = 'Основной лист назначений | Индивидуальные сеансы'
 
     def __str__(self):
         return f"{self.assigned_procedure.illness_history} - Сеанс #{self.session_number}"

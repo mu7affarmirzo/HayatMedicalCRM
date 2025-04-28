@@ -30,8 +30,8 @@
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
                     {% if consulting %}
-                    <li class="breadcrumb-item"><a href="{% url 'neurologist_consulting_detail' history.id consulting.id %}">Консультация невролога</a></li>
-                    <li class="breadcrumb-item active">Редактирование</li>
+                        <li class="breadcrumb-item"><a href="{% url 'neurologist_consulting_detail' history.id consulting.id %}">Консультация невролога</a></li>
+                        <li class="breadcrumb-item active">Редактирование</li>
                     {% else %}
                     <li class="breadcrumb-item active">Новая консультация невролога</li>
                     {% endif %}

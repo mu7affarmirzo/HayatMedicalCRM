@@ -1,0 +1,574 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+{% block title %}Основной лист назначений | Hayat Medical Center{% endblock %}
+{% block extra_css %}
+    <style>
+        .prescription-card {
+            transition: all 0.3s;
+        }
+
+        .prescription-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+        }
+
+        .status-recommended {
+            background-color: #17a2b8;
+        }
+
+        .status-assigned {
+            background-color: #007bff;
+        }
+
+        .status-cancelled {
+            background-color: #dc3545;
+        }
+
+        .status-stopped {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .status-dispatched {
+            background-color: #28a745;
+        }
+
+        .status-completed {
+            background-color: #28a745;
+        }
+
+        .status-pending {
+            background-color: #6c757d;
+        }
+
+        .progress-xs {
+            height: 5px;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #007bff;
+        }
+
+        /* Progress bar styles */
+        .progress {
+            border-radius: 2px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0;
+        }
+
+        .progress-bar-animated {
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        .progress-bar-striped {
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+        }
+
+        /* Add hover effect to rows */
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        /* Progress group in info boxes */
+        .progress-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-group .progress-text {
+            font-weight: 600;
+        }
+
+        .progress-group .progress-number {
+            float: right;
+            font-weight: 600;
+        }
+
+        .progress-sm {
+            height: 5px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Основной лист назначений</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История
+                            болезни #{{ history.series_number }}</a></li>
+                        <li class="breadcrumb-item active">Основной лист назначений</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-4">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info elevation-1"><i class="fas fa-stethoscope"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Консультации и исследования</span>
+                            <span class="info-box-number">{{ consultation_count }}</span>
+                            {% if consultation_count > 0 %}
+                                <div class="progress-group mt-2">
+                                    <div class="progress progress-sm">
+                                        <div class="progress-bar bg-info"
+                                             style="width: {{ completed_consultations_percent }}%"></div>
+                                    </div>
+                                    <small class="text-muted">Выполнено {{ completed_consultations }}
+                                        из {{ consultation_count }}</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-procedures"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Лечебные процедуры</span>
+                            <span class="info-box-number">{{ procedure_count }}</span>
+                            {% if procedure_count > 0 %}
+                                <div class="progress-group mt-2">
+                                    <div class="progress progress-sm">
+                                        <div class="progress-bar bg-success"
+                                             style="width: {{ total_procedures_percent }}%"></div>
+                                    </div>
+                                    <small class="text-muted">Выполнено {{ total_completed_sessions }}
+                                        из {{ total_sessions }} сеансов</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-pills"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Медикаменты</span>
+                            <span class="info-box-number">{{ medication_count }}</span>
+                            {% if medication_count > 0 %}
+                                <div class="progress-group mt-2">
+                                    <div class="progress progress-sm">
+                                        <div class="progress-bar bg-warning"
+                                             style="width: {{ active_medications_percent }}%"></div>
+                                    </div>
+                                    <small class="text-muted">Активных курсов: {{ active_medications }}
+                                        из {{ medication_count }}</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tab navigation -->
+            <div class="card">
+                <div class="card-header p-2">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item"><a class="nav-link active" href="#consultations" data-toggle="tab">Консультации
+                            и исследования</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#procedures" data-toggle="tab">Лечебные
+                            процедуры</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#medications" data-toggle="tab">Медикаменты</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Consultations and Examinations Tab -->
+                        <div class="tab-pane active" id="consultations">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <a href="#" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Добавить консультацию/исследование
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% if consultations %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>Название</th>
+                                            <th>Врач</th>
+                                            <th>Статус</th>
+                                            <th>Дата назначения</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for consultation in consultations %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ consultation.medical_service.name }}</td>
+                                                <td>
+                                                    {{ consultation.consulted_doctor.full_name|default:"Не назначен" }}</td>
+                                                <td>
+                                        <span class="badge status-{{ consultation.state }}">
+                                            {{ consultation.get_state_display }}
+                                        </span>
+                                                </td>
+                                                <td>{{ consultation.created_at|date:"d.m.Y" }}</td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="#" class="btn btn-info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="#" class="btn btn-warning">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="#" class="btn btn-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" class="p-0">
+                                                    <div class="progress progress-xs m-0"
+                                                         style="height: 3px; border-radius: 0;">
+                                                        {% if consultation.state == 'recommended' %}
+                                                            <div class="progress-bar bg-info" style="width: 25%"></div>
+                                                        {% elif consultation.state == 'assigned' %}
+                                                            <div class="progress-bar bg-primary"
+                                                                 style="width: 50%"></div>
+                                                        {% elif consultation.state == 'dispatched' %}
+                                                            <div class="progress-bar bg-success"
+                                                                 style="width: 100%"></div>
+                                                        {% elif consultation.state == 'cancelled' %}
+                                                            <div class="progress-bar bg-danger"
+                                                                 style="width: 100%"></div>
+                                                        {% elif consultation.state == 'stopped' %}
+                                                            <div class="progress-bar bg-warning"
+                                                                 style="width: 75%"></div>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Нет назначенных консультаций и исследований
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Procedures Tab -->
+                        <div class="tab-pane" id="procedures">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <a href="#" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Добавить лечебную процедуру
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% if procedures %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>Название</th>
+                                            <th>Терапевт</th>
+                                            <th>Начало</th>
+                                            <th>Частота</th>
+                                            <th>Прогресс</th>
+                                            <th>Статус</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for procedure in procedures %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ procedure.medical_service.name }}</td>
+                                                <td>{{ procedure.therapist.full_name|default:"Не назначен" }}</td>
+                                                <td>{{ procedure.start_date|date:"d.m.Y" }}</td>
+                                                <td>{{ procedure.frequency }}</td>
+                                                <td>
+                                                    <div class="position-relative" style="height: 24px;">
+                                                        <div class="progress" style="height: 24px;">
+                                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                                                 role="progressbar"
+                                                                 style="width: {{ procedure.progres_percentile }}%"
+                                                                 aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                                                 aria-valuemin="0"
+                                                                 aria-valuemax="{{ procedure.quantity }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="position-absolute d-flex justify-content-center align-items-center"
+                                                             style="top: 0; left: 0; right: 0; bottom: 0; font-weight: bold;">
+                                                            <span>{{ procedure.proceeded_sessions }}/{{ procedure.quantity }}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                        <span class="badge status-{{ procedure.state }}">
+                                            {{ procedure.get_state_display }}
+                                        </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="#" class="btn btn-info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="#" class="btn btn-warning">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="#" class="btn btn-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Session details for procedures -->
+                                <div class="mt-4">
+                                    <h5>Индивидуальные сеансы</h5>
+                                    <div class="row">
+                                        {% for procedure in procedures %}
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h3 class="card-title">{{ procedure.medical_service.name }}</h3>
+                                                        <div class="card-tools">
+                                                            <span class="badge status-{{ procedure.state }}">{{ procedure.get_state_display }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body pb-0">
+                                                        <div class="progress mb-3" style="height: 10px;">
+                                                            <div class="progress-bar bg-success"
+                                                                 role="progressbar"
+                                                                 style="width: {{ procedure.progres_percentile }}%"
+                                                                 aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                                                 aria-valuemin="0"
+                                                                 aria-valuemax="{{ procedure.quantity }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-center mb-3">
+                                                            <span class="badge bg-success">{{ procedure.proceeded_sessions }}</span>
+                                                            из
+                                                            <span class="badge bg-secondary">{{ procedure.quantity }}</span>
+                                                            сеансов выполнено
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body p-0 pt-0">
+                                                        <ul class="list-group list-group-flush">
+                                                            {% for session in procedure.individual_sessions.all %}
+                                                                <li class="list-group-item {% if session.status == 'completed' %}bg-light{% endif %}">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        {% if session.status == 'completed' %}
+                                                            <i class="fas fa-check-circle text-success mr-1"></i>
+                                                        {% elif session.status == 'pending' %}
+                                                            <i class="fas fa-clock text-warning mr-1"></i>
+                                                        {% elif session.status == 'canceled' %}
+                                                            <i class="fas fa-times-circle text-danger mr-1"></i>
+                                                        {% endif %}
+                                                        Сеанс #{{ session.session_number }}
+                                                    </span>
+                                                                        <span class="badge status-{{ session.status }}">{{ session.get_status_display }}</span>
+                                                                    </div>
+                                                                    {% if session.therapist %}
+                                                                        <small class="text-muted">Терапевт: {{ session.therapist.full_name }}</small>
+                                                                        <br>
+                                                                    {% endif %}
+                                                                    {% if session.completed_at %}
+                                                                        <small class="text-muted">Проведен:
+                                                                            {{ session.completed_at|date:"d.m.Y H:i" }}</small>
+                                                                    {% endif %}
+
+                                                                    <!-- Progress indicator for each session -->
+                                                                    <div class="progress progress-xs mt-2">
+                                                                        {% if session.status == 'completed' %}
+                                                                            <div class="progress-bar bg-success"
+                                                                                 style="width: 100%"></div>
+                                                                        {% elif session.status == 'pending' %}
+                                                                            <div class="progress-bar bg-warning"
+                                                                                 style="width: 0%"></div>
+                                                                        {% elif session.status == 'canceled' %}
+                                                                            <div class="progress-bar bg-danger"
+                                                                                 style="width: 100%"></div>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </li>
+                                                                {% empty %}
+                                                                <li class="list-group-item">Нет запланированных
+                                                                    сеансов
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Нет назначенных лечебных процедур
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Medications Tab -->
+                        <div class="tab-pane" id="medications">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <a href="#" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Добавить медикамент
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% if medications %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>Название</th>
+                                            <th>Дозировка</th>
+                                            <th>Режим приема</th>
+                                            <th>Начало</th>
+                                            <th>Окончание</th>
+                                            <th>Статус</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for med in medications %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ med.medication_name }}</td>
+                                                <td>{{ med.dosage }}</td>
+                                                <td>{{ med.frequency }}</td>
+                                                <td>{{ med.start_date|date:"d.m.Y" }}</td>
+                                                <td>{{ med.end_date|date:"d.m.Y" }}</td>
+                                                <td>
+                                        <span class="badge status-{{ med.state }}">
+                                            {{ med.get_state_display }}
+                                        </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="#" class="btn btn-info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="#" class="btn btn-warning">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="#" class="btn btn-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="8" class="p-0">
+                                                    {% now "Y-m-d" as current_date %}
+                                                    {% with start=med.start_date|date:"Y-m-d" end=med.end_date|date:"Y-m-d" %}
+                                                        {% if med.state == 'assigned' or med.state == 'recommended' %}
+                                                            {% with total_days=start|timesince:end|floatformat:0 days_passed=start|timesince:current_date|floatformat:0 progress_pct=days_passed|divisibleby:total_days %}
+                                                                <div class="progress progress-xs m-0"
+                                                                     style="height: 5px; border-radius: 0;">
+                                                                    <div class="progress-bar bg-warning"
+                                                                         style="width: {{ progress_pct }}%"
+                                                                         data-toggle="tooltip"
+                                                                         title="День {{ days_passed }} из {{ total_days }} дней курса">
+                                                                    </div>
+                                                                </div>
+                                                            {% endwith %}
+                                                        {% elif med.state == 'completed' %}
+                                                            <div class="progress progress-xs m-0"
+                                                                 style="height: 5px; border-radius: 0;">
+                                                                <div class="progress-bar bg-success"
+                                                                     style="width: 100%"></div>
+                                                            </div>
+                                                        {% elif med.state == 'cancelled' %}
+                                                            <div class="progress progress-xs m-0"
+                                                                 style="height: 5px; border-radius: 0;">
+                                                                <div class="progress-bar bg-danger"
+                                                                     style="width: 100%"></div>
+                                                            </div>
+                                                        {% elif med.state == 'stopped' %}
+                                                            <div class="progress progress-xs m-0"
+                                                                 style="height: 5px; border-radius: 0;">
+                                                                <div class="progress-bar bg-warning progress-bar-striped"
+                                                                     style="width: 100%"></div>
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Нет назначенных медикаментов
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block extra_js %}
+    <script>
+        $(function () {
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip()
+
+            // Handle tab navigation from URL
+            var hash = window.location.hash;
+            if (hash) {
+                $('.nav-pills a[href="' + hash + '"]').tab('show');
+            }
+
+            // Update URL when tab changes
+            $('.nav-pills a').on('shown.bs.tab', function (e) {
+                window.location.hash = e.target.hash;
+            });
+        });
+    </script>
+{% endblock %}

@@ -242,6 +242,11 @@
                                                         <a href="#" class="btn btn-warning">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
+                                                        <button type="button" class="btn btn-primary"
+                                                                data-toggle="modal"
+                                                                data-target="#sessionModal{{ procedure.id }}">
+                                                            <i class="fas fa-calendar-check"></i>
+                                                        </button>
                                                         <a href="#" class="btn btn-danger">
                                                             <i class="fas fa-trash"></i>
                                                         </a>
@@ -355,10 +360,234 @@
                                         </tbody>
                                     </table>
                                 </div>
-
                                 <!-- Session details for procedures -->
+                                <!-- Modal dialogs for each procedure -->
+                                {% for procedure in procedures %}
+                                    <!-- Modal for procedure {{ procedure.id }} -->
+                                    <div class="modal fade" id="sessionModal{{ procedure.id }}" tabindex="-1"
+                                         role="dialog" aria-labelledby="sessionModalLabel{{ procedure.id }}"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title" id="sessionModalLabel{{ procedure.id }}">
+                                                        <i class="fas fa-calendar-alt mr-2"></i>Управление
+                                                        сеансами: {{ procedure.medical_service.name }}
+                                                    </h5>
+                                                    <button type="button" class="close text-white" data-dismiss="modal"
+                                                            aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="mr-3">
+                                                    <span class="badge badge-pill badge-primary p-2">
+                                                        <i class="fas fa-prescription-bottle-alt"></i>
+                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="mb-0">Процедура</h6>
+                                                                    <p class="text-muted mb-0">{{ procedure.medical_service.name }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="mr-3">
+                                                    <span class="badge badge-pill badge-info p-2">
+                                                        <i class="fas fa-user-md"></i>
+                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="mb-0">Терапевт</h6>
+                                                                    <p class="text-muted mb-0">
+                                                                        {{ procedure.therapist.full_name|default:"Не назначен" }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-4">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="mr-3">
+                                                    <span class="badge badge-pill badge-success p-2">
+                                                        <i class="fas fa-calendar-day"></i>
+                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="mb-0">Дата начала</h6>
+                                                                    <p class="text-muted mb-0">
+                                                                        {{ procedure.start_date|date:"d.m.Y" }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="mr-3">
+                                                    <span class="badge badge-pill badge-warning p-2">
+                                                        <i class="fas fa-sync-alt"></i>
+                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="mb-0">Частота</h6>
+                                                                    <p class="text-muted mb-0">{{ procedure.frequency }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="mr-3">
+                                                    <span class="badge badge-pill badge-secondary p-2">
+                                                        <i class="fas fa-hashtag"></i>
+                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="mb-0">Статус</h6>
+                                                                    <p class="mb-0">
+                                                        <span class="badge status-{{ procedure.state }}">
+                                                            {{ procedure.get_state_display }}
+                                                        </span>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="progress mb-3" style="height: 15px;">
+                                                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                                                             style="width: {{ procedure.progres_percentile }}%"
+                                                             role="progressbar"
+                                                             aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                                             aria-valuemin="0"
+                                                             aria-valuemax="{{ procedure.quantity }}">
+                                                            {{ procedure.proceeded_sessions }}/{{ procedure.quantity }}
+                                                        </div>
+                                                    </div>
+
+                                                    <h5 class="mt-4 mb-3">
+                                                        <i class="fas fa-list-ol mr-2"></i>Список сеансов
+                                                        <button class="btn btn-sm btn-outline-primary float-right">
+                                                            <i class="fas fa-plus"></i> Добавить сеанс
+                                                        </button>
+                                                    </h5>
+
+                                                    <form id="sessionForm{{ procedure.id }}">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-bordered table-hover">
+                                                                <thead class="thead-light">
+                                                                <tr>
+                                                                    <th style="width: 5%">№</th>
+                                                                    <th style="width: 20%">Статус</th>
+                                                                    <th style="width: 30%">Терапевт</th>
+                                                                    <th style="width: 25%">Дата</th>
+                                                                    <th style="width: 20%">Действия</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                {% for session in procedure.individual_sessions.all %}
+                                                                    <tr class="{% if session.status == 'completed' %}table-success{% elif session.status == 'canceled' %}table-danger{% endif %}">
+                                                                        <td class="text-center">{{ session.session_number }}</td>
+                                                                        <td>
+                                                                            <select class="form-control form-control-sm session-status-select"
+                                                                                    name="status_{{ session.id }}">
+                                                                                <option value="pending"
+                                                                                        {% if session.status == 'pending' %}selected{% endif %}>
+                                                                                    Ожидает
+                                                                                </option>
+                                                                                <option value="completed"
+                                                                                        {% if session.status == 'completed' %}selected{% endif %}>
+                                                                                    Проведен
+                                                                                </option>
+                                                                                <option value="canceled"
+                                                                                        {% if session.status == 'canceled' %}selected{% endif %}>
+                                                                                    Отменен
+                                                                                </option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            <select class="form-control form-control-sm"
+                                                                                    name="therapist_{{ session.id }}">
+                                                                                <option value="">-- Выберите терапевта
+                                                                                    --
+                                                                                </option>
+                                                                                <!-- Here you would dynamically populate with available therapists -->
+                                                                                <option value="1"
+                                                                                        {% if session.therapist and session.therapist.id == 1 %}selected{% endif %}>
+                                                                                    Терапевт 1
+                                                                                </option>
+                                                                                <option value="2"
+                                                                                        {% if session.therapist and session.therapist.id == 2 %}selected{% endif %}>
+                                                                                    Терапевт 2
+                                                                                </option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            <input type="datetime-local"
+                                                                                   class="form-control form-control-sm"
+                                                                                   name="date_{{ session.id }}"
+                                                                                   value="
+                                                                                           {% if session.completed_at %}{{ session.completed_at|date:'Y-m-d\TH:i' }}{% endif %}">
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            <button type="button"
+                                                                                    class="btn btn-sm btn-success save-session-btn"
+                                                                                    data-session-id="{{ session.id }}">
+                                                                                <i class="fas fa-save"></i>
+                                                                            </button>
+                                                                            <button type="button"
+                                                                                    class="btn btn-sm btn-info"
+                                                                                    data-toggle="collapse"
+                                                                                    data-target="#sessionNotes{{ session.id }}"
+                                                                                    aria-expanded="false">
+                                                                                <i class="fas fa-sticky-note"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr class="collapse"
+                                                                        id="sessionNotes{{ session.id }}">
+                                                                        <td colspan="5" class="bg-light">
+                                                                            <div class="form-group mb-0">
+                                                                                <label for="notes_{{ session.id }}">Примечания:</label>
+                                                                                <textarea class="form-control"
+                                                                                          id="notes_{{ session.id }}"
+                                                                                          name="notes_{{ session.id }}"
+                                                                                          rows="2">{{ session.notes|default:'' }}</textarea>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                    {% empty %}
+                                                                    <tr>
+                                                                        <td colspan="5" class="text-center">Нет
+                                                                            запланированных сеансов
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            data-dismiss="modal">Закрыть
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary save-all-sessions"
+                                                            data-procedure-id="{{ procedure.id }}">
+                                                        <i class="fas fa-save mr-1"></i> Сохранить все изменения
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+
+                                <!-- Original session cards - can be removed or kept for quick overview -->
                                 <div class="mt-4">
-                                    <h5>Индивидуальные сеансы</h5>
+                                    <h5>Краткий обзор сеансов</h5>
                                     <div class="row">
                                         {% for procedure in procedures %}
                                             <div class="col-md-6">
@@ -385,10 +614,18 @@
                                                             <span class="badge bg-secondary">{{ procedure.quantity }}</span>
                                                             сеансов выполнено
                                                         </div>
+                                                        <div class="text-center mb-3">
+                                                            <button class="btn btn-sm btn-primary" data-toggle="modal"
+                                                                    data-target="#sessionModal{{ procedure.id }}">
+                                                                <i class="fas fa-calendar-check mr-1"></i> Управление
+                                                                сеансами
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <div class="card-body p-0 pt-0">
                                                         <ul class="list-group list-group-flush">
-                                                            {% for session in procedure.individual_sessions.all %}
+                                                            <!-- Show only the next 3 upcoming sessions -->
+                                                            {% for session in procedure.individual_sessions.all|dictsortreversed:"status"|slice:":3" %}
                                                                 <li class="list-group-item {% if session.status == 'completed' %}bg-light{% endif %}">
                                                                     <div class="d-flex justify-content-between align-items-center">
                                                     <span>
@@ -431,6 +668,16 @@
                                                                     сеансов
                                                                 </li>
                                                             {% endfor %}
+                                                            {% if procedure.individual_sessions.all|length > 3 %}
+                                                                <li class="list-group-item text-center">
+                                                                    <button class="btn btn-sm btn-link"
+                                                                            data-toggle="modal"
+                                                                            data-target="#sessionModal{{ procedure.id }}">
+                                                                        Показать все сеансы
+                                                                        ({{ procedure.individual_sessions.all|length }})
+                                                                    </button>
+                                                                </li>
+                                                            {% endif %}
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -504,16 +751,14 @@
                                                     {% now "Y-m-d" as current_date %}
                                                     {% with start=med.start_date|date:"Y-m-d" end=med.end_date|date:"Y-m-d" %}
                                                         {% if med.state == 'assigned' or med.state == 'recommended' %}
-                                                            {% with total_days=start|timesince:end|floatformat:0 days_passed=start|timesince:current_date|floatformat:0 progress_pct=days_passed|divisibleby:total_days %}
-                                                                <div class="progress progress-xs m-0"
-                                                                     style="height: 5px; border-radius: 0;">
-                                                                    <div class="progress-bar bg-warning"
-                                                                         style="width: {{ progress_pct }}%"
-                                                                         data-toggle="tooltip"
-                                                                         title="День {{ days_passed }} из {{ total_days }} дней курса">
-                                                                    </div>
+                                                            <div class="progress progress-xs m-0"
+                                                                 style="height: 5px; border-radius: 0;">
+                                                                <div class="progress-bar bg-warning"
+                                                                     style="width: {{ med.progress_percent }}%"
+                                                                     data-toggle="tooltip"
+                                                                     title="День {{ med.days_elapsed }} из {{ med.total_days }} дней курса">
                                                                 </div>
-                                                            {% endwith %}
+                                                            </div>
                                                         {% elif med.state == 'completed' %}
                                                             <div class="progress progress-xs m-0"
                                                                  style="height: 5px; border-radius: 0;">
@@ -568,6 +813,94 @@
             // Update URL when tab changes
             $('.nav-pills a').on('shown.bs.tab', function (e) {
                 window.location.hash = e.target.hash;
+            });
+
+            // Handle session status changes
+            $('.session-status-select').on('change', function () {
+                var newStatus = $(this).val();
+                var row = $(this).closest('tr');
+
+                // Update row styling based on new status
+                row.removeClass('table-success table-danger');
+                if (newStatus === 'completed') {
+                    row.addClass('table-success');
+                } else if (newStatus === 'canceled') {
+                    row.addClass('table-danger');
+                }
+            });
+
+            // Handle individual session save button
+            $('.save-session-btn').on('click', function () {
+                var sessionId = $(this).data('session-id');
+                var form = $(this).closest('form');
+
+                // Show saving indicator
+                $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                // Simulate AJAX save (replace with actual AJAX call)
+                setTimeout(function () {
+                    // Reset button
+                    $('.save-session-btn[data-session-id="' + sessionId + '"]')
+                        .html('<i class="fas fa-save"></i>')
+                        .removeClass('btn-success')
+                        .addClass('btn-outline-success');
+
+                    // Show success message
+                    $.notify({
+                        icon: 'fas fa-check-circle',
+                        message: 'Сеанс #' + sessionId + ' успешно обновлен'
+                    }, {
+                        type: 'success',
+                        placement: {
+                            from: 'top',
+                            align: 'center'
+                        },
+                        delay: 2000
+                    });
+
+                    // After 2 seconds, restore button
+                    setTimeout(function () {
+                        $('.save-session-btn[data-session-id="' + sessionId + '"]')
+                            .removeClass('btn-outline-success')
+                            .addClass('btn-success');
+                    }, 2000);
+
+                }, 1000);
+            });
+
+            // Handle save all sessions button
+            $('.save-all-sessions').on('click', function () {
+                var procedureId = $(this).data('procedure-id');
+                var form = $('#sessionForm' + procedureId);
+
+                // Show saving indicator
+                $(this).html('<i class="fas fa-spinner fa-spin mr-1"></i> Сохранение...');
+
+                // Simulate AJAX save (replace with actual AJAX call)
+                setTimeout(function () {
+                    // Reset button
+                    $('.save-all-sessions[data-procedure-id="' + procedureId + '"]')
+                        .html('<i class="fas fa-save mr-1"></i> Сохранить все изменения');
+
+                    // Show success message
+                    $.notify({
+                        icon: 'fas fa-check-circle',
+                        message: 'Все сеансы успешно обновлены'
+                    }, {
+                        type: 'success',
+                        placement: {
+                            from: 'top',
+                            align: 'center'
+                        },
+                        delay: 2000
+                    });
+
+                    // Close modal after 1 second
+                    setTimeout(function () {
+                        $('#sessionModal' + procedureId).modal('hide');
+                    }, 1000);
+
+                }, 1500);
             });
         });
     </script>

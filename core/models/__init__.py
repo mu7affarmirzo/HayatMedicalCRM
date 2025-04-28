@@ -16,3 +16,4 @@ from .repeated_appointment import *
 from .ekg_appointment import *
 from .final_appointment import *
 from .treatments import *
+from .lab_research import *

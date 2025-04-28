@@ -57,6 +57,9 @@
                     <a class="dropdown-item" tabindex="-1" href="{% url 'final_appointment_create' history.id %}">Заключительный прием лечащего врача</a>
                 </div>
             </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{% url 'prescription_list' history.id %}" class="nav-link">Основноый лист назначений</a>
+                </li>
             {% if request.user.is_superuser %}
                 <li class="nav-item d-none d-sm-inline-block">
                     <a href="#" class="nav-link">Статистика</a>
@@ -276,7 +279,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a href="{% url 'prescription_list' history.id %}"
+                        <a href="#"
                            class="nav-link {{ active_page.proc_main_list_page }}">
                             <i class="nav-icon fas fa-clipboard-list"></i>
                             <p>
@@ -286,21 +289,21 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="#"
+                                <a href="{% url 'prescription_list' history.id %}#consultations"
                                    class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Консультации и исследования</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="#"
+                                <a href="{% url 'prescription_list' history.id %}#procedures"
                                    class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Лечебные процедуры</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="#"
+                                <a href="{% url 'prescription_list' history.id %}#medications"
                                    class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Медикаменты</p>

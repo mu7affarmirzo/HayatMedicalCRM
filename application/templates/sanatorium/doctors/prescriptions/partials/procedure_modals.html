@@ -1,180 +1,186 @@
-<!-- Session Management Modals -->
+{% load static %}
+
+<!-- Sessions Management Modal for each procedure -->
 {% for procedure in procedures %}
 <div class="modal fade" id="sessionModal{{ procedure.id }}" tabindex="-1" role="dialog" aria-labelledby="sessionModalLabel{{ procedure.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title" id="sessionModalLabel{{ procedure.id }}">
-                    <i class="fas fa-calendar-alt mr-2"></i>Управление сеансами: {{ procedure.medical_service.name }}
+                    <i class="fas fa-calendar-check mr-2"></i>Управление сеансами
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <span class="badge badge-pill badge-primary p-2">
-                                    <i class="fas fa-prescription-bottle-alt"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Процедура</h6>
-                                <p class="text-muted mb-0">{{ procedure.medical_service.name }}</p>
-                            </div>
-                        </div>
+                <!-- Procedure Info -->
+                <div class="card card-primary card-outline mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ procedure.medical_service.name }}</h3>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <span class="badge badge-pill badge-info p-2">
-                                    <i class="fas fa-user-md"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Терапевт</h6>
-                                <p class="text-muted mb-0">{{ procedure.therapist.full_name|default:"Не назначен" }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <span class="badge badge-pill badge-success p-2">
-                                    <i class="fas fa-calendar-day"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Дата начала</h6>
-                                <p class="text-muted mb-0">{{ procedure.start_date|date:"d.m.Y" }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <span class="badge badge-pill badge-warning p-2">
-                                    <i class="fas fa-sync-alt"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Частота</h6>
-                                <p class="text-muted mb-0">{{ procedure.frequency }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <span class="badge badge-pill badge-secondary p-2">
-                                    <i class="fas fa-hashtag"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Статус</h6>
-                                <p class="mb-0">
-                                    <span class="badge status-{{ procedure.state }}">
-                                        {{ procedure.get_state_display }}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="progress mb-3" style="height: 15px;">
-                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                        style="width: {{ procedure.progres_percentile }}%"
-                        role="progressbar"
-                        aria-valuenow="{{ procedure.proceeded_sessions }}"
-                        aria-valuemin="0"
-                        aria-valuemax="{{ procedure.quantity }}">
-                        {{ procedure.proceeded_sessions }}/{{ procedure.quantity }}
-                    </div>
-                </div>
-
-                <h5 class="mt-4 mb-3">
-                    <i class="fas fa-list-ol mr-2"></i>Список сеансов
-                    <button class="btn btn-sm btn-outline-primary float-right">
-                        <i class="fas fa-plus"></i> Добавить сеанс
-                    </button>
-                </h5>
-
-                <form id="sessionForm{{ procedure.id }}">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th style="width: 5%">№</th>
-                                    <th style="width: 20%">Статус</th>
-                                    <th style="width: 30%">Терапевт</th>
-                                    <th style="width: 25%">Дата</th>
-                                    <th style="width: 20%">Действия</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for session in procedure.individual_sessions.all %}
-                                <tr class="{% if session.status == 'completed' %}table-success{% elif session.status == 'canceled' %}table-danger{% endif %}">
-                                    <td class="text-center">{{ session.session_number }}</td>
-                                    <td>
-                                        <select class="form-control form-control-sm session-status-select" name="status_{{ session.id }}">
-                                            <option value="pending" {% if session.status == 'pending' %}selected{% endif %}>Ожидает</option>
-                                            <option value="completed" {% if session.status == 'completed' %}selected{% endif %}>Проведен</option>
-                                            <option value="canceled" {% if session.status == 'canceled' %}selected{% endif %}>Отменен</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="therapist_{{ session.id }}">
-                                            <option value="">-- Выберите терапевта --</option>
-                                            <!-- Here you would dynamically populate with available therapists -->
-                                            <option value="1" {% if session.therapist and session.therapist.id == 1 %}selected{% endif %}>Терапевт 1</option>
-                                            <option value="2" {% if session.therapist and session.therapist.id == 2 %}selected{% endif %}>Терапевт 2</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="datetime-local" class="form-control form-control-sm"
-                                               name="date_{{ session.id }}"
-                                               value="{% if session.completed_at %}{{ session.completed_at|date:'Y-m-d\TH:i' }}{% endif %}">
-                                    </td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-success save-session-btn" data-session-id="{{ session.id }}">
-                                            <i class="fas fa-save"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-info" data-toggle="collapse" data-target="#sessionNotes{{ session.id }}" aria-expanded="false">
-                                            <i class="fas fa-sticky-note"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr class="collapse" id="sessionNotes{{ session.id }}">
-                                    <td colspan="5" class="bg-light">
-                                        <div class="form-group mb-0">
-                                            <label for="notes_{{ session.id }}">Примечания:</label>
-                                            <textarea class="form-control" id="notes_{{ session.id }}" name="notes_{{ session.id }}" rows="2">{{ session.notes|default:'' }}</textarea>
+                    <div class="card-body p-0">
+                        <table class="table table-sm">
+                            <tr>
+                                <th style="width: 30%">Терапевт</th>
+                                <td>{{ procedure.therapist.full_name|default:"Не назначен" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Начало</th>
+                                <td>{{ procedure.start_date|date:"d.m.Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Частота</th>
+                                <td>{{ procedure.frequency }}</td>
+                            </tr>
+                            <tr>
+                                <th>Прогресс</th>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" 
+                                             role="progressbar"
+                                             style="width: {{ procedure.progres_percentile }}%"
+                                             aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                             aria-valuemin="0" 
+                                             aria-valuemax="{{ procedure.quantity }}">
+                                            {{ procedure.proceeded_sessions }}/{{ procedure.quantity }}
                                         </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">Нет запланированных сеансов</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
+                                    </div>
+                                </td>
+                            </tr>
                         </table>
                     </div>
-                </form>
+                </div>
+                
+                <!-- Individual Sessions Management -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th style="width: 20%">Статус</th>
+                                <th style="width: 25%">Терапевт</th>
+                                <th style="width: 25%">Дата выполнения</th>
+                                <th style="width: 25%">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in procedure.individual_sessions.all %}
+                            <tr class="{% if session.status == 'completed' %}table-success{% elif session.status == 'canceled' %}table-danger{% endif %}">
+                                <td>{{ session.session_number }}</td>
+                                <td>
+                                    <span class="badge status-{{ session.status }}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ session.therapist.full_name|default:"-" }}</td>
+                                <td>{{ session.completed_at|date:"d.m.Y H:i"|default:"-" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary update-session-btn" 
+                                            data-toggle="modal" 
+                                            data-target="#editSessionModal{{ session.id }}">
+                                        <i class="fas fa-edit mr-1"></i> Изменить статус
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary save-all-sessions" data-procedure-id="{{ procedure.id }}">
-                    <i class="fas fa-save mr-1"></i> Сохранить все изменения
-                </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Individual Session Edit Modals -->
+{% for session in procedure.individual_sessions.all %}
+<div class="modal fade" id="editSessionModal{{ session.id }}" tabindex="-1" role="dialog" aria-labelledby="editSessionModalLabel{{ session.id }}" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSessionModalLabel{{ session.id }}">
+                    <i class="fas fa-edit mr-2"></i>Обновить статус сеанса #{{ session.session_number }}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="updateSessionForm{{ session.id }}" method="post" action="{% url 'update_session_status' session.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="status{{ session.id }}">Статус:</label>
+                        <select class="form-control" id="status{{ session.id }}" name="status">
+                            <option value="pending" {% if session.status == 'pending' %}selected{% endif %}>Ожидает</option>
+                            <option value="completed" {% if session.status == 'completed' %}selected{% endif %}>Выполнен</option>
+                            <option value="canceled" {% if session.status == 'canceled' %}selected{% endif %}>Отменен</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes{{ session.id }}">Примечания:</label>
+                        <textarea class="form-control" id="notes{{ session.id }}" name="notes" rows="3">{{ session.notes }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endfor %}
+{% endfor %}
+
+<!-- JavaScript for handling AJAX session updates -->
+<script>
+$(function() {
+    // AJAX form submission for session updates
+    $('[id^=updateSessionForm]').on('submit', function(e) {
+        e.preventDefault();
+        
+        var form = $(this);
+        var url = form.attr('action');
+        
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(),
+            success: function(data) {
+                if (data.success) {
+                    // Close the modal
+                    $('.modal').modal('hide');
+                    
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Успешно',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(function() {
+                        // Reload the page to show updated data
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ошибка',
+                        text: data.message
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ошибка',
+                    text: 'Произошла ошибка при обновлении статуса сеанса'
+                });
+            }
+        });
+    });
+});
+</script>

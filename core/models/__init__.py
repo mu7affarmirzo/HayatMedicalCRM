@@ -7,14 +7,5 @@ from .rooms import *
 from .services import *
 from .tariffs import *
 from .illness_history import *
-from .appointments import *
-from .cardiologist_appointment import *
-from .neurologist_appointment import *
-from .on_duty_doctor_appointment import *
-from .on_arrival_duty_doc_appointment import *
-from .repeated_appointment import *
-from .ekg_appointment import *
-from .final_appointment import *
-from .prescriptions import *
 from .lab_research import *
 from .sanatorium import *

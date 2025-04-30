@@ -1,6 +1,8 @@
+{% load static %}
+
 <div class="row mb-3">
     <div class="col-md-12">
-        <a href="#" class="btn btn-primary">
+        <a href="{% url 'procedure_create' history.id %}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Добавить лечебную процедуру
         </a>
     </div>
@@ -53,16 +55,16 @@
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm">
-                        <a href="#" class="btn btn-info">
+                        <a href="{% url 'procedure_detail' procedure.id %}" class="btn btn-info" title="Просмотр">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="#" class="btn btn-warning">
+                        <a href="{% url 'procedure_edit' procedure.id %}" class="btn btn-warning" title="Редактировать">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#sessionModal{{ procedure.id }}">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#sessionModal{{ procedure.id }}" title="Управление сеансами">
                             <i class="fas fa-calendar-check"></i>
                         </button>
-                        <a href="#" class="btn btn-danger">
+                        <a href="{% url 'procedure_delete' procedure.id %}" class="btn btn-danger" title="Удалить">
                             <i class="fas fa-trash"></i>
                         </a>
                     </div>

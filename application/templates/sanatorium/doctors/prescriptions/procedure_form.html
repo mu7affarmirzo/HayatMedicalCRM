@@ -1,0 +1,215 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} лечебную процедуру | Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css' %}">
+<style>
+    .required {
+        border-color: #f56954;
+    }
+    .required:focus {
+        box-shadow: 0 0 0 0.2rem rgba(245, 105, 84, 0.25);
+    }
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ action }} лечебную процедуру</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни #{{ history.series_number }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'main_prescription_list' history.id %}">Лист назначений</a></li>
+                    <li class="breadcrumb-item active">{{ action }} лечебную процедуру</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-spa mr-2"></i>{{ action }} лечебную процедуру
+                </h3>
+            </div>
+            <form method="post" id="procedureForm">
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <h5><i class="icon fas fa-ban"></i> Ошибка!</h5>
+                        Пожалуйста, исправьте указанные ниже ошибки.
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.medical_service.id_for_label }}">Процедура*:</label>
+                                {{ form.medical_service }}
+                                {% if form.medical_service.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.medical_service.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.therapist.id_for_label }}">Терапевт:</label>
+                                {{ form.therapist }}
+                                {% if form.therapist.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.therapist.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Оставьте пустым, если терапевт будет назначен позднее</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.start_date.id_for_label }}">Дата начала*:</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.start_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.frequency.id_for_label }}">Частота*:</label>
+                                {{ form.frequency }}
+                                {% if form.frequency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.frequency.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.quantity.id_for_label }}">Количество сеансов*:</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.quantity.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.comments.id_for_label }}">Примечания:</label>
+                                {{ form.comments }}
+                                {% if form.comments.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.comments.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i> Сохранить
+                    </button>
+                    <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">
+                        <i class="fas fa-times mr-1"></i> Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.ru.min.js' %}"></script>
+<script>
+    $(function() {
+        //Initialize Select2 Elements
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        //Initialize Datepicker
+        $('.datepicker').datepicker({
+            format: 'dd.mm.yyyy',
+            autoclose: true,
+            todayHighlight: true,
+            language: 'ru',
+            startDate: new Date()
+        });
+
+        // Client-side validation
+        $('#procedureForm').on('submit', function(e) {
+            var isValid = true;
+
+            // Check required fields
+            $('.required').each(function() {
+                if ($(this).val() === '' || $(this).val() === null) {
+                    $(this).addClass('is-invalid');
+                    isValid = false;
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            // Check quantity
+            var quantity = $('#{{ form.quantity.id_for_label }}').val();
+            if (quantity < 1) {
+                $('#{{ form.quantity.id_for_label }}').addClass('is-invalid');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+
+                // Show error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ошибка валидации',
+                    text: 'Пожалуйста, заполните все обязательные поля корректно.'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

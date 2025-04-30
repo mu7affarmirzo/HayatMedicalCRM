@@ -17,3 +17,4 @@ from .ekg_appointment import *
 from .final_appointment import *
 from .prescriptions import *
 from .lab_research import *
+from .sanatorium import *

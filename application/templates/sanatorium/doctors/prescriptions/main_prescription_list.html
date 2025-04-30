@@ -131,15 +131,15 @@
                         <span class="info-box-icon bg-info elevation-1"><i class="fas fa-stethoscope"></i></span>
                         <div class="info-box-content">
                             <span class="info-box-text">Консультации и исследования</span>
-                            <span class="info-box-number">{{ consultation_count }}</span>
-                            {% if consultation_count > 0 %}
+                            <span class="info-box-number">{{ total_consultations_count }}</span>
+                            {% if total_consultations_count > 0 %}
                                 <div class="progress-group mt-2">
                                     <div class="progress progress-sm">
                                         <div class="progress-bar bg-info"
-                                             style="width: {{ completed_consultations_percent }}%"></div>
+                                             style="width: {{ completed_total_percent }}%"></div>
                                     </div>
-                                    <small class="text-muted">Выполнено {{ completed_consultations }}
-                                        из {{ consultation_count }}</small>
+                                    <small class="text-muted">Выполнено {{ completed_total }}
+                                        из {{ total_consultations_count }}</small>
                                 </div>
                             {% endif %}
                         </div>
@@ -307,7 +307,7 @@
                                             <th>Терапевт</th>
                                             <th>Начало</th>
                                             <th>Частота</th>
-                                                <th>Прогресс</th>
+                                            <th>Прогресс</th>
                                             <th>Статус</th>
                                             <th>Действия</th>
                                         </tr>
@@ -344,7 +344,8 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm">
-                                                        <a href="#" class="btn btn-info" data-toggle="modal" data-target="#sessionModal{{ procedure.id }}">
+                                                        <a href="#" class="btn btn-info" data-toggle="modal"
+                                                           data-target="#sessionModal{{ procedure.id }}">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                         <a href="#" class="btn btn-warning">
@@ -531,6 +532,8 @@
                                                                                    name="date_{{ session.id }}"
                                                                                    value="
 
+
+
                                                                                            {% if session.completed_at %}{{ session.completed_at|date:'Y-m-d\TH:i' }}{% endif %}">
                                                                         </td>
                                                                         <td class="text-center">
@@ -560,7 +563,7 @@
                                                                             </div>
                                                                         </td>
                                                                     </tr>
-                                                                {% empty %}
+                                                                    {% empty %}
                                                                     <tr>
                                                                         <td colspan="5" class="text-center">Нет
                                                                             запланированных сеансов

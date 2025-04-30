@@ -1,0 +1,58 @@
+<div class="row">
+    <!-- Consultations & Lab Tests Info Box -->
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="info-box">
+            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-stethoscope"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Консультации и исследования</span>
+                <span class="info-box-number">{{ total_consultations_count }}</span>
+                {% if total_consultations_count > 0 %}
+                <div class="progress-group mt-2">
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-info" style="width: {{ completed_total_percent }}%"></div>
+                    </div>
+                    <small class="text-muted">Выполнено {{ completed_total }} из {{ total_consultations_count }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Procedures Info Box -->
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="info-box">
+            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-procedures"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Лечебные процедуры</span>
+                <span class="info-box-number">{{ procedure_count }}</span>
+                {% if procedure_count > 0 %}
+                <div class="progress-group mt-2">
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-success" style="width: {{ total_procedures_percent }}%"></div>
+                    </div>
+                    <small class="text-muted">Выполнено {{ total_completed_sessions }} из {{ total_sessions }} сеансов</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Medications Info Box -->
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="info-box">
+            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-pills"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Медикаменты</span>
+                <span class="info-box-number">{{ medication_count }}</span>
+                {% if medication_count > 0 %}
+                <div class="progress-group mt-2">
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-warning" style="width: {{ active_medications_percent }}%"></div>
+                    </div>
+                    <small class="text-muted">Активных курсов: {{ active_medications }} из {{ medication_count }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

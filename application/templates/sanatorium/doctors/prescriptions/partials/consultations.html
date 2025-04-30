@@ -1,0 +1,74 @@
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a href="#" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Добавить консультацию/исследование
+        </a>
+    </div>
+</div>
+
+{% if consultations %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Название</th>
+                <th>Врач</th>
+                <th>Статус</th>
+                <th>Дата назначения</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for consultation in consultations %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ consultation.medical_service.name }}</td>
+                <td>{{ consultation.consulted_doctor.full_name|default:"Не назначен" }}</td>
+                <td>
+                    <span class="badge status-{{ consultation.state }}">
+                        {{ consultation.get_state_display }}
+                    </span>
+                </td>
+                <td>{{ consultation.created_at|date:"d.m.Y" }}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="#" class="btn btn-info">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="btn btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="#" class="btn btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" class="p-0">
+                    <div class="progress progress-xs m-0" style="height: 3px; border-radius: 0;">
+                        {% if consultation.state == 'recommended' %}
+                            <div class="progress-bar bg-info" style="width: 25%"></div>
+                        {% elif consultation.state == 'assigned' %}
+                            <div class="progress-bar bg-primary" style="width: 50%"></div>
+                        {% elif consultation.state == 'dispatched' %}
+                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                        {% elif consultation.state == 'cancelled' %}
+                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                        {% elif consultation.state == 'stopped' %}
+                            <div class="progress-bar bg-warning" style="width: 75%"></div>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle mr-2"></i>
+    Нет назначенных консультаций и исследований
+</div>
+{% endif %}

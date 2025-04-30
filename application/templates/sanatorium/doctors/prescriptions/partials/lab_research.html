@@ -1,0 +1,97 @@
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5><i class="fas fa-flask mr-2"></i>Лабораторные исследования</h5>
+        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addLabTestModal">
+            <i class="fas fa-plus"></i> Назначить анализ
+        </button>
+    </div>
+
+    {% if lab_results %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Исследование</th>
+                    <th>Тип образца</th>
+                    <th>Назначил</th>
+                    <th>Дата назначения</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lab in lab_results %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ lab.research.name }}</td>
+                    <td>{{ lab.specimen_type.name|default:"Не указан" }}</td>
+                    <td>{{ lab.ordered_by.full_name|default:"Система" }}</td>
+                    <td>{{ lab.ordered_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        {% if lab.status == 'pending' %}
+                            <span class="badge badge-secondary">Ожидает</span>
+                        {% elif lab.status == 'collected' %}
+                            <span class="badge badge-info">Образец взят</span>
+                        {% elif lab.status == 'processing' %}
+                            <span class="badge badge-primary">В обработке</span>
+                        {% elif lab.status == 'preliminary' %}
+                            <span class="badge badge-warning">Предварительный</span>
+                        {% elif lab.status == 'final' %}
+                            <span class="badge badge-success">Завершен</span>
+                        {% elif lab.status == 'amended' %}
+                            <span class="badge badge-warning">Исправлен</span>
+                        {% elif lab.status == 'cancelled' %}
+                            <span class="badge badge-danger">Отменен</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#viewLabResultModal{{ lab.id }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if lab.status == 'pending' %}
+                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editLabResultModal{{ lab.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                            {% if lab.status == 'final' or lab.status == 'amended' %}
+                            <a href="#" class="btn btn-secondary" title="Печать результата">
+                                <i class="fas fa-print"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="7" class="p-0">
+                        <div class="progress progress-xs m-0" style="height: 3px; border-radius: 0;">
+                            {% if lab.status == 'pending' %}
+                                <div class="progress-bar bg-secondary" style="width: 20%"></div>
+                            {% elif lab.status == 'collected' %}
+                                <div class="progress-bar bg-info" style="width: 40%"></div>
+                            {% elif lab.status == 'processing' %}
+                                <div class="progress-bar bg-primary" style="width: 60%"></div>
+                            {% elif lab.status == 'preliminary' %}
+                                <div class="progress-bar bg-warning" style="width: 80%"></div>
+                            {% elif lab.status == 'final' or lab.status == 'amended' %}
+                                <div class="progress-bar {% if lab.is_abnormal %}bg-danger{% else %}bg-success{% endif %}" style="width: 100%"></div>
+                            {% elif lab.status == 'cancelled' %}
+                                <div class="progress-bar bg-danger" style="width: 100%"></div>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle mr-2"></i> Нет назначенных лабораторных исследований
+    </div>
+    {% endif %}
+</div>

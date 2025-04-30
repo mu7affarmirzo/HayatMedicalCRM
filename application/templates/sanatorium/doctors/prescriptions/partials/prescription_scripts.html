@@ -1,0 +1,246 @@
+<script>
+$(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Handle tab navigation from URL
+    var hash = window.location.hash;
+    if (hash) {
+        $('.nav-pills a[href="' + hash + '"]').tab('show');
+    }
+
+    // Update URL when tab changes
+    $('.nav-pills a').on('shown.bs.tab', function (e) {
+        window.location.hash = e.target.hash;
+    });
+
+    // =====================================
+    // Procedures/Sessions Scripts
+    // =====================================
+
+    // Handle session status changes
+    $('.session-status-select').on('change', function() {
+        var newStatus = $(this).val();
+        var row = $(this).closest('tr');
+
+        // Update row styling based on new status
+        row.removeClass('table-success table-danger');
+        if (newStatus === 'completed') {
+            row.addClass('table-success');
+        } else if (newStatus === 'canceled') {
+            row.addClass('table-danger');
+        }
+    });
+
+    // Handle individual session save button
+    $('.save-session-btn').on('click', function() {
+        var sessionId = $(this).data('session-id');
+        var form = $(this).closest('form');
+
+        // Show saving indicator
+        $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        // Simulate AJAX save (replace with actual AJAX call)
+        setTimeout(function() {
+            // Reset button
+            $('.save-session-btn[data-session-id="' + sessionId + '"]')
+                .html('<i class="fas fa-save"></i>')
+                .removeClass('btn-success')
+                .addClass('btn-outline-success');
+
+            // Show success message (you'd need to include a notification library)
+            alert('Сеанс #' + sessionId + ' успешно обновлен');
+
+            // After 2 seconds, restore button
+            setTimeout(function() {
+                $('.save-session-btn[data-session-id="' + sessionId + '"]')
+                    .removeClass('btn-outline-success')
+                    .addClass('btn-success');
+            }, 2000);
+
+        }, 1000);
+    });
+
+    // Handle save all sessions button
+    $('.save-all-sessions').on('click', function() {
+        var procedureId = $(this).data('procedure-id');
+        var form = $('#sessionForm' + procedureId);
+
+        // Show saving indicator
+        $(this).html('<i class="fas fa-spinner fa-spin mr-1"></i> Сохранение...');
+
+        // Simulate AJAX save (replace with actual AJAX call)
+        setTimeout(function() {
+            // Reset button
+            $('.save-all-sessions[data-procedure-id="' + procedureId + '"]')
+                .html('<i class="fas fa-save mr-1"></i> Сохранить все изменения');
+
+            // Show success message
+            alert('Все сеансы успешно обновлены');
+
+            // Close modal after 1 second
+            setTimeout(function() {
+                $('#sessionModal' + procedureId).modal('hide');
+            }, 1000);
+
+        }, 1500);
+    });
+
+    // =====================================
+    // Lab Research Scripts
+    // =====================================
+
+    // Lab Research Category and Test Selection
+    $('#labCategorySelect').on('change', function() {
+        var categoryId = $(this).val();
+        var testSelect = $('#labTestSelect');
+
+        // Clear current options
+        testSelect.empty().append('<option value="">-- Выберите исследование --</option>');
+
+        if (!categoryId) return;
+
+        // Simulate AJAX loading of tests for selected category
+        // In production, replace with actual AJAX call to your backend
+        setTimeout(function() {
+            if (categoryId == 1) { // Биохимия
+                testSelect.append('<option value="101">Общий белок</option>');
+                testSelect.append('<option value="102">Глюкоза</option>');
+                testSelect.append('<option value="103">Холестерин</option>');
+            } else if (categoryId == 2) { // Гематология
+                testSelect.append('<option value="201">Общий анализ крови</option>');
+                testSelect.append('<option value="202">Коагулограмма</option>');
+            } else if (categoryId == 3) { // Иммунология
+                testSelect.append('<option value="301">TORCH-инфекции</option>');
+                testSelect.append('<option value="302">Антитела к COVID-19</option>');
+            }
+        }, 300);
+    });
+
+    $('#labTestSelect').on('change', function() {
+        var testId = $(this).val();
+        var specimenSelect = $('#specimenTypeSelect');
+        var preparationInfo = $('#testPreparationInfo');
+
+        // Reset specimen types
+        specimenSelect.val('');
+
+        if (!testId) {
+            preparationInfo.text('Выберите исследование для отображения информации о подготовке.');
+            return;
+        }
+
+        // Simulate fetching test info
+        // Replace with actual AJAX call in production
+        setTimeout(function() {
+            if (testId == 101) { // Общий белок
+                preparationInfo.html('<ul>' +
+                    '<li>Сдавать натощак (не менее 8 часов голодания)</li>' +
+                    '<li>Не употреблять алкоголь за 24 часа до исследования</li>' +
+                    '<li>Исключить физические нагрузки за 24 часа до исследования</li>' +
+                    '</ul>');
+            } else if (testId == 201) { // Общий анализ крови
+                preparationInfo.html('<ul>' +
+                    '<li>Специальная подготовка не требуется</li>' +
+                    '<li>Рекомендуется сдавать кровь до приема пищи</li>' +
+                    '</ul>');
+            }
+        }, 300);
+    });
+
+    // Handle lab order submission
+    $('#saveLabOrder').on('click', function() {
+        var testId = $('#labTestSelect').val();
+        if (!testId) {
+            alert('Пожалуйста, выберите исследование');
+            return;
+        }
+
+        $(this).html('<i class="fas fa-spinner fa-spin mr-1"></i> Сохранение...').prop('disabled', true);
+
+        // Simulate AJAX saving
+        // Replace with actual AJAX call to your backend
+        setTimeout(function() {
+            // Show success notification
+            alert('Исследование успешно назначено');
+
+            // Close modal and reset button
+            $('#addLabTestModal').modal('hide');
+            $('#saveLabOrder').html('<i class="fas fa-save mr-1"></i> Назначить').prop('disabled', false);
+
+            // In production, you'd usually reload the page or update the table
+        }, 1000);
+    });
+
+    // =====================================
+    // Medication Scripts
+    // =====================================
+
+    // Medication name autocomplete/lookup functionality
+    $('#medicationName').on('input', function() {
+        var medName = $(this).val();
+        var medInfo = $('#medicationInfo');
+
+        if (!medName || medName.length < 3) {
+            medInfo.text('Введите название препарата для получения информации.');
+            return;
+        }
+
+        // Simulate API lookup
+        // Replace with actual API call in production
+        setTimeout(function() {
+            if (medName.toLowerCase().includes('парац')) {
+                medInfo.html('<ul>' +
+                    '<li><strong>Категория:</strong> Анальгетик, жаропонижающее</li>' +
+                    '<li><strong>Взаимодействия:</strong> Алкоголь, варфарин</li>' +
+                    '<li><strong>Противопоказания:</strong> Печеночная недостаточность</li>' +
+                    '<li><strong>Побочные эффекты:</strong> Гепатотоксичность при передозировке</li>' +
+                    '</ul>');
+            } else if (medName.toLowerCase().includes('ибупр')) {
+                medInfo.html('<ul>' +
+                    '<li><strong>Категория:</strong> НПВС</li>' +
+                    '<li><strong>Взаимодействия:</strong> Аспирин, антикоагулянты</li>' +
+                    '<li><strong>Противопоказания:</strong> Язвенная болезнь, аспириновая астма</li>' +
+                    '<li><strong>Побочные эффекты:</strong> Желудочно-кишечные расстройства</li>' +
+                    '</ul>');
+            }
+        }, 500);
+    });
+
+    // Medication form date logic
+    $('#startDate').on('change', function() {
+        // Ensure end date is not before start date
+        var startDate = new Date($(this).val());
+        var endDateInput = $('#endDate');
+        var endDate = new Date(endDateInput.val());
+
+        if (endDate < startDate) {
+            // Set end date to start date + 7 days by default
+            var newEndDate = new Date(startDate);
+            newEndDate.setDate(newEndDate.getDate() + 7);
+            endDateInput.val(newEndDate.toISOString().substr(0, 10));
+        }
+    });
+
+    // Save medication
+    $('#saveMedication').on('click', function() {
+        // Validate form
+        var form = document.getElementById('medicationForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        $(this).html('<i class="fas fa-spinner fa-spin mr-1"></i> Сохранение...').prop('disabled', true);
+
+        // Simulate AJAX saving
+        setTimeout(function() {
+            alert('Медикамент успешно назначен');
+
+            // Close modal and reset button
+            $('#addMedicationModal').modal('hide');
+            $('#saveMedication').html('<i class="fas fa-save mr-1"></i> Назначить').prop('disabled', false);
+        }, 1000);
+    });
+});
+</script>

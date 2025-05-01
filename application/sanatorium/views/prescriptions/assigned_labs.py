@@ -129,23 +129,38 @@ class AssignedLabsDeleteView(LoginRequiredMixin, DeleteView):
         return reverse('assigned_labs_list')
 
 
+@login_required
 def get_labs_by_category(request):
+    """AJAX view for getting labs filtered by category"""
     category_id = request.GET.get('category_id')
     search_term = request.GET.get('search_term', '')
 
+    labs_query = LabResearchModel.objects.filter(is_active=True)
+
+    # Apply category filter if provided
     if category_id:
-        labs = LabResearchModel.objects.filter(
-            category_id=category_id,
-            is_active=True
-        )
+        labs_query = labs_query.filter(category_id=category_id)
 
-        if search_term:
-            labs = labs.filter(name__icontains=search_term)
+    # Apply search filter if provided
+    if search_term:
+        labs_query = labs_query.filter(name__icontains=search_term)
 
-        labs = labs.values('id', 'name', 'price')
-        return JsonResponse({'labs': list(labs)})
+    # Limit to reasonable number
+    labs_query = labs_query[:50]
 
-    return JsonResponse({'labs': []})
+    # Prepare response data
+    labs_data = []
+    for lab in labs_query:
+        labs_data.append({
+            'id': lab.id,
+            'name': lab.name,
+            'price': str(lab.price),
+            'category_name': lab.category.name if lab.category else None,
+            'cito': lab.cito,
+            'deadline': lab.deadline
+        })
+
+    return JsonResponse({'labs': labs_data})
 
 
 def update_lab_state(request, pk, new_state):

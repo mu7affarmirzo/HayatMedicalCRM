@@ -1,53 +1,59 @@
 from django import forms
-from core.models import AssignedLabs, IllnessHistory, LabResearchModel
+from core.models import AssignedLabs, LabResearchModel, LabResearchCategoryModel
 
 
 class AssignedLabsForm(forms.ModelForm):
+    """Form for creating and updating lab assignments."""
 
-    lab = forms.ModelChoiceField(
-        queryset=LabResearchModel.objects.filter(is_active=True),
-        widget=forms.Select(attrs={'class': 'form-control select2'}),
-        required=True,
-        label='Lab Test'
-    )
-
-    state = forms.ChoiceField(
-        choices=AssignedLabs.STATE_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        initial='recommended'
-    )
-
-    category_filter = forms.ChoiceField(
-        choices=[('', 'All Categories')],  # Will be populated dynamically in __init__
+    category_filter = forms.ModelChoiceField(
+        queryset=LabResearchCategoryModel.objects.all(),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'category-filter'}),
-        label='Filter by Category'
+        empty_label="Все категории",
+        label="Категория анализов"
     )
 
     lab_search = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Search for lab tests...',
+            'placeholder': 'Поиск анализов...',
             'id': 'lab-search'
         }),
-        label='Search Lab Tests'
+        label='Поиск анализов'
     )
 
     class Meta:
         model = AssignedLabs
         fields = ['lab', 'state']
+        widgets = {
+            'lab': forms.Select(attrs={
+                'class': 'form-control select2',
+                'style': 'width: 100%;',
+                'id': 'lab-select'
+            }),
+            'state': forms.Select(attrs={'class': 'form-control'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Dynamically populate category choices
-        from core.models import LabResearchCategoryModel
-        categories = LabResearchCategoryModel.objects.all()
-        category_choices = [('', 'All Categories')]
-        category_choices.extend([(c.id, c.name) for c in categories])
-        self.fields['category_filter'].choices = category_choices
+        # Set lab queryset to active labs only
+        self.fields['lab'].queryset = LabResearchModel.objects.filter(is_active=True)
 
-        # If we're editing an existing instance, pre-select the lab's category
-        if 'instance' in kwargs and kwargs['instance'] and kwargs['instance'].lab and kwargs['instance'].lab.category:
-            self.fields['category_filter'].initial = kwargs['instance'].lab.category.id
+        # Set custom field labels
+        self.fields['lab'].label = "Лабораторный анализ"
+        self.fields['state'].label = "Статус назначения"
+
+        # Set custom choices for state field
+        self.fields['state'].choices = (
+            ('recommended', 'Рекомендован'),
+            ('assigned', 'Назначен'),
+            ('dispatched', 'Отправлен'),
+            ('results', 'Результаты получены'),
+            ('cancelled', 'Отменен'),
+            ('stopped', 'Остановлен'),
+        )
+
+        # Set initial state
+        self.fields['state'].initial = 'recommended'

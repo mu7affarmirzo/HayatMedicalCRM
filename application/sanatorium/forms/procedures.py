@@ -1,9 +1,15 @@
 from django import forms
 from django.utils import timezone
-from core.models import ProcedureServiceModel, IndividualProcedureSessionModel, Service
+from core.models import ProcedureServiceModel, IndividualProcedureSessionModel, Service, ServiceTypeModel
 
 
 class ProcedureForm(forms.ModelForm):
+    service_type = forms.ModelChoiceField(
+        queryset=ServiceTypeModel.objects.all(),
+        required=True,
+        label="Тип услуги",
+        widget=forms.Select(attrs={'class': 'form-control select2', 'id': 'service-type'})
+    )
     class Meta:
         model = ProcedureServiceModel
         fields = [
@@ -15,9 +21,9 @@ class ProcedureForm(forms.ModelForm):
             'comments'
         ]
         widgets = {
-            'medical_service': forms.Select(attrs={'class': 'form-control select2'}),
+            'medical_service': forms.Select(attrs={'class': 'form-control select2', 'id': 'medical-service'}),
             'therapist': forms.Select(attrs={'class': 'form-control select2'}),
-            'start_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'autocomplete': 'off'}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
             'frequency': forms.Select(attrs={'class': 'form-control'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -26,15 +32,24 @@ class ProcedureForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Filter medical services to only include procedures
-        # self.fields['medical_service'].queryset = Service.objects.filter(
-        #     type__name='procedure'
-        # ).order_by('name')
+        # Set initial empty choice for medical_service
+        self.fields['medical_service'].queryset = Service.objects.none()
 
-        # Add "required" class to required fields for client-side validation
-        for field_name, field in self.fields.items():
-            if field.required:
-                field.widget.attrs['class'] += ' required'
+        # If we have an instance with a selected medical_service
+        if self.instance and self.instance.pk and self.instance.medical_service:
+            service_type = self.instance.medical_service.type
+            self.fields['service_type'].initial = service_type
+            self.fields['medical_service'].queryset = Service.objects.filter(type=service_type)
+
+        # If we have data with service_type already selected
+        if 'service_type' in self.data:
+            try:
+                service_type_id = int(self.data.get('service_type'))
+                self.fields['medical_service'].queryset = Service.objects.filter(
+                    type_id=service_type_id
+                )
+            except (ValueError, TypeError):
+                pass  # Invalid input, ignore
 
     def clean(self):
         cleaned_data = super().clean()

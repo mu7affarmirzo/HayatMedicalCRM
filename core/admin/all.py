@@ -3,8 +3,8 @@ from dataclasses import field
 from django.contrib import admin
 
 from core.models import (Account, PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService,
-                         Tariff, IllnessHistory, DiagnosisTemplate,
-)
+                         Tariff, IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
+                         )
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -43,6 +43,11 @@ class BookingDetailAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 @admin.register(Booking)
 class BookingAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     pass
+
+
+@admin.register(ServiceTypeModel)
+class ServiceTypeModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in ServiceTypeModel._meta.fields]
 
 
 @admin.register(Service)

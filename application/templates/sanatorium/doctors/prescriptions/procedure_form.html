@@ -1,215 +1,409 @@
-{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% extends 'snippets/base.html' %}
 {% load static %}
-
-{% block title %}{{ action }} лечебную процедуру | Hayat Medical Center{% endblock %}
-
+{% block title %}Добавление процедуры{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
-<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
-<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css' %}">
-<style>
-    .required {
-        border-color: #f56954;
-    }
-    .required:focus {
-        box-shadow: 0 0 0 0.2rem rgba(245, 105, 84, 0.25);
-    }
-    .form-control.is-invalid {
-        border-color: #dc3545;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right calc(0.375em + 0.1875rem) center;
-        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-    }
-</style>
-{% endblock %}
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <style>
+        .form-group label {
+            font-weight: bold;
+        }
 
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+{% endblock %}
 {% block content %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">{{ action }} лечебную процедуру</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни #{{ history.series_number }}</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'main_prescription_list' history.id %}">Лист назначений</a></li>
-                    <li class="breadcrumb-item active">{{ action }} лечебную процедуру</li>
-                </ol>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Добавление процедуры</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'main_prescription_list' history.id %}">Основной
+                            лист назначений</a></li>
+                        <li class="breadcrumb-item active">Добавление процедуры</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<!-- /.content-header -->
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div class="row">
+                    <div class="col-md-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;
+                                </button>
+                                <h5>
+                                    <i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}
+                                </h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            <!-- Form Card -->
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Форма добавления процедуры</h3>
+                </div>
+                <!-- /.card-header -->
 
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-spa mr-2"></i>{{ action }} лечебную процедуру
-                </h3>
+                <!-- form start -->
+                <form method="post" id="procedureForm">
+                    {% csrf_token %}
+                    <div class="card-body">
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        {% if history %}
+                            <div class="alert alert-info">
+                                <h5><i class="icon fas fa-info"></i> Информация о пациенте</h5>
+                                <p><strong>История болезни №:</strong> {{ history.series_number }}</p>
+                                <p><strong>Пациент:</strong> {{ history.patient.full_name }}</p>
+                            </div>
+                            <input type="hidden" name="illness_history" value="{{ history.id }}">
+                        {% else %}
+                            <div class="form-group">
+                                <label for="{{ form.illness_history.id_for_label }}" class="required-field">История
+                                    болезни</label>
+                                {{ form.illness_history }}
+                                {% if form.illness_history.errors %}
+                                    <div class="text-danger">
+                                        {{ form.illness_history.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.service_type.id_for_label }}" class="required-field">Тип услуги</label>
+                                    {{ form.service_type }}
+                                    {% if form.service_type.errors %}
+                                    <div class="text-danger">
+                                        {{ form.service_type.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.medical_service.id_for_label }}" class="required-field">Услуга</label>
+                                    {{ form.medical_service }}
+                                    {% if form.medical_service.errors %}
+                                    <div class="text-danger">
+                                        {{ form.medical_service.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.therapist.id_for_label }}">Терапевт</label>
+                                    {{ form.therapist }}
+                                    {% if form.therapist.errors %}
+                                        <div class="text-danger">
+                                            {{ form.therapist.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.start_date.id_for_label }}" class="required-field">Дата
+                                        начала</label>
+                                    {{ form.start_date }}
+                                    {% if form.start_date.errors %}
+                                        <div class="text-danger">
+                                            {{ form.start_date.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.quantity.id_for_label }}" class="required-field">Количество
+                                        сеансов</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger">
+                                            {{ form.quantity.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.frequency.id_for_label }}"
+                                           class="required-field">Частота</label>
+                                    {{ form.frequency }}
+                                    {% if form.frequency.errors %}
+                                        <div class="text-danger">
+                                            {{ form.frequency.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.comments.id_for_label }}">Комментарии</label>
+                            {{ form.comments }}
+                            {% if form.comments.errors %}
+                                <div class="text-danger">
+                                    {{ form.comments.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Сохранить
+                        </button>
+                        <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">
+                            <i class="fas fa-arrow-left"></i> Назад
+                        </a>
+                    </div>
+                </form>
             </div>
-            <form method="post" id="procedureForm">
-                {% csrf_token %}
-                <div class="card-body">
-                    {% if form.errors %}
-                    <div class="alert alert-danger alert-dismissible">
-                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                        <h5><i class="icon fas fa-ban"></i> Ошибка!</h5>
-                        Пожалуйста, исправьте указанные ниже ошибки.
-                    </div>
-                    {% endif %}
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.medical_service.id_for_label }}">Процедура*:</label>
-                                {{ form.medical_service }}
-                                {% if form.medical_service.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.medical_service.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.therapist.id_for_label }}">Терапевт:</label>
-                                {{ form.therapist }}
-                                {% if form.therapist.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.therapist.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Оставьте пустым, если терапевт будет назначен позднее</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.start_date.id_for_label }}">Дата начала*:</label>
-                                {{ form.start_date }}
-                                {% if form.start_date.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.start_date.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.frequency.id_for_label }}">Частота*:</label>
-                                {{ form.frequency }}
-                                {% if form.frequency.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.frequency.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.quantity.id_for_label }}">Количество сеансов*:</label>
-                                {{ form.quantity }}
-                                {% if form.quantity.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.quantity.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.comments.id_for_label }}">Примечания:</label>
-                                {{ form.comments }}
-                                {% if form.comments.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.comments.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-1"></i> Сохранить
-                    </button>
-                    <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">
-                        <i class="fas fa-times mr-1"></i> Отмена
-                    </a>
-                </div>
-            </form>
+            <!-- /.card -->
         </div>
-    </div>
-</section>
+    </section>
 {% endblock %}
-
 {% block extra_js %}
-<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
-<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
-<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.ru.min.js' %}"></script>
+    <!-- Select2 -->
+    <!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
 <script>
     $(function() {
-        //Initialize Select2 Elements
+        // Initialize Select2 Elements
         $('.select2').select2({
             theme: 'bootstrap4'
         });
 
-        //Initialize Datepicker
-        $('.datepicker').datepicker({
-            format: 'dd.mm.yyyy',
-            autoclose: true,
-            todayHighlight: true,
-            language: 'ru',
-            startDate: new Date()
+        // Function to load medical services based on service type
+        function loadMedicalServices() {
+            var serviceTypeId = $('#service-type').val();
+            var medicalServiceSelect = $('#medical-service');
+
+            // Disable the select while loading
+            medicalServiceSelect.prop('disabled', true);
+
+            // Fetch services for the selected type
+            $.ajax({
+                url: "{% url 'load_services' %}",
+                data: {
+                    'service_type_id': serviceTypeId
+                },
+                success: function(data) {
+                    // Replace the options with the returned HTML
+                    medicalServiceSelect.html(data);
+
+                    // Refresh select2
+                    medicalServiceSelect.trigger('change.select2');
+                },
+                error: function() {
+                    // Show error message
+                    medicalServiceSelect.html('<option value="">Ошибка загрузки данных</option>');
+                    medicalServiceSelect.trigger('change.select2');
+                },
+                complete: function() {
+                    // Re-enable the select
+                    medicalServiceSelect.prop('disabled', false);
+                }
+            });
+        }
+
+        // Bind change event to service type dropdown
+        $('#service-type').on('change', function() {
+            loadMedicalServices();
         });
 
-        // Client-side validation
+        // Initialize services if a service type is already selected (e.g., in edit mode)
+        if ($('#service-type').val()) {
+            loadMedicalServices();
+        }
+
+        // Form validation
         $('#procedureForm').on('submit', function(e) {
             var isValid = true;
 
             // Check required fields
-            $('.required').each(function() {
-                if ($(this).val() === '' || $(this).val() === null) {
-                    $(this).addClass('is-invalid');
-                    isValid = false;
-                } else {
-                    $(this).removeClass('is-invalid');
-                }
-            });
+            if (!$('#service-type').val()) {
+                $('#service-type').closest('.form-group').find('.text-danger').remove();
+                $('#service-type').closest('.form-group').append('<div class="text-danger">Это поле обязательно.</div>');
+                isValid = false;
+            }
 
-            // Check quantity
-            var quantity = $('#{{ form.quantity.id_for_label }}').val();
-            if (quantity < 1) {
-                $('#{{ form.quantity.id_for_label }}').addClass('is-invalid');
+            if (!$('#medical-service').val()) {
+                $('#medical-service').closest('.form-group').find('.text-danger').remove();
+                $('#medical-service').closest('.form-group').append('<div class="text-danger">Это поле обязательно.</div>');
                 isValid = false;
             }
 
             if (!isValid) {
                 e.preventDefault();
-
-                // Show error message
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Ошибка валидации',
-                    text: 'Пожалуйста, заполните все обязательные поля корректно.'
-                });
+                return false;
             }
         });
     });
 </script>
+{#    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>#}
+{#    <script>#}
+{#        // Trigger an AJAX request whenever the service type dropdown changes#}
+{#        $(document).ready(function () {#}
+{#            $('#id_service_type').change(function () {#}
+{#                var selectedType = $(this).val();#}
+{##}
+{#                $.ajax({#}
+{#                    url: "{% url "load_services" %}",  // We'll define a URL pattern for this#}
+{#                    data: {#}
+{#                        'service_type_id': selectedType#}
+{#                    },#}
+{#                    success: function (data) {#}
+{#                        // `data` will be the rendered HTML from services_dropdown_list_options.html#}
+{#                        // Replace the entire <option> list for #id_service#}
+{#                        $("#id_service").html(data);#}
+{#                    }#}
+{#                });#}
+{#            });#}
+{#        });#}
+{#    </script>#}
+{#    <script>#}
+{#        $(function () {#}
+{#            // Initialize Select2 Elements#}
+{#            $('.select2').select2({#}
+{#                theme: 'bootstrap4'#}
+{#            });#}
+{##}
+{#            // Debug logging#}
+{#            console.log("Service type field found:", $('#service-type').length > 0);#}
+{#            console.log("Medical service field found:", $('#medical-service').length > 0);#}
+{##}
+{#            // Function to update medical_service options based on service_type#}
+{#            function updateMedicalServices() {#}
+{#                var serviceTypeId = $('#service-type').val();#}
+{#                var medicalServiceSelect = $('#medical-service');#}
+{##}
+{#                console.log("Updating services for service type ID:", serviceTypeId);#}
+{##}
+{#                // Reset the medical service dropdown#}
+{#                medicalServiceSelect.empty().append('<option value="">Выберите услугу</option>');#}
+{##}
+{#                if (!serviceTypeId) {#}
+{#                    console.log("No service type selected");#}
+{#                    return;#}
+{#                }#}
+{##}
+{#                // Disable the select and show loading#}
+{#                medicalServiceSelect.prop('disabled', true);#}
+{#                medicalServiceSelect.append('<option value="">Загрузка...</option>');#}
+{##}
+{#                // Get the CSRF token#}
+{#                var csrftoken = $('[name=csrfmiddlewaretoken]').val();#}
+{##}
+{#                // Fetch services for the selected type#}
+{#                $.ajax({#}
+{#                    url: '{% url "get_services_by_type" %}',#}
+{#                    type: 'GET',#}
+{#                    data: {#}
+{#                        'service_type_id': serviceTypeId#}
+{#                    },#}
+{#                    headers: {#}
+{#                        'X-CSRFToken': csrftoken#}
+{#                    },#}
+{#                    dataType: 'json',#}
+{#                    success: function (data) {#}
+{#                        console.log("Services loaded:", data);#}
+{##}
+{#                        // Reset the dropdown#}
+{#                        medicalServiceSelect.empty().append('<option value="">Выберите услугу</option>');#}
+{##}
+{#                        // Add services from response#}
+{#                        if (data && data.length > 0) {#}
+{#                            $.each(data, function (index, service) {#}
+{#                                medicalServiceSelect.append(#}
+{#                                    $('<option></option>').val(service.id).text(service.name)#}
+{#                                );#}
+{#                            });#}
+{#                        } else {#}
+{#                            medicalServiceSelect.append('<option value="" disabled>Нет доступных услуг</option>');#}
+{#                        }#}
+{#                    },#}
+{#                    error: function (xhr, status, error) {#}
+{#                        console.error("Error loading services:", error);#}
+{#                        medicalServiceSelect.empty().append('<option value="">Ошибка загрузки данных</option>');#}
+{#                    },#}
+{#                    complete: function () {#}
+{#                        // Re-enable the select and refresh select2#}
+{#                        medicalServiceSelect.prop('disabled', false);#}
+{#                        medicalServiceSelect.trigger('change.select2');#}
+{#                    }#}
+{#                });#}
+{#            }#}
+{##}
+{#            // Bind change event to service type dropdown#}
+{#            $('#service-type').on('change', function () {#}
+{#                updateMedicalServices();#}
+{#            });#}
+{##}
+{#            // Initialize services if a service type is already selected (e.g., in edit mode)#}
+{#            if ($('#service-type').val()) {#}
+{#                updateMedicalServices();#}
+{#            }#}
+{##}
+{#            // Form validation#}
+{#            $('#procedureForm').on('submit', function (e) {#}
+{#                var isValid = true;#}
+{##}
+{#                // Check required fields#}
+{#                if (!$('#service-type').val()) {#}
+{#                    $('#service-type').closest('.form-group').find('.text-danger').remove();#}
+{#                    $('#service-type').closest('.form-group').append('<div class="text-danger">Это поле обязательно.</div>');#}
+{#                    isValid = false;#}
+{#                }#}
+{##}
+{#                if (!$('#medical-service').val()) {#}
+{#                    $('#medical-service').closest('.form-group').find('.text-danger').remove();#}
+{#                    $('#medical-service').closest('.form-group').append('<div class="text-danger">Это поле обязательно.</div>');#}
+{#                    isValid = false;#}
+{#                }#}
+{##}
+{#                if (!isValid) {#}
+{#                    e.preventDefault();#}
+{#                    return false;#}
+{#                }#}
+{#            });#}
+{#        });#}
+{#    </script>#}
 {% endblock %}

@@ -86,7 +86,7 @@ class IndividualProcedureSessionModel(BaseAuditModel):
 
     class Meta:
         ordering = ['session_number']
-        unique_together = ['assigned_procedure', 'session_number']  # Ensure no duplicate session numbers
+        unique_together = ['assigned_procedure', 'session_number', 'id']  # Ensure no duplicate session numbers
 
         verbose_name = 'Основной лист назначений | Индивидуальный сеанс'
         verbose_name_plural = 'Основной лист назначений | Индивидуальные сеансы'

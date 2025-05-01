@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
@@ -9,7 +10,7 @@ from core.models import (
     ProcedureServiceModel,
     IllnessHistory,
     IndividualProcedureSessionModel,
-    Service
+    Service, ServiceTypeModel
 )
 
 
@@ -35,26 +36,28 @@ def procedure_detail(request, procedure_id):
 def procedure_create(request, history_id):
     """View for creating a new procedure"""
     history = get_object_or_404(IllnessHistory, id=history_id)
+    service_types = ServiceTypeModel.objects.all()
+
 
     if request.method == 'POST':
         form = ProcedureForm(request.POST)
+        print('here we are')
         if form.is_valid():
             procedure = form.save(commit=False)
             procedure.illness_history = history
             procedure.prescribed_by = request.user
             procedure.save()
 
-            # Create individual sessions based on quantity
-            create_procedure_sessions(procedure)
-
             messages.success(request, f'Лечебная процедура "{procedure.medical_service.name}" успешно добавлена.')
             return redirect('main_prescription_list', history_id=history.id)
     else:
+        print('not wanted')
         form = ProcedureForm()
 
     context = {
         'form': form,
         'history': history,
+        'service_types': service_types,
         'action': 'Добавить'
     }
 
@@ -116,10 +119,46 @@ def procedure_delete(request, procedure_id):
     return render(request, 'sanatorium/doctors/prescriptions/procedure_confirm_delete.html', context)
 
 
+# @login_required
+# @require_POST
+# def update_session_status(request, session_id):
+#     """AJAX view for updating a procedure session status"""
+#     session = get_object_or_404(IndividualProcedureSessionModel, id=session_id)
+#
+#     status = request.POST.get('status')
+#     notes = request.POST.get('notes', '')
+#
+#     if status not in [choice[0] for choice in IndividualProcedureSessionModel.STATUS_CHOICES]:
+#         return JsonResponse({
+#             'success': False,
+#             'message': 'Некорректный статус'
+#         }, status=400)
+#
+#     session.status = status
+#     session.notes = notes
+#
+#     # If marking as completed, set completed time
+#     if status == 'completed':
+#         from django.utils import timezone
+#         session.completed_at = timezone.now()
+#         session.completed_by = request.user
+#
+#     session.save()
+#
+#     # Update parent procedure progress
+#     update_procedure_progress(session.assigned_procedure)
+#
+#     return JsonResponse({
+#         'success': True,
+#         'message': 'Статус сеанса успешно обновлен'
+#     })
+
 @login_required
 @require_POST
 def update_session_status(request, session_id):
     """AJAX view for updating a procedure session status"""
+    next_url = request.POST.get('next', '')
+
     session = get_object_or_404(IndividualProcedureSessionModel, id=session_id)
 
     status = request.POST.get('status')
@@ -131,24 +170,61 @@ def update_session_status(request, session_id):
             'message': 'Некорректный статус'
         }, status=400)
 
+    # Save old status to check if it changed
+    old_status = session.status
+
+    # Update session data
     session.status = status
     session.notes = notes
 
     # If marking as completed, set completed time
-    if status == 'completed':
+    completed_at = None
+    if status == 'completed' and old_status != 'completed':
         from django.utils import timezone
-        session.completed_at = timezone.now()
+        now = timezone.now()
+        session.completed_at = now
         session.completed_by = request.user
+        completed_at = now.strftime('%d.%m.Y %H:%M')
+
+    # If changing from completed to another status, clear completed time
+    if old_status == 'completed' and status != 'completed':
+        session.completed_at = None
+        session.completed_by = None
 
     session.save()
 
     # Update parent procedure progress
-    update_procedure_progress(session.procedure)
+    procedure = session.assigned_procedure
+    update_procedure_progress(procedure)
 
-    return JsonResponse({
-        'success': True,
-        'message': 'Статус сеанса успешно обновлен'
-    })
+    if next_url:
+        return redirect(next_url)
+
+    url = reverse(
+        'prescription_list',
+        kwargs={'history_id': procedure.illness_history.pk}  # →  "prescriptions/1"
+    )
+
+    return redirect(f"{url}#procedures")
+
+
+@login_required
+def get_services_by_type(request):
+    """AJAX endpoint to get services filtered by type"""
+    service_type_id = request.GET.get('service_type_id')
+
+    try:
+        service_type = ServiceTypeModel.objects.get(id=service_type_id)
+    except ServiceTypeModel.DoesNotExist:
+        return []
+    services = list(service_type.services.all().values_list('id', 'name'))
+    return JsonResponse(services, safe=False)
+
+
+def load_services(request):
+    service_type_id = request.GET.get('service_type_id')
+    services = Service.objects.filter(type__id=service_type_id)
+    return render(request, 'sanatorium/doctors/prescriptions/services_dropdown_list_options.html', {'services': services})
 
 
 # Helper functions
@@ -156,7 +232,7 @@ def create_procedure_sessions(procedure):
     """Create individual sessions for a procedure based on quantity"""
     for i in range(1, procedure.quantity + 1):
         IndividualProcedureSessionModel.objects.create(
-            procedure=procedure,
+            assigned_procedure=procedure,
             session_number=i,
             status='pending'
         )
@@ -196,3 +272,5 @@ def update_procedure_progress(procedure):
 
     procedure.proceeded_sessions = completed_count
     procedure.save()
+
+

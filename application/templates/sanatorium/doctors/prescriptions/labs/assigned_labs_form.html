@@ -110,10 +110,9 @@
                                 </div>
                             {% endif %}
 
-                            <!-- Hidden lab select field that will be populated by our UI -->
-                            <div class="form-group d-none">
-                                {{ form.lab }}
-                            </div>
+                            <!-- Hidden lab input fields -->
+                            <input type="hidden" name="lab" id="id_lab" value="{{ form.instance.lab.id|default:'' }}">
+                            <input type="hidden" name="lab_validator" id="lab_validator">
 
                             <!-- Custom lab selection interface -->
                             <div class="row">
@@ -208,7 +207,7 @@
                             <button type="submit" class="btn btn-primary" id="submit-button">
                                 {% if form.instance.id %}Сохранить изменения{% else %}Назначить анализ{% endif %}
                             </button>
-                            <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">
+                            <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-default">
                                 Отмена
                             </a>
                         </div>
@@ -229,15 +228,11 @@
 <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
 <script>
     $(function () {
-        // Initialize Select2 Elements
-        $('.select2').select2({
-            theme: 'bootstrap4'
-        });
-
         const categoryFilter = $('#category-filter');
         const labSearch = $('#lab-search');
         const labList = $('#lab-list');
-        const labSelect = $('#id_lab');
+        const labInput = $('#id_lab');
+        const labValidator = $('#lab_validator');
         const selectedLabText = $('#selected-lab-text');
         const loadingIndicator = $('#loading-indicator');
         const noLabsFound = $('#no-labs-found');
@@ -342,6 +337,12 @@
             const labId = $(this).data('lab-id');
             const labName = $(this).data('lab-name');
 
+            console.log('Selected lab:', labId, labName);
+
+            // Update both hidden inputs
+            labInput.val(labId);
+            labValidator.val(labId);
+
             // Update visual selection
             $('.lab-card').removeClass('selected');
             $('.select-lab-btn').removeClass('btn-success').addClass('btn-primary').text('Выбрать');
@@ -350,30 +351,23 @@
             $(this).find('.select-lab-btn').removeClass('btn-primary').addClass('btn-success')
                 .html('<i class="fas fa-check mr-1"></i> Выбрано');
 
-            // Update hidden select field
-            labSelect.val(labId);
-            selectedLabId = labId;
-
             // Update display
             selectedLabText.html(`<i class="fas fa-flask mr-1"></i> ${labName}`);
             selectedLabText.parent().removeClass('bg-light').addClass('bg-success text-white');
+
+            // Set selectedLabId for future reference
+            selectedLabId = labId;
         });
 
         // Form submission validation
-        // Добавьте эту функцию в ваш JavaScript-код для проверки перед отправкой формы
         $('#lab-assignment-form').on('submit', function(e) {
-            // Проверяем, выбран ли анализ
-            if (!$('#id_lab').val()) {
-                e.preventDefault(); // Останавливаем отправку формы
-                toastr.error('Пожалуйста, выберите лабораторный анализ');
+            console.log('Form submitted, lab value:', labInput.val());
+
+            if (!labInput.val()) {
+                e.preventDefault();
+                alert('Пожалуйста, выберите лабораторный анализ');
                 return false;
             }
-
-            // Для отладки - выводим значение в консоль
-            console.log('Выбранный анализ ID:', $('#id_lab').val());
-
-            // Если всё в порядке, форма будет отправлена
-            return true;
         });
     });
 </script>

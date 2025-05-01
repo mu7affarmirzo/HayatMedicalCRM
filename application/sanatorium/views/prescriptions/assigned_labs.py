@@ -76,7 +76,7 @@ class AssignedLabsCreateView(LoginRequiredMixin, CreateView):
     template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_form.html'
 
     def get_success_url(self):
-        return reverse('main_prescription_list', kwargs={'pk': self.object.pk})
+        return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

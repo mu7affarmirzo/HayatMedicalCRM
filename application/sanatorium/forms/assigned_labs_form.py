@@ -27,11 +27,12 @@ class AssignedLabsForm(forms.ModelForm):
         model = AssignedLabs
         fields = ['lab', 'state']
         widgets = {
-            'lab': forms.Select(attrs={
-                'class': 'form-control select2',
-                'style': 'width: 100%;',
-                'id': 'lab-select'
-            }),
+            # 'lab': forms.Select(attrs={
+            #     'class': 'form-control select2',
+            #     'style': 'width: 100%;',
+            #     'id': 'lab-select'
+            # }),
+            'lab': forms.HiddenInput(),
             'state': forms.Select(attrs={'class': 'form-control'}),
         }
 

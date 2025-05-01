@@ -1,0 +1,114 @@
+<div class="lab-results-container">
+  <div class="lab-result-header mb-4">
+    <div class="row">
+      <div class="col-md-8">
+        <h4>{{ lab.lab.name }}</h4>
+        <p class="text-muted">Пациент: {{ lab.illness_history.patient.full_name }}</p>
+      </div>
+      <div class="col-md-4 text-right">
+        <span class="badge badge-success">Результаты получены</span>
+        <p class="text-muted">{{ lab.modified_at|date:"d.m.Y H:i" }}</p>
+      </div>
+    </div>
+  </div>
+
+  {% if lab.result_values.exists %}
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Показатели</h5>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-bordered">
+          <thead>
+            <tr class="bg-light">
+              <th style="width: 35%">Показатель</th>
+              <th style="width: 20%">Значение</th>
+              <th style="width: 15%">Ед. изм.</th>
+              <th style="width: 30%">Референсные значения</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for value in values %}
+              <tr>
+                <td>{{ value.name }}</td>
+                <td>
+                  {% if value.flags == 'High' %}
+                    <span class="text-danger font-weight-bold">{{ value.value }} <i class="fas fa-arrow-up"></i></span>
+                  {% elif value.flags == 'Low' %}
+                    <span class="text-primary font-weight-bold">{{ value.value }} <i class="fas fa-arrow-down"></i></span>
+                  {% elif value.flags == 'Critical' %}
+                    <span class="text-danger font-weight-bold">{{ value.value }} <i class="fas fa-exclamation-triangle"></i></span>
+                  {% else %}
+                    {{ value.value }}
+                  {% endif %}
+                </td>
+                <td>{{ value.unit }}</td>
+                <td>{{ value.reference_range }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if results %}
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">История результатов</h5>
+      </div>
+      <div class="card-body">
+        <div class="timeline">
+          {% for result in results %}
+            <div class="time-label">
+              <span class="bg-primary">{{ result.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div>
+              <i class="fas fa-clipboard-check bg-success"></i>
+              <div class="timeline-item">
+                <span class="time"><i class="fas fa-clock"></i> {{ result.created_at|date:"H:i" }}</span>
+                <h3 class="timeline-header">Результаты добавлены</h3>
+                <div class="timeline-body">
+                  {% if result.comments %}
+                    <div class="callout callout-info">
+                      <p>{{ result.comments }}</p>
+                    </div>
+                  {% endif %}
+
+                  {% if result.attached_file %}
+                    <div class="attached-file mt-3">
+                      <strong><i class="fas fa-paperclip mr-1"></i> Прикрепленный файл:</strong>
+                      <div class="mt-2">
+                        <a href="{% url 'download_result_file' result.id %}" class="btn btn-primary btn-sm" target="_blank">
+                          <i class="fas fa-download mr-1"></i>
+                          {% if result.file_format %}
+                            {% if result.file_format == 'pdf' %}PDF-документ
+                            {% elif result.file_format == 'jpg' or result.file_format == 'jpeg' or result.file_format == 'png' %}Изображение
+                            {% else %}Скачать файл
+                            {% endif %}
+                          {% else %}
+                            Скачать файл
+                          {% endif %}
+                        </a>
+                      </div>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="timeline-footer">
+                  <small class="text-muted">Добавил: {{ result.created_by.get_full_name }}</small>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+          <div>
+            <i class="fas fa-clock bg-gray"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <i class="icon fas fa-info-circle"></i> Нет доступных результатов исследования.
+    </div>
+  {% endif %}
+</div>

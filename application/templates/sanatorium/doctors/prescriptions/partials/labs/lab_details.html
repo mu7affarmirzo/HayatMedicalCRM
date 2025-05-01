@@ -1,0 +1,178 @@
+<div class="lab-detail-container">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="info-box">
+        <span class="info-box-icon bg-info"><i class="fas fa-flask"></i></span>
+        <div class="info-box-content">
+          <span class="info-box-text">Название исследования</span>
+          <span class="info-box-number">{{ lab.lab.name }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="info-box">
+        <span class="info-box-icon
+          {% if lab.state == 'recommended' %}bg-info
+          {% elif lab.state == 'assigned' %}bg-primary
+          {% elif lab.state == 'dispatched' %}bg-warning
+          {% elif lab.state == 'results' %}bg-success
+          {% elif lab.state == 'cancelled' %}bg-danger
+          {% elif lab.state == 'stopped' %}bg-secondary{% endif %}">
+          <i class="fas fa-chart-line"></i>
+        </span>
+        <div class="info-box-content">
+          <span class="info-box-text">Текущий статус</span>
+          <span class="info-box-number">
+            {% if lab.state == 'recommended' %}Рекомендовано
+            {% elif lab.state == 'assigned' %}Назначено
+            {% elif lab.state == 'dispatched' %}Отправлено в лабораторию
+            {% elif lab.state == 'results' %}Результаты получены
+            {% elif lab.state == 'cancelled' %}Отменено
+            {% elif lab.state == 'stopped' %}Прекращено{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="info-box">
+        <span class="info-box-icon bg-secondary"><i class="fas fa-calendar-alt"></i></span>
+        <div class="info-box-content">
+          <span class="info-box-text">Дата назначения</span>
+          <span class="info-box-number">{{ lab.created_at|date:"d.m.Y H:i" }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="info-box">
+        <span class="info-box-icon bg-secondary"><i class="fas fa-user-md"></i></span>
+        <div class="info-box-content">
+          <span class="info-box-text">Кем назначено</span>
+          <span class="info-box-number">{{ lab.created_by.get_full_name }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">История изменений</h3>
+        </div>
+        <div class="card-body p-0">
+          <div class="timeline timeline-inverse">
+            <!-- Initial assignment -->
+            <div>
+              <i class="fas fa-flask bg-primary"></i>
+              <div class="timeline-item">
+                <span class="time"><i class="far fa-clock"></i> {{ lab.created_at|date:"d.m.Y H:i" }}</span>
+                <h3 class="timeline-header">Исследование назначено</h3>
+                <div class="timeline-body">
+                  Исследование "{{ lab.lab.name }}" было назначено {{ lab.created_by.get_full_name }}.
+                </div>
+              </div>
+            </div>
+
+            <!-- Other status changes -->
+            {% if lab.modified_at != lab.created_at %}
+            <div>
+              <i class="fas fa-edit bg-warning"></i>
+              <div class="timeline-item">
+                <span class="time"><i class="far fa-clock"></i> {{ lab.modified_at|date:"d.m.Y H:i" }}</span>
+                <h3 class="timeline-header">Статус изменен</h3>
+                <div class="timeline-body">
+                  Статус изменен на "
+                  {% if lab.state == 'recommended' %}Рекомендовано
+                  {% elif lab.state == 'assigned' %}Назначено
+                  {% elif lab.state == 'dispatched' %}Отправлено в лабораторию
+                  {% elif lab.state == 'results' %}Результаты получены
+                  {% elif lab.state == 'cancelled' %}Отменено
+                  {% elif lab.state == 'stopped' %}Прекращено{% endif %}
+                  " пользователем {{ lab.modified_by.get_full_name }}.
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Results if available -->
+            {% if lab.lab_results.exists %}
+              {% for result in lab.lab_results.all %}
+                <div>
+                  <i class="fas fa-clipboard-check bg-success"></i>
+                  <div class="timeline-item">
+                    <span class="time"><i class="far fa-clock"></i> {{ result.created_at|date:"d.m.Y H:i" }}</span>
+                    <h3 class="timeline-header">Результаты добавлены</h3>
+                    <div class="timeline-body">
+                      Результаты добавлены пользователем {{ result.created_by.get_full_name }}.
+                      {% if result.comments %}<p><strong>Комментарии:</strong> {{ result.comments }}</p>{% endif %}
+                      {% if result.attached_file %}
+                        <p><strong>Прикрепленный файл:</strong>
+                          <a href="{% url 'download_result_file' result.id %}" target="_blank">
+                            {{ result.attached_file.name|default:"Скачать файл" }}
+                            <i class="fas fa-download ml-1"></i>
+                          </a>
+                        </p>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <div>
+              <i class="far fa-clock bg-gray"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if lab.result_values.exists %}
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Значения показателей</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Показатель</th>
+                  <th>Значение</th>
+                  <th>Ед. изм.</th>
+                  <th>Референс</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for value in lab.result_values.all %}
+                  <tr>
+                    <td>{{ value.name }}</td>
+                    <td>
+                      {{ value.value }}
+                      {% if value.flags %}
+                        {% if value.flags == 'High' %}
+                          <i class="fas fa-arrow-up text-danger ml-1" title="Повышено"></i>
+                        {% elif value.flags == 'Low' %}
+                          <i class="fas fa-arrow-down text-primary ml-1" title="Понижено"></i>
+                        {% elif value.flags == 'Critical' %}
+                          <i class="fas fa-exclamation-triangle text-danger ml-1" title="Критическое значение"></i>
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                    <td>{{ value.unit }}</td>
+                    <td>{{ value.reference_range }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>

@@ -1,5 +1,5 @@
 from django.urls import path
-from ..views.final_app import (
+from application.sanatorium.views.final_app import (
     FinalAppointmentListView,
     FinalAppointmentDetailView,
     FinalAppointmentCreateView,

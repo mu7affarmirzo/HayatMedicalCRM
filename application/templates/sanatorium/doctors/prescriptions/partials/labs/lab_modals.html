@@ -1,0 +1,161 @@
+<!-- Assign New Lab Test Modal -->
+<div class="modal fade" id="assignLabModal" tabindex="-1" role="dialog" aria-labelledby="assignLabModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary">
+        <h5 class="modal-title" id="assignLabModalLabel">Назначить лабораторное исследование</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="assignLabForm" method="post" action="#">
+        {% csrf_token %}
+        <div class="modal-body">
+          <!-- Lab Category Filter -->
+          <div class="form-group">
+            <label for="filter_category">Фильтр по категории:</label>
+            <select class="form-control" id="filter_category">
+              <option value="all">Все категории</option>
+              {% regroup available_labs|dictsort:"category" by category as lab_category_list %}
+              {% for category in lab_category_list %}
+                <option value="{{ category.grouper|default:'Общие анализы' }}">{{ category.grouper|default:'Общие анализы' }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="lab_test">Выберите исследование:</label>
+            <select class="form-control select2" id="lab_test" name="lab_test" required>
+              <option value="">-- Выберите исследование --</option>
+              {% for lab in available_labs %}
+              <option value="{{ lab.id }}" data-category="{{ lab.category|default:'Общие анализы' }}">
+                {{ lab.name }}
+                {% if lab.category %} ({{ lab.category }}){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="lab_state">Статус:</label>
+            <select class="form-control" id="lab_state" name="state">
+              <option value="recommended">Рекомендовано</option>
+              <option value="assigned" selected>Назначено</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="lab_notes">Примечания:</label>
+            <textarea class="form-control" id="lab_notes" name="notes" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary">Назначить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add this script for category filtering in the modal -->
+<script>
+$(document).ready(function() {
+  // Initialize select2 dropdown for lab tests with proper configuration
+  $('#lab_test').select2({
+    theme: 'bootstrap4',
+    width: '100%',
+    dropdownParent: $('#assignLabModal')
+  });
+
+  // Filter lab tests by category
+  $('#filter_category').on('change', function() {
+    var selectedCategory = $(this).val();
+
+    // First destroy select2 to modify options
+    $('#lab_test').select2('destroy');
+
+    // Reset selection
+    $('#lab_test').val('');
+
+    // Show all options if "all" is selected, otherwise filter
+    if (selectedCategory === 'all') {
+      $('#lab_test option').show();
+    } else {
+      $('#lab_test option').each(function() {
+        if ($(this).val() === '') {
+          $(this).show(); // Always show the placeholder option
+        } else {
+          var optionCategory = $(this).data('category');
+          if (optionCategory === selectedCategory) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        }
+      });
+    }
+
+    // Reinitialize select2
+    $('#lab_test').select2({
+      theme: 'bootstrap4',
+      width: '100%',
+      dropdownParent: $('#assignLabModal')
+    });
+  });
+
+  // Reset the filter when modal opens
+  $('#assignLabModal').on('shown.bs.modal', function() {
+    // Reset category filter to "All categories"
+    $('#filter_category').val('all').trigger('change');
+
+    // Clear form fields
+    $('#lab_test').val('').trigger('change');
+    $('#lab_state').val('assigned');
+    $('#lab_notes').val('');
+  });
+
+  // Custom handling for Assign Lab Form submission with proper AJAX
+  $('#assignLabForm').submit(function(e) {
+    e.preventDefault();
+
+    // Validation
+    if (!$('#lab_test').val()) {
+      toastr.error('Пожалуйста, выберите исследование');
+      return false;
+    }
+
+    // Submit via AJAX
+    $.ajax({
+      url: $(this).attr('action'),
+      type: 'POST',
+      data: $(this).serialize(),
+      success: function(response) {
+        if (response.success) {
+          // Close modal
+          $('#assignLabModal').modal('hide');
+
+          // Show success message
+          toastr.success('Исследование успешно назначено');
+
+          // Reload page to show the new lab test
+          // We use the current URL to preserve any active filters
+          setTimeout(function() {
+            window.location.reload();
+          }, 1000);
+        } else {
+          toastr.error(response.error || 'Произошла ошибка при назначении исследования');
+        }
+      },
+      error: function(xhr) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          toastr.error(response.error || 'Произошла ошибка при выполнении запроса');
+        } catch (e) {
+          toastr.error('Произошла ошибка при выполнении запроса');
+        }
+      }
+    });
+  });
+});
+</script>

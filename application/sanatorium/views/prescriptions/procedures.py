@@ -202,7 +202,7 @@ def update_session_status(request, session_id):
 
     url = reverse(
         'prescription_list',
-        kwargs={'history_id': procedure.illness_history.pk}  # →  "prescriptions/1"
+        kwargs={'history_id': procedure.illness_history.pk}  # →  "prescription_urls/1"
     )
 
     return redirect(f"{url}#procedures")

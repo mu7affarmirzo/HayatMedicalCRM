@@ -1,0 +1,352 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Lab Test Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-flask mr-2"></i>Lab Test Details
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'main_prescription_list' %}" class="btn btn-default btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to List
+                        </a>
+                        <a href="{% url 'assigned_labs_update' assigned_lab.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                        <a href="{% url 'assigned_labs_delete' assigned_lab.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-user-injured mr-2"></i>Patient Information
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if assigned_lab.illness_history.patient %}
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Patient Name:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.f_name }} 
+                                            {{ assigned_lab.illness_history.patient.l_name }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Date of Birth:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.date_of_birth|date:"M d, Y" }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Age:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.age }} years
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Gender:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.formatted_gender }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Phone:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.mobile_phone_number|default:"Not provided" }}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No patient information available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-flask mr-2"></i>Lab Test Information
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Test Name:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.lab.name }}</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Category:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.lab.category.name }}</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Status:</div>
+                                        <div class="col-sm-8">
+                                            <span id="lab-status" class="badge 
+                                                {% if assigned_lab.state == 'recommended' %}bg-info
+                                                {% elif assigned_lab.state == 'assigned' %}bg-primary
+                                                {% elif assigned_lab.state == 'dispatched' %}bg-warning
+                                                {% elif assigned_lab.state == 'results' %}bg-success
+                                                {% elif assigned_lab.state == 'cancelled' or assigned_lab.state == 'stopped' %}bg-danger
+                                                {% endif %}">
+                                                {{ assigned_lab.get_state_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Price:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.lab.price }} USD</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Turnaround Time:</div>
+                                        <div class="col-sm-8">
+                                            {% if assigned_lab.lab.cito %}
+                                                {{ assigned_lab.lab.deadline_cito }} hours (CITO)
+                                            {% else %}
+                                                {{ assigned_lab.lab.deadline|default:"Not specified" }} hours
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Assigned Date:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.created_at|date:"M d, Y H:i" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status update buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-secondary">
+                                    <h5 class="card-title">Update Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="btn-group">
+                                        <button type="button" 
+                                                class="btn btn-info update-status {% if assigned_lab.state == 'recommended' %}active{% endif %}"
+                                                data-state="recommended"
+                                                data-lab-id="{{ assigned_lab.id }}"
+                                                {% if assigned_lab.state == 'recommended' %}disabled{% endif %}>
+                                            Recommended
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-primary update-status {% if assigned_lab.state == 'assigned' %}active{% endif %}"
+                                                data-state="assigned"
+                                                data-lab-id="{{ assigned_lab.id }}"
+                                                {% if assigned_lab.state == 'assigned' %}disabled{% endif %}>
+                                            Assigned
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-warning update-status {% if assigned_lab.state == 'dispatched' %}active{% endif %}"
+                                                data-state="dispatched"
+                                                data-lab-id="{{ assigned_lab.id }}"
+                                                {% if assigned_lab.state == 'dispatched' %}disabled{% endif %}>
+                                            Dispatched
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-success update-status {% if assigned_lab.state == 'results' %}active{% endif %}"
+                                                data-state="results"
+                                                data-lab-id="{{ assigned_lab.id }}"
+                                                {% if assigned_lab.state == 'results' %}disabled{% endif %}>
+                                            Results Available
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-danger update-status {% if assigned_lab.state == 'cancelled' %}active{% endif %}"
+                                                data-state="cancelled"
+                                                data-lab-id="{{ assigned_lab.id }}"
+                                                {% if assigned_lab.state == 'cancelled' %}disabled{% endif %}>
+                                            Cancelled
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lab Results Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-success">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-file-medical-alt mr-2"></i>Lab Results
+                                    </h5>
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#add-result-modal">
+                                            <i class="fas fa-plus mr-1"></i> Add Result
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if assigned_lab.lab_results.all %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Comments</th>
+                                                    <th>File</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for result in assigned_lab.lab_results.all %}
+                                                <tr>
+                                                    <td>{{ result.result_date|date:"M d, Y H:i" }}</td>
+                                                    <td>{{ result.comments|default:"No comments" }}</td>
+                                                    <td>
+                                                        {% if result.attached_file %}
+                                                        <a href="{{ result.attached_file.url }}" target="_blank" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-file-download mr-1"></i>
+                                                            Download ({{ result.file_format|upper }})
+                                                        </a>
+                                                        {% else %}
+                                                        <span class="text-muted">No file attached</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <a href="#" class="btn btn-warning btn-sm">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <a href="#" class="btn btn-danger btn-sm">
+                                                                <i class="fas fa-trash"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle mr-2"></i>No results have been added yet.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Result Modal -->
+<div class="modal fade" id="add-result-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h4 class="modal-title">Add Lab Result</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="#" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="result-comments">Comments</label>
+                        <textarea class="form-control" id="result-comments" name="comments" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="result-file">Attach File</label>
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="result-file" name="attached_file">
+                                <label class="custom-file-label" for="result-file">Choose file</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save Result</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Status update buttons
+        $('.update-status').on('click', function() {
+            const labId = $(this).data('lab-id');
+            const newState = $(this).data('state');
+            const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+            
+            $.ajax({
+                url: `/labs/assigned/${labId}/update-state/${newState}/`,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update status label and buttons
+                        $('#lab-status').removeClass().addClass('badge');
+                        
+                        if (newState === 'recommended') {
+                            $('#lab-status').addClass('bg-info');
+                        } else if (newState === 'assigned') {
+                            $('#lab-status').addClass('bg-primary');
+                        } else if (newState === 'dispatched') {
+                            $('#lab-status').addClass('bg-warning');
+                        } else if (newState === 'results') {
+                            $('#lab-status').addClass('bg-success');
+                        } else if (newState === 'cancelled' || newState === 'stopped') {
+                            $('#lab-status').addClass('bg-danger');
+                        }
+                        
+                        $('#lab-status').text(response.state_display);
+                        
+                        // Reset buttons
+                        $('.update-status').removeClass('active').prop('disabled', false);
+                        $(`.update-status[data-state="${newState}"]`).addClass('active').prop('disabled', true);
+                        
+                        // Show success toast
+                        toastr.success('Lab status updated successfully');
+                    }
+                },
+                error: function() {
+                    toastr.error('Failed to update lab status');
+                }
+            });
+        });
+        
+        // File input display
+        $('.custom-file-input').on('change', function() {
+            let fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        });
+    });
+</script>
+{% endblock %}

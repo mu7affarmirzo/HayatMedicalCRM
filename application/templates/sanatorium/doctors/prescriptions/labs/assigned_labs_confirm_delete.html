@@ -1,0 +1,97 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+
+{% load static %}
+
+{% block title %}Delete Lab Assignment{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger">
+                    <h3 class="card-title">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Delete Lab Assignment
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="icon fas fa-ban"></i> Warning!</h5>
+                        <p>Are you sure you want to delete this lab assignment?</p>
+                        <p><strong>This action cannot be undone.</strong></p>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-secondary">
+                                    <h5 class="card-title">Lab Assignment Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table">
+                                        <tr>
+                                            <th style="width: 150px;">Patient:</th>
+                                            <td>
+                                                {% if assigned_lab.illness_history.patient %}
+                                                    {{ assigned_lab.illness_history.patient.f_name }}
+                                                    {{ assigned_lab.illness_history.patient.l_name }}
+                                                {% else %}
+                                                    <span class="text-muted">No patient information</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Lab Test:</th>
+                                            <td>{{ assigned_lab.lab.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Category:</th>
+                                            <td>{{ assigned_lab.lab.category.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Status:</th>
+                                            <td>
+                                                <span class="badge
+                                                    {% if assigned_lab.state == 'recommended' %}bg-info
+                                                    {% elif assigned_lab.state == 'assigned' %}bg-primary
+                                                    {% elif assigned_lab.state == 'dispatched' %}bg-warning
+                                                    {% elif assigned_lab.state == 'results' %}bg-success
+                                                    {% elif assigned_lab.state == 'cancelled' or assigned_lab.state == 'stopped' %}bg-danger
+                                                    {% endif %}">
+                                                    {{ assigned_lab.get_state_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Date Assigned:</th>
+                                            <td>{{ assigned_lab.created_at|date:"M d, Y" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash mr-1"></i> Yes, Delete
+                            </button>
+                            <a href="{% if assigned_lab.illness_history %}
+                                       {% url 'illness_history_detail' assigned_lab.illness_history.id %}
+                                     {% else %}
+                                       {% url 'main_prescription_list' %}
+                                     {% endif %}"
+                               class="btn btn-default">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

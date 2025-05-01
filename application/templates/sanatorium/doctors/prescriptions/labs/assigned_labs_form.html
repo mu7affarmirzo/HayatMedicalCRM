@@ -1,0 +1,254 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+
+{% load static %}
+
+{% block title %}
+    {% if form.instance.id %}
+        Update Lab Assignment
+    {% else %}
+        Assign New Lab Test
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lab-card {
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .lab-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .lab-card.selected {
+        border: 2px solid #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .lab-price {
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    #lab-selection-container {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-flask mr-2"></i>{{ title }}
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" id="assign-lab-form">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h5><i class="icon fas fa-ban"></i> Please correct the errors below</h5>
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.illness_history.id_for_label }}">
+                                        {{ form.illness_history.label }}
+                                    </label>
+                                    {{ form.illness_history }}
+                                    {% if form.illness_history.errors %}
+                                    <div class="text-danger">
+                                        {{ form.illness_history.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.state.id_for_label }}">
+                                        {{ form.state.label }}
+                                    </label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                    <div class="text-danger">
+                                        {{ form.state.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-info">
+                                        <h4 class="card-title">Lab Test Selection</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="{{ form.category_filter.id_for_label }}">
+                                                {{ form.category_filter.label }}
+                                            </label>
+                                            {{ form.category_filter }}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.lab_search.id_for_label }}">
+                                                {{ form.lab_search.label }}
+                                            </label>
+                                            {{ form.lab_search }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden lab input field -->
+                        <div class="form-group d-none">
+                            {{ form.lab }}
+                            {% if form.lab.errors %}
+                            <div class="text-danger">
+                                {{ form.lab.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Lab selection grid -->
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-1"></i> Save Lab Assignment
+                            </button>
+                            <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        const categoryFilter = $('#category-filter');
+        const labSearch = $('#lab-search');
+        const labList = $('#lab-list');
+        const labSelect = $('#id_lab');
+        const loadingIndicator = $('#loading-indicator');
+        const noLabsFound = $('#no-labs-found');
+
+        let selectedLabId = '{{ form.instance.lab.id|default:"" }}';
+
+        // Initialize select2
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Load initial labs
+        function loadLabs() {
+            loadingIndicator.removeClass('d-none');
+            labList.empty();
+            noLabsFound.addClass('d-none');
+
+            const categoryId = categoryFilter.val();
+            const searchTerm = labSearch.val();
+
+            $.ajax({
+                url: '{% url "get_labs_by_category" %}',
+                data: {
+                    category_id: categoryId,
+                    search_term: searchTerm
+                },
+                success: function(response) {
+                    loadingIndicator.addClass('d-none');
+
+                    if (response.labs && response.labs.length > 0) {
+                        response.labs.forEach(function(lab) {
+                            const isSelected = lab.id == selectedLabId;
+
+                            const labCard = `
+                                <div class="col-md-4 col-sm-6 mb-3">
+                                    <div class="card lab-card ${isSelected ? 'selected' : ''}" data-lab-id="${lab.id}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${lab.name}</h5>
+                                            <p class="card-text lab-price">$${lab.price}</p>
+                                            <div class="text-center mt-2">
+                                                <button type="button" class="btn btn-sm ${isSelected ? 'btn-success' : 'btn-primary'} select-lab-btn">
+                                                    ${isSelected ? '<i class="fas fa-check mr-1"></i> Selected' : 'Select'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+
+                            labList.append(labCard);
+                        });
+                    } else {
+                        noLabsFound.removeClass('d-none');
+                    }
+                },
+                error: function() {
+                    loadingIndicator.addClass('d-none');
+                    noLabsFound.removeClass('d-none');
+                }
+            });
+        }
+
+        // Initial load
+        loadLabs();
+
+        // Filter change event
+        categoryFilter.on('change', loadLabs);
+
+        // Search input event
+        let searchTimeout;
+        labSearch.on('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(loadLabs, 300);
+        });
+
+        // Lab selection event
+        $(document).on('click', '.lab-card', function() {
+            const labId = $(this).data('lab-id');
+
+            // Update visual selection
+            $('.lab-card').removeClass('selected');
+            $('.select-lab-btn').removeClass('btn-success').addClass('btn-primary').text('Select');
+
+            $(this).addClass('selected');
+            $(this).find('.select-lab-btn').removeClass('btn-primary').addClass('btn-success')
+                .html('<i class="fas fa-check mr-1"></i> Selected');
+
+            // Update hidden select field
+            labSelect.val(labId);
+            selectedLabId = labId;
+        });
+
+        // Form validation
+        $('#assign-lab-form').on('submit', function(e) {
+            if (!labSelect.val()) {
+                e.preventDefault();
+                toastr.error('Please select a lab test');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

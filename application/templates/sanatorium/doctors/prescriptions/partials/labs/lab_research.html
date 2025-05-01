@@ -1,0 +1,144 @@
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Лабораторные исследования</h3>
+    <div class="card-tools">
+      <div class="btn-group mr-2">
+        <form id="labCategoryFilterForm" method="get" class="d-inline">
+          <select class="form-control form-control-sm" id="labCategorySelect" name="lab_category" onchange="this.form.submit()">
+            <option value="all" {% if selected_category == 'all' %}selected{% endif %}>Все категории</option>
+            {% for category in lab_categories.keys %}
+              <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                {{ category }}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+      <a href="{% url 'assigned_labs_create_for_patient' history.id %}" class="btn btn-primary btn-sm">
+  <i class="fas fa-plus"></i> Назначить
+</a>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div id="labTestsTableContainer">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th style="width: 30%">Исследование</th>
+            <th style="width: 15%">Статус</th>
+            <th style="width: 20%">Дата назначения</th>
+            <th style="width: 15%">Результаты</th>
+            <th style="width: 20%">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if filtered_labs %}
+            {% for lab in filtered_labs %}
+              <tr>
+                <td>
+                  {{ lab.lab.name }}
+                  {% if lab.lab.category %}
+                    <span class="badge badge-light">{{ lab.lab.category }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if lab.state == 'recommended' %}
+                    <span class="badge badge-info">Рекомендовано</span>
+                  {% elif lab.state == 'assigned' %}
+                    <span class="badge badge-primary">Назначено</span>
+                  {% elif lab.state == 'dispatched' %}
+                    <span class="badge badge-warning">Отправлено</span>
+                  {% elif lab.state == 'results' %}
+                    <span class="badge badge-success">Результаты получены</span>
+                  {% elif lab.state == 'cancelled' %}
+                    <span class="badge badge-danger">Отменено</span>
+                  {% elif lab.state == 'stopped' %}
+                    <span class="badge badge-secondary">Прекращено</span>
+                  {% endif %}
+                </td>
+                <td>{{ lab.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                  {% if lab.state == 'results' %}
+                    <button type="button" class="btn btn-sm btn-info view-results-btn" data-id="{{ lab.id }}">
+                      <i class="fas fa-eye"></i> Просмотр
+                    </button>
+                  {% elif lab.state == 'cancelled' or lab.state == 'stopped' %}
+                    <span class="text-muted">Недоступно</span>
+                  {% else %}
+                    <button type="button" class="btn btn-sm btn-success upload-results-btn" data-id="{{ lab.id }}" data-name="{{ lab.lab.name }}">
+                      <i class="fas fa-upload"></i> Загрузить
+                    </button>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-info view-lab-btn" data-id="{{ lab.id }}">
+                      <i class="fas fa-info-circle"></i>
+                    </button>
+                    {% if lab.state != 'cancelled' and lab.state != 'stopped' and lab.state != 'results' %}
+                      <button type="button" class="btn btn-sm btn-warning edit-lab-btn" data-id="{{ lab.id }}">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-danger cancel-lab-btn" data-id="{{ lab.id }}" data-name="{{ lab.lab.name }}">
+                        <i class="fas fa-times"></i>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-secondary stop-lab-btn" data-id="{{ lab.id }}" data-name="{{ lab.lab.name }}">
+                        <i class="fas fa-ban"></i>
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" class="text-center py-3">
+                {% if selected_category != 'all' %}
+                  Нет назначенных лабораторных исследований в категории "{{ selected_category }}"
+                {% else %}
+                  Нет назначенных лабораторных исследований
+                {% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer bg-light">
+    <div class="row">
+      <div class="col">
+        <small class="text-muted">
+          <i class="fas fa-flask mr-1"></i> Всего: {{ assigned_labs|length }}
+          | <i class="fas fa-check text-success mr-1"></i> Выполнено: {{ completed_lab_tests }}
+          | <i class="fas fa-times text-danger mr-1"></i> Отменено: {{ cancelled_lab_tests }}
+        </small>
+      </div>
+      <div class="col text-right">
+        <div class="progress" style="height: 10px; width: 150px; display: inline-block;">
+          <div class="progress-bar bg-success" role="progressbar" style="width: {{ lab_completion_percent }}%"
+               aria-valuenow="{{ lab_completion_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <small class="text-muted ml-2">{{ lab_completion_percent|floatformat:1 }}% выполнено</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    // Preserve other query parameters when changing category filter
+    $('#labCategoryFilterForm').submit(function(event) {
+      event.preventDefault();
+
+      // Get the current URL
+      let url = new URL(window.location.href);
+
+      // Set the lab_category parameter
+      url.searchParams.set('lab_category', $('#labCategorySelect').val());
+
+      // Navigate to the new URL
+      window.location.href = url.href;
+    });
+  });
+</script>

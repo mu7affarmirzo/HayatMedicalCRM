@@ -102,7 +102,7 @@
 # #         'active_page': active_page,
 # #     }
 # #
-# #     return render(request, 'sanatorium/doctors/prescriptions/main_prescription_list.html', context)
+# #     return render(request, 'sanatorium/doctors/prescription_urls/main_prescription_list.html', context)
 #
 # @login_required
 # def main_prescription_list_view(request, history_id):
@@ -208,4 +208,4 @@
 #         'active_page': active_page,
 #     }
 #
-#     return render(request, 'sanatorium/doctors/prescriptions/main_prescription_list.html', context)
+#     return render(request, 'sanatorium/doctors/prescription_urls/main_prescription_list.html', context)

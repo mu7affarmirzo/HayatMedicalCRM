@@ -2,9 +2,12 @@ from dataclasses import field
 
 from django.contrib import admin
 
-from core.models import (Account, PatientModel, RoomType, Room, Booking, BookingDetail, Service, TariffService,
-                         Tariff, IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
-                         )
+from core.models import (
+    Account, PatientModel, RoomType, Room, Booking,
+    BookingDetail, Service, TariffService, Tariff,
+    IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
+    Warehouse, CompanyModel, ItemsModel, ItemsInStockModel,
+)
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -69,3 +72,22 @@ class TariffAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class IllnessHistoryAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = [field.name for field in IllnessHistory._meta.fields]
 
+
+@admin.register(Warehouse)
+class WarehouseAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in Warehouse._meta.fields]
+
+
+@admin.register(CompanyModel)
+class CompanyModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in CompanyModel._meta.fields]
+
+
+@admin.register(ItemsModel)
+class ItemsModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in ItemsModel._meta.fields]
+
+
+@admin.register(ItemsInStockModel)
+class ItemsInStockModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in ItemsInStockModel._meta.fields]

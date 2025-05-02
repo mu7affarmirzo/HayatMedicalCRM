@@ -4,75 +4,82 @@
 {% block title %}Основной лист назначений | Hayat Medical Center{% endblock %}
 
 {% block extra_css %}
-{% include 'sanatorium/doctors/prescriptions/partials/prescription_styles.html' %}
+    {% include 'sanatorium/doctors/prescriptions/partials/prescription_styles.html' %}
 {% endblock %}
 
 {% block content %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Основной лист назначений</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни #{{ history.series_number }}</a></li>
-                    <li class="breadcrumb-item active">Основной лист назначений</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- /.content-header -->
-
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-        <!-- Info boxes -->
-        {% include 'sanatorium/doctors/prescriptions/partials/info_boxes.html' %}
-
-        <!-- Tab navigation -->
-        <div class="card">
-            <div class="card-header p-2">
-                <ul class="nav nav-pills">
-                    <li class="nav-item"><a class="nav-link active" href="#consultations" data-toggle="tab">Консультации и исследования</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#procedures" data-toggle="tab">Лечебные процедуры</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#medications" data-toggle="tab">Медикаменты</a></li>
-                </ul>
-            </div>
-            <div class="card-body">
-                <div class="tab-content">
-                    <!-- Consultations and Examinations Tab -->
-                    <div class="tab-pane active" id="consultations">
-                        {% include 'sanatorium/doctors/prescriptions/partials/consultations.html' %}
-
-                        <!-- Lab Research Section -->
-                        {% include 'sanatorium/doctors/prescriptions/partials/labs/lab_research.html' %}
-                    </div>
-
-                    <!-- Procedures Tab -->
-                    <div class="tab-pane" id="procedures">
-                        {% include 'sanatorium/doctors/prescriptions/partials/procedures.html' %}
-                    </div>
-
-                    <!-- Medications Tab -->
-                    <div class="tab-pane" id="medications">
-                        {% include 'sanatorium/doctors/prescriptions/partials/medications.html' %}
-                    </div>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Основной лист назначений</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История
+                            болезни #{{ history.series_number }}</a></li>
+                        <li class="breadcrumb-item active">Основной лист назначений</li>
+                    </ol>
                 </div>
             </div>
         </div>
     </div>
-</section>
+    <!-- /.content-header -->
 
-<!-- Modal Dialogs -->
-{% include 'sanatorium/doctors/prescriptions/partials/labs/lab_modals.html' %}
-{% include 'sanatorium/doctors/prescriptions/partials/procedure_modals.html' %}
-{% include 'sanatorium/doctors/prescriptions/partials/medication_modals.html' %}
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            {% include 'sanatorium/doctors/prescriptions/partials/info_boxes.html' %}
+
+            <!-- Tab navigation -->
+            <div class="card">
+                <div class="card-header p-2">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item"><a class="nav-link active" href="#consultations" data-toggle="tab">Консультации</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="#labs" data-toggle="tab">Исследования</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#procedures" data-toggle="tab">Лечебные
+                            процедуры</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#medications" data-toggle="tab">Медикаменты</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Consultations Tab -->
+                        <div class="tab-pane active" id="consultations">
+                            {% include 'sanatorium/doctors/prescriptions/partials/consultations.html' %}
+                        </div>
+
+                        <!-- Labs Tab -->
+                        <div class="tab-pane" id="labs">
+                            {% include 'sanatorium/doctors/prescriptions/partials/labs/lab_research.html' %}
+                        </div>
+
+                        <!-- Procedures Tab -->
+                        <div class="tab-pane" id="procedures">
+                            {% include 'sanatorium/doctors/prescriptions/partials/procedures.html' %}
+                        </div>
+
+                        <!-- Medications Tab -->
+                        <div class="tab-pane" id="medications">
+                            {% include 'sanatorium/doctors/prescriptions/partials/medications.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Dialogs -->
+    {% include 'sanatorium/doctors/prescriptions/partials/labs/lab_modals.html' %}
+    {% include 'sanatorium/doctors/prescriptions/partials/procedure_modals.html' %}
+    {% include 'sanatorium/doctors/prescriptions/partials/medication_modals.html' %}
 {% endblock %}
 
 {% block extra_js %}
-{% include 'sanatorium/doctors/prescriptions/partials/prescription_scripts.html' %}
+    {% include 'sanatorium/doctors/prescriptions/partials/prescription_scripts.html' %}
 {% endblock %}

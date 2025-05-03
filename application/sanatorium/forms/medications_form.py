@@ -33,7 +33,7 @@ class PrescribedMedicationForm(forms.ModelForm):
         widgets = {
             'dosage': forms.TextInput(attrs={'class': 'form-control'}),
             'frequency': forms.Select(attrs={'class': 'form-control select2'}),
-            'route': forms.Select(attrs={'class': 'form-control select2'}),
+            'route': forms.Select(attrs={'class': 'form-control', 'rows': 2}),
             'start_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
             'end_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
             'duration_days': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),

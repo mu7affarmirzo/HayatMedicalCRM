@@ -6,7 +6,7 @@ from core.models import (
     Account, PatientModel, RoomType, Room, Booking,
     BookingDetail, Service, TariffService, Tariff,
     IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
-    Warehouse, CompanyModel, ItemsModel, ItemsInStockModel,
+    Warehouse, CompanyModel, MedicationModel, MedicationsInStockModel,
 )
 
 from import_export.admin import ImportExportModelAdmin
@@ -83,11 +83,11 @@ class CompanyModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = [field.name for field in CompanyModel._meta.fields]
 
 
-@admin.register(ItemsModel)
-class ItemsModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    list_display = [field.name for field in ItemsModel._meta.fields]
+@admin.register(MedicationModel)
+class MedicationModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in MedicationModel._meta.fields]
 
 
-@admin.register(ItemsInStockModel)
-class ItemsInStockModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    list_display = [field.name for field in ItemsInStockModel._meta.fields]
+@admin.register(MedicationsInStockModel)
+class MedicationsInStockModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in MedicationsInStockModel._meta.fields]

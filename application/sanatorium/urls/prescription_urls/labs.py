@@ -5,8 +5,6 @@ from application.sanatorium.views.prescriptions import assigned_labs
 urlpatterns = [
 
     path('assigned/create/', assigned_labs.AssignedLabsCreateView.as_view(), name='assigned_labs_create'),
-# In urls.py
-#     path('assigned/create/<int:history_id>/', assigned_labs.assign_lab_create, name='assigned_labs_create_for_patient'),
 
     path('assigned/create/<int:illness_history_id>/', assigned_labs.AssignedLabsCreateView.as_view(),
          name='assigned_labs_create_for_patient'),

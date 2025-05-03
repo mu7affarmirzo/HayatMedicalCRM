@@ -9,5 +9,5 @@ urlpatterns = [
 
     path('procedures/', include('application.sanatorium.urls.prescription_urls.procedures')),
     path('labs/', include('application.sanatorium.urls.prescription_urls.labs')),
-    # path('medications/', include('application.sanatorium.urls.prescription_urls.medications')),
+    path('medications/', include('application.sanatorium.urls.prescription_urls.medications')),
 ]

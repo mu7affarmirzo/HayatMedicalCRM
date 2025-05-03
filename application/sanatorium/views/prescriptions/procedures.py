@@ -39,7 +39,6 @@ def procedure_create(request, history_id):
     history = get_object_or_404(IllnessHistory, id=history_id)
     service_types = ServiceTypeModel.objects.all()
 
-
     if request.method == 'POST':
         form = ProcedureForm(request.POST)
         print('here we are')

@@ -1,0 +1,202 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Назначение: {{ medication.medication.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2 text-gray-800">Назначение: {{ medication.medication.name }}</h1>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="{% url 'prescribed_medication_update' medication.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <a href="{% url 'medication_administration_create' %}?prescribed_medication={{ medication.id }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Добавить применение
+            </a>
+        </div>
+    </div>
+
+    <!-- Medication Details -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Информация о назначении</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th>Пациент:</th>
+                                <td>{{ medication.illness_history.patient.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Лекарство:</th>
+                                <td>{{ medication.medication.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Дозировка:</th>
+                                <td>{{ medication.dosage }}</td>
+                            </tr>
+                            <tr>
+                                <th>Частота приема:</th>
+                                <td>{{ medication.get_frequency_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Способ применения:</th>
+                                <td>{{ medication.route|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Дата начала:</th>
+                                <td>{{ medication.start_date }}</td>
+                            </tr>
+                            <tr>
+                                <th>Дата окончания:</th>
+                                <td>{{ medication.end_date|default:"Не указана" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Продолжительность (дней):</th>
+                                <td>{{ medication.duration_days|default:"Не указана" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Статус:</th>
+                                <td>
+                                    <span class="badge badge-
+                                    {% if medication.status == 'recommended' %}info
+                                    {% elif medication.status == 'prescribed' %}primary
+                                    {% elif medication.status == 'active' %}success
+                                    {% elif medication.status == 'completed' %}secondary
+                                    {% elif medication.status == 'discontinued' %}danger
+                                    {% endif %}">
+                                        {{ medication.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>По необходимости:</th>
+                                <td>{% if medication.is_prn %}Да{% else %}Нет{% endif %}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Инструкции и причины</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Инструкции:</h6>
+                        <p>{{ medication.instructions|default:"Не указаны"|linebreaks }}</p>
+                    </div>
+
+                    <div>
+                        <h6 class="font-weight-bold">Причина назначения:</h6>
+                        <p>{{ medication.reason|default:"Не указана"|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Информация о назначении</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Назначено:</th>
+                            <td>{{ medication.prescribed_by.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Дата назначения:</th>
+                            <td>{{ medication.prescribed_at }}</td>
+                        </tr>
+                        {% if medication.last_modified_by %}
+                        <tr>
+                            <th>Последнее изменение:</th>
+                            <td>{{ medication.last_modified_by.full_name }} ({{ medication.modified_at }})</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Administration History -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">История применения</h6>
+            <a href="{% url 'medication_administration_create' %}?prescribed_medication={{ medication.id }}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> Добавить применение
+            </a>
+        </div>
+        <div class="card-body">
+            {% if administrations %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Дата и время</th>
+                                <th>Применено</th>
+                                <th>Доза</th>
+                                <th>Реакция пациента</th>
+                                <th>Побочные эффекты</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for administration in administrations %}
+                                <tr>
+                                    <td>{{ administration.administered_at }}</td>
+                                    <td>{{ administration.administered_by.full_name }}</td>
+                                    <td>{{ administration.dosage_given }}</td>
+                                    <td>{{ administration.patient_response|truncatechars:30|default:"-" }}</td>
+                                    <td>{{ administration.side_effects|truncatechars:30|default:"-" }}</td>
+                                    <td>
+                                        <a href="{% url 'medication_administration_detail' administration.id %}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'medication_administration_update' administration.id %}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'medication_administration_delete' administration.id %}" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    История применения отсутствует.
+                    <a href="{% url 'medication_administration_create' %}?prescribed_medication={{ medication.id }}" class="alert-link">Добавить первое применение</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <a href="{% url 'prescribed_medication_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Назад к списку
+            </a>
+            <a href="{% url 'prescribed_medication_update' medication.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <a href="{% url 'prescribed_medication_delete' medication.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Удалить
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

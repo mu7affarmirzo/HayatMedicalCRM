@@ -1,0 +1,166 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Список назначенных лекарств{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2 text-gray-800">
+                {% if illness_history %}
+                    Назначенные лекарства для пациента {{ illness_history.patient.full_name }}
+                {% else %}
+                    Список назначенных лекарств
+                {% endif %}
+            </h1>
+        </div>
+        <div class="col-md-4 text-right">
+            {% if illness_history %}
+                <a href="{% url 'prescribed_medication_create' %}?illness_history={{ illness_history.id }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Добавить назначение
+                </a>
+            {% else %}
+                <a href="{% url 'prescribed_medication_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Добавить назначение
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Фильтры</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="form-inline">
+                        {% if illness_history %}
+                            <input type="hidden" name="illness_history" value="{{ illness_history.id }}">
+                        {% endif %}
+                        <div class="form-group mr-3">
+                            <label for="status" class="mr-2">Статус:</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">Все статусы</option>
+                                {% for status_code, status_label in status_choices %}
+                                    <option value="{{ status_code }}" {% if request.GET.status == status_code %}selected{% endif %}>
+                                        {{ status_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Применить</button>
+                        <a href="{% if illness_history %}{% url 'prescribed_medication_list' %}?illness_history={{ illness_history.id }}{% else %}{% url 'prescribed_medication_list' %}{% endif %}" class="btn btn-secondary ml-2">Сбросить</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medications List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Назначенные лекарства</h6>
+        </div>
+        <div class="card-body">
+            {% if medications %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Пациент</th>
+                                <th>Лекарство</th>
+                                <th>Дозировка</th>
+                                <th>Частота</th>
+                                <th>Начало</th>
+                                <th>Окончание</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for medication in medications %}
+                                <tr>
+                                    <td>{{ medication.illness_history.patient.full_name }}</td>
+                                    <td>{{ medication.medication.name }}</td>
+                                    <td>{{ medication.dosage }}</td>
+                                    <td>{{ medication.get_frequency_display }}</td>
+                                    <td>{{ medication.start_date }}</td>
+                                    <td>{{ medication.end_date|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge badge-
+                                        {% if medication.status == 'recommended' %}info
+                                        {% elif medication.status == 'prescribed' %}primary
+                                        {% elif medication.status == 'active' %}success
+                                        {% elif medication.status == 'completed' %}secondary
+                                        {% elif medication.status == 'discontinued' %}danger
+                                        {% endif %}">
+                                            {{ medication.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'prescribed_medication_detail' medication.id %}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'prescribed_medication_update' medication.id %}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'prescribed_medication_delete' medication.id %}" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="mt-3">
+                    <nav aria-label="Навигация по страницам">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.illness_history %}&illness_history={{ request.GET.illness_history }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&laquo; Первая</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.illness_history %}&illness_history={{ request.GET.illness_history }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Предыдущая</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.illness_history %}&illness_history={{ request.GET.illness_history }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Следующая</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.illness_history %}&illness_history={{ request.GET.illness_history }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Последняя &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="alert alert-info">
+                    Назначенные лекарства не найдены.
+                    {% if illness_history %}
+                        <a href="{% url 'prescribed_medication_create' %}?illness_history={{ illness_history.id }}" class="alert-link">Создать новое назначение</a>
+                    {% else %}
+                        <a href="{% url 'prescribed_medication_create' %}" class="alert-link">Создать новое назначение</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

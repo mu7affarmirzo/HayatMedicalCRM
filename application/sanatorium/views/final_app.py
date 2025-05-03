@@ -43,7 +43,7 @@ class FinalAppointmentCreateOrUpdateView(LoginRequiredMixin, View):
 class FinalAppointmentCreateView(LoginRequiredMixin, CreateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
-    template_name = 'sanatorium/doctors/final_app/form.html'
+    template_name = 'sanatorium/doctors/appointments/final_app/form.html'
 
     def get_success_url(self):
         return reverse_lazy('final_appointment_detail',
@@ -66,7 +66,7 @@ class FinalAppointmentCreateView(LoginRequiredMixin, CreateView):
 class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
-    template_name = 'sanatorium/doctors/final_app/form.html'
+    template_name = 'sanatorium/doctors/appointments/final_app/form.html'
 
     def get_success_url(self):
         return reverse_lazy('final_appointment_detail',
@@ -85,7 +85,7 @@ class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
 
 class FinalAppointmentListView(LoginRequiredMixin, ListView):
     model = FinalAppointmentWithDoctorModel
-    template_name = 'sanatorium/doctors/final_app/list.html'
+    template_name = 'sanatorium/doctors/appointments/final_app/list.html'
     context_object_name = 'appointments'
 
     def get_queryset(self):
@@ -102,7 +102,7 @@ class FinalAppointmentListView(LoginRequiredMixin, ListView):
 
 class FinalAppointmentDetailView(LoginRequiredMixin, DetailView):
     model = FinalAppointmentWithDoctorModel
-    template_name = 'sanatorium/doctors/final_app/detail.html'
+    template_name = 'sanatorium/doctors/appointments/final_app/detail.html'
     context_object_name = 'appointment'
 
     def get_context_data(self, **kwargs):
@@ -115,7 +115,7 @@ class FinalAppointmentDetailView(LoginRequiredMixin, DetailView):
 class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
-    template_name = 'sanatorium/doctors/final_app/form.html'
+    template_name = 'sanatorium/doctors/appointments/final_app/form.html'
 
     def get_success_url(self):
         return reverse_lazy('repeated_appointment_detail',

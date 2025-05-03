@@ -45,7 +45,7 @@ def assign_lab_create(request, history_id):
 
 class AssignedLabsListView(LoginRequiredMixin, ListView):
     model = AssignedLabs
-    template_name = 'sanatorium/doctors/on_duty_app/list.html'
+    template_name = 'sanatorium/doctors/appointments/on_duty_app/list.html'
     context_object_name = 'appointments'
     paginate_by = 10
 
@@ -59,7 +59,7 @@ class AssignedLabsListView(LoginRequiredMixin, ListView):
 
 class AssignedLabsDetailView(LoginRequiredMixin, DetailView):
     model = AssignedLabs
-    template_name = 'sanatorium/doctors/on_duty_app/detail.html'
+    template_name = 'sanatorium/doctors/appointments/on_duty_app/detail.html'
     context_object_name = 'appointment'
 
     def get_context_data(self, **kwargs):

@@ -23,7 +23,7 @@ def initial_appointment_detail(request, history_id):
 
     # Add all appointments for sidebar
     context.update(get_sidebar_appointments(history))
-    return render(request, 'sanatorium/doctors/init_appointment/appointment_detail.html', context)
+    return render(request, 'sanatorium/doctors/appointments/init_appointment/appointment_detail.html', context)
 
 
 @login_required
@@ -58,7 +58,7 @@ def initial_appointment_update(request, history_id):
     # Add all appointments for sidebar
     context.update(get_sidebar_appointments(history))
 
-    return render(request, 'sanatorium/doctors/init_appointment/appointment_form.html', context)
+    return render(request, 'sanatorium/doctors/appointments/init_appointment/appointment_form.html', context)
 
 
 def get_sidebar_appointments(history):

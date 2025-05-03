@@ -11,7 +11,7 @@ from core.models import AppointmentWithOnDutyDoctorModel
 
 class AppointmentWithOnDutyDoctorListView(LoginRequiredMixin, ListView):
     model = AppointmentWithOnDutyDoctorModel
-    template_name = 'sanatorium/doctors/on_duty_app/list.html'
+    template_name = 'sanatorium/doctors/appointments/on_duty_app/list.html'
     context_object_name = 'appointments'
     paginate_by = 10
 
@@ -25,7 +25,7 @@ class AppointmentWithOnDutyDoctorListView(LoginRequiredMixin, ListView):
 
 class AppointmentWithOnDutyDoctorDetailView(LoginRequiredMixin, DetailView):
     model = AppointmentWithOnDutyDoctorModel
-    template_name = 'sanatorium/doctors/on_duty_app/detail.html'
+    template_name = 'sanatorium/doctors/appointments/on_duty_app/detail.html'
     context_object_name = 'appointment'
 
     def get_context_data(self, **kwargs):
@@ -39,7 +39,7 @@ class AppointmentWithOnDutyDoctorDetailView(LoginRequiredMixin, DetailView):
 class AppointmentWithOnDutyDoctorCreateView(LoginRequiredMixin, CreateView):
     model = AppointmentWithOnDutyDoctorModel
     form_class = AppointmentWithOnDutyDoctorForm
-    template_name = 'sanatorium/doctors/on_duty_app/form.html'
+    template_name = 'sanatorium/doctors/appointments/on_duty_app/form.html'
 
     def get_success_url(self):
         return reverse('on_duty_appointment_detail', kwargs={'pk': self.object.pk})
@@ -66,7 +66,7 @@ class AppointmentWithOnDutyDoctorCreateView(LoginRequiredMixin, CreateView):
 class AppointmentWithOnDutyDoctorUpdateView(LoginRequiredMixin, UpdateView):
     model = AppointmentWithOnDutyDoctorModel
     form_class = AppointmentWithOnDutyDoctorForm
-    template_name = 'sanatorium/doctors/on_duty_app/form.html'
+    template_name = 'sanatorium/doctors/appointments/on_duty_app/form.html'
     context_object_name = 'appointment'
 
     def get_success_url(self):

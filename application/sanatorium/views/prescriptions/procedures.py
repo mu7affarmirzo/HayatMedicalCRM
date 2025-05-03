@@ -27,6 +27,7 @@ def procedure_detail(request, procedure_id):
         'procedure': procedure,
         'history': history,
         'sessions': sessions,
+        'active_page': {'proc_main_list_page': 'active'}
     }
 
     return render(request, 'sanatorium/doctors/prescriptions/procedure_detail.html', context)
@@ -58,7 +59,9 @@ def procedure_create(request, history_id):
         'form': form,
         'history': history,
         'service_types': service_types,
-        'action': 'Добавить'
+        'action': 'Добавить',
+        'active_page': {'proc_main_list_page': 'active'}
+
     }
 
     return render(request, 'sanatorium/doctors/prescriptions/procedure_form.html', context)
@@ -90,9 +93,11 @@ def procedure_edit(request, procedure_id):
         form = ProcedureForm(instance=procedure)
 
     context = {
+
         'form': form,
         'procedure': procedure,
         'history': history,
+        'active_page': {'proc_main_list_page': 'active'},
         'action': 'Редактировать'
     }
 
@@ -114,6 +119,8 @@ def procedure_delete(request, procedure_id):
     context = {
         'procedure': procedure,
         'history': history,
+        'active_page': {'proc_main_list_page': 'active'}
+
     }
 
     return render(request, 'sanatorium/doctors/prescriptions/procedure_confirm_delete.html', context)

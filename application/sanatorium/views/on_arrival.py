@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 class AppointmentWithOnDutyDoctorOnArrivalCreateView(LoginRequiredMixin, CreateView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
     form_class = OnDutyDoctorOnArrivalForm
-    template_name = 'sanatorium/doctors/on_arrival/form.html'
+    template_name = 'sanatorium/doctors/appointments/on_arrival/form.html'
 
     def get_success_url(self):
         return reverse_lazy('on_arrival_consulting_detail',
@@ -32,7 +32,7 @@ class AppointmentWithOnDutyDoctorOnArrivalCreateView(LoginRequiredMixin, CreateV
 
 class AppointmentWithOnDutyDoctorOnArrivalListView(LoginRequiredMixin, ListView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
-    template_name = 'sanatorium/doctors/on_arrival/list.html'
+    template_name = 'sanatorium/doctors/appointments/on_arrival/list.html'
     context_object_name = 'consultings'
 
     def get_queryset(self):
@@ -48,7 +48,7 @@ class AppointmentWithOnDutyDoctorOnArrivalListView(LoginRequiredMixin, ListView)
 
 class AppointmentWithOnDutyDoctorOnArrivalDetailView(LoginRequiredMixin, DetailView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
-    template_name = 'sanatorium/doctors/on_arrival/detail.html'
+    template_name = 'sanatorium/doctors/appointments/on_arrival/detail.html'
     context_object_name = 'appointment'
 
     def get_context_data(self, **kwargs):
@@ -61,7 +61,7 @@ class AppointmentWithOnDutyDoctorOnArrivalDetailView(LoginRequiredMixin, DetailV
 class AppointmentWithOnDutyDoctorOnArrivalUpdateView(LoginRequiredMixin, UpdateView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
     form_class = OnDutyDoctorOnArrivalForm
-    template_name = 'sanatorium/doctors/on_arrival/form.html'
+    template_name = 'sanatorium/doctors/appointments/on_arrival/form.html'
 
     def get_success_url(self):
         return reverse_lazy('on_arrival_consulting_detail',

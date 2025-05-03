@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.repeated_app import (
+from application.sanatorium.views.appointment_views.repeated_app import (
     RepeatedAppointmentCreateView,
     RepeatedAppointmentUpdateView,
     RepeatedAppointmentDetailView,

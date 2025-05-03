@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from core.models import FinalAppointmentWithDoctorModel, IllnessHistory
-from ..forms.final_app_form import FinalAppointmentWithDoctorForm
+from application.sanatorium.forms.final_app_form import FinalAppointmentWithDoctorForm
 
 
 class FinalAppointmentCreateOrUpdateView(LoginRequiredMixin, View):

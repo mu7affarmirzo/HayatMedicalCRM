@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.neurologist_app import (
+from application.sanatorium.views.appointment_views.neurologist_app import (
     NeurologistConsultingCreateView,
     NeurologistConsultingUpdateView,
     NeurologistConsultingDetailView,

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.ekg_app import (
+from application.sanatorium.views.appointment_views.ekg_app import (
     EkgAppointmentCreateView,
     EkgAppointmentUpdateView,
     EkgAppointmentDetailView,

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.on_duty_app import (
+from application.sanatorium.views.appointment_views.on_duty_app import (
     AppointmentWithOnDutyDoctorCreateView,
     AppointmentWithOnDutyDoctorUpdateView,
     AppointmentWithOnDutyDoctorDetailView,

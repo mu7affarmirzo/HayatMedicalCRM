@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from core.models import InitialAppointmentWithDoctorModel, IllnessHistory
-from ..forms.init_appointment_form import InitialAppointmentForm
+from application.sanatorium.forms.init_appointment_form import InitialAppointmentForm
 
 
 @login_required

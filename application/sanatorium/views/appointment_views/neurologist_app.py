@@ -3,17 +3,17 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from core.models import EkgAppointmentModel, IllnessHistory
-from ..forms.ekg_app_form import EkgAppointmentForm
+from core.models import ConsultingWithNeurologistModel, IllnessHistory
+from application.sanatorium.forms.neurologist_app_form import ConsultingWithNeurologistForm
 
 
-class EkgAppointmentCreateView(LoginRequiredMixin, CreateView):
-    model = EkgAppointmentModel
-    form_class = EkgAppointmentForm
-    template_name = 'sanatorium/doctors/appointments/ekg_app/form.html'
+class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
+    model = ConsultingWithNeurologistModel
+    form_class = ConsultingWithNeurologistForm
+    template_name = 'sanatorium/doctors/appointments/neurologist/form.html'
 
     def get_success_url(self):
-        return reverse_lazy('ekg_appointment_detail',
+        return reverse_lazy('neurologist_consulting_detail',
                             kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
@@ -29,27 +29,27 @@ class EkgAppointmentCreateView(LoginRequiredMixin, CreateView):
         context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         return context
 
-
-class EkgAppointmentListView(LoginRequiredMixin, ListView):
-    model = EkgAppointmentModel
-    template_name = 'sanatorium/doctors/appointments/ekg_app/list.html'
-    context_object_name = 'appointments'
+class NeurologistConsultingListView(LoginRequiredMixin, ListView):
+    model = ConsultingWithNeurologistModel
+    template_name = 'sanatorium/doctors/appointments/neurologist/list.html'
+    context_object_name = 'consultings'
 
     def get_queryset(self):
         history_id = self.kwargs.get('history_id')
-        return EkgAppointmentModel.objects.filter(illness_history_id=history_id)
+        return ConsultingWithNeurologistModel.objects.filter(illness_history_id=history_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['illness_history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
+        context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         return context
 
 
-class EkgAppointmentDetailView(LoginRequiredMixin, DetailView):
-    model = EkgAppointmentModel
-    template_name = 'sanatorium/doctors/appointments/ekg_app/detail.html'
-    context_object_name = 'appointment'
+class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
+    model = ConsultingWithNeurologistModel
+    template_name = 'sanatorium/doctors/appointments/neurologist/detail.html'
+    context_object_name = 'consulting'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -58,13 +58,13 @@ class EkgAppointmentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class EkgAppointmentUpdateView(LoginRequiredMixin, UpdateView):
-    model = EkgAppointmentModel
-    form_class = EkgAppointmentForm
-    template_name = 'sanatorium/doctors/appointments/ekg_app/form.html'
+class NeurologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
+    model = ConsultingWithNeurologistModel
+    form_class = ConsultingWithNeurologistForm
+    template_name = 'sanatorium/doctors/appointments/neurologist/form.html'
 
     def get_success_url(self):
-        return reverse_lazy('ekg_appointment_detail',
+        return reverse_lazy('neurologist_consulting_detail',
                             kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
@@ -76,4 +76,3 @@ class EkgAppointmentUpdateView(LoginRequiredMixin, UpdateView):
         context['illness_history'] = self.object.illness_history
         context['history'] = self.object.illness_history
         return context
-

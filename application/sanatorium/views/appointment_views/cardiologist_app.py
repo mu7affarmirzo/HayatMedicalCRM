@@ -5,8 +5,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 
 from core.models import ConsultingWithCardiologistModel, IllnessHistory
-from ..decorators import set_active_sidebar
-from ..forms.cardiologist_app_form import ConsultingWithCardiologistForm
+from application.sanatorium.decorators import set_active_sidebar
+from application.sanatorium.forms.cardiologist_app_form import ConsultingWithCardiologistForm
 
 
 class CardiologistConsultingListView(LoginRequiredMixin, ListView):

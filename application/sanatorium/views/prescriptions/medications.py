@@ -69,6 +69,17 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
     success_message = "Назначение успешно создано"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+
+        # Get illness_history from URL parameter
+        illness_history_id = self.kwargs.get('illness_history_id')
+        if illness_history_id:
+            kwargs['illness_history'] = get_object_or_404(IllnessHistory, pk=illness_history_id)
+
+        return kwargs
+
     def get_initial(self):
         initial = super().get_initial()
         # Pre-populate illness_history if provided in URL

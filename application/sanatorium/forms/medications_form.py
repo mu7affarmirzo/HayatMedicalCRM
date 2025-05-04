@@ -45,6 +45,9 @@ class PrescribedMedicationForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.illness_history = kwargs.pop('illness_history', None)
+
         super().__init__(*args, **kwargs)
 
         # Add any placeholder text or help text
@@ -54,7 +57,16 @@ class PrescribedMedicationForm(forms.ModelForm):
 
         # Set initial values if needed
         if not self.instance.pk:  # Only for new instances
-            self.fields['status'].initial = 'active'
+            is_assigned_doctor = False
+            if self.user and self.illness_history:
+                is_assigned_doctor = self.illness_history.doctor == self.user
+
+            # Set initial status based on doctor assignment
+            if is_assigned_doctor:
+                self.fields['status'].initial = 'assigned'
+            else:
+                self.fields['status'].initial = 'prescribed'
+
             self.fields['start_date'].initial = timezone.now().date()
 
         # Calculate suggested end date based on duration if provided

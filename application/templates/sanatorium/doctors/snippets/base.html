@@ -47,19 +47,26 @@
                     Создать <span class="caret"></span>
                 </a>
                 <div class="dropdown-menu">
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация кардиолога первичная</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация невролога первичная</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр дежурного врача при поступлении</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный приём лечащего врача</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_duty_appointment_create' history.id %}">Прием дежурного врача</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'ekg_appointment_create' history.id %}">ЭКГ (Электрокардиограмма)</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация
+                        кардиолога первичная</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация
+                        невролога первичная</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр
+                        дежурного врача при поступлении</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный
+                        приём лечащего врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_duty_appointment_create' history.id %}">Прием
+                        дежурного врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'ekg_appointment_create' history.id %}">ЭКГ
+                        (Электрокардиограмма)</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'final_appointment_create' history.id %}">Заключительный прием лечащего врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'final_appointment_create' history.id %}">Заключительный
+                        прием лечащего врача</a>
                 </div>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{% url 'prescription_list' history.id %}" class="nav-link">Основноый лист назначений</a>
-                </li>
+                <a href="{% url 'prescription_list' history.id %}" class="nav-link">Основноый лист назначений</a>
+            </li>
             {% if request.user.is_superuser %}
                 <li class="nav-item d-none d-sm-inline-block">
                     <a href="#" class="nav-link">Статистика</a>
@@ -122,13 +129,15 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                     data-accordion="false">
                     <li class="nav-item">
-                        <a href="{% url 'illness_history_detail' history.id %}" class="nav-link {{ active_page.title_page }}">
+                        <a href="{% url 'illness_history_detail' history.id %}"
+                           class="nav-link {{ active_page.title_page }}">
                             <i class="nav-icon fas fa-home"></i>
                             <p>Титульная страница</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'initial_appointment_detail' history.id %}" class="nav-link {{ active_page.initial_appointment }}">
+                        <a href="{% url 'initial_appointment_detail' history.id %}"
+                           class="nav-link {{ active_page.initial_appointment }}">
                             <i class="nav-icon fas fa-user-md"></i>
                             <p>Первичный прием лечащего врача</p>
                         </a>
@@ -182,168 +191,179 @@
                                     {% endfor %}
                                 </ul>
                             </li>
-                            <li class="nav-item">
-                                <li class="nav-item ">
-                                    <a href="#" class="nav-link {{ active_page.consulting_on_arrival }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>
-                                            Осмотр дежурного врача при поступлении
-                                            <i class="right fas fa-angle-left"></i>
-                                        </p>
-                                    </a>
-                                    <ul class="nav nav-treeview">
-                                        {% for consulting in history.on_duty_doctor_on_arr_appointment.all %}
-                                            <li class="nav-item">
-                                                <a href="{% url 'on_arrival_consulting_detail' consulting.id %}"
-                                                   class="nav-link">
-                                                    <i class="far"></i>
-                                                    <p>Осмотр дежурного врача при поступлении | {{ consulting.created_at }}</p>
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </li>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link {{ active_page.repeated_appointment }}">
+                            <li class="nav-item ">
+                                <a href="#" class="nav-link {{ active_page.consulting_on_arrival }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>
-                                        Повторный приём лечащего врача
+                                        Осмотр дежурного врача при поступлении
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                        <div class="dropdown-divider"></div>
-                                        {% for consulting in history.repeated_appointment.all %}
-                                            <li class="nav-item">
-                                                <a href="{% url 'repeated_appointment_detail' consulting.id %}"
-                                                   class="nav-link">
-                                                    <i class="far"></i>
-                                                    <p>Повторный приём лечащего врача | {{ consulting.created_at }}</p>
-                                                </a>
-                                            </li>
-                                        {% endfor %}
+                                    {% for consulting in history.on_duty_doctor_on_arr_appointment.all %}
+                                        <li class="nav-item">
+                                            <a href="{% url 'on_arrival_consulting_detail' consulting.id %}"
+                                               class="nav-link">
+                                                <i class="far"></i>
+                                                <p>Осмотр дежурного врача при поступлении
+                                                    | {{ consulting.created_at }}</p>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
                                 </ul>
                             </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link {{ active_page.on_duty_appointment }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>
-                                        Прием дежурного врача
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                        <div class="dropdown-divider"></div>
-                                        {% for consulting in history.on_duty_doctor_appointment.all %}
-                                            <li class="nav-item">
-                                                <a href="{% url 'on_duty_appointment_detail' consulting.id %}"
-                                                   class="nav-link">
-                                                    <i class="far"></i>
-                                                    <p>Прием дежурного врача | {{ consulting.created_at }}</p>
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link {{ active_page.ekg_appointment }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>
-                                        ЭКГ (Электрокардиограмма)
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                        <div class="dropdown-divider"></div>
-                                        {% for consulting in history.ekg_app.all %}
-                                            <li class="nav-item">
-                                                <a href="{% url 'ekg_appointment_detail' consulting.id%}"
-                                                   class="nav-link">
-                                                    <i class="far"></i>
-                                                    <p>ЭКГ (Электрокардиограмма) | {{ consulting.created_at }}</p>
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                </ul>
-                            </li>
-
-                            <div class="dropdown-divider"></div>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="far"></i>
-                                    <p>Заключительный прием | {{ final_appointment.created_at }}</p>
-                                </a>
-                            </li>
-                        </ul>
                     </li>
-
                     <li class="nav-item">
-                        <a href="#"
-                           class="nav-link {{ active_page.proc_main_list_page }}">
-                            <i class="nav-icon fas fa-clipboard-list"></i>
+                        <a href="#" class="nav-link {{ active_page.repeated_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
                             <p>
-                                Основной лист назначений
-                                <i class="fas fa-angle-left right"></i>
+                                Повторный приём лечащего врача
+                                <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{% url 'prescription_list' history.id %}#consultations"
-                                   class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Консультации</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'prescription_list' history.id %}#labs"
-                                   class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Исследования</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'prescription_list' history.id %}#procedures"
-                                   class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Лечебные процедуры</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'prescription_list' history.id %}#medications"
-                                   class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Медикаменты</p>
-                                </a>
-                            </li>
+                            <div class="dropdown-divider"></div>
+                            {% for consulting in history.repeated_appointment.all %}
+                                <li class="nav-item">
+                                    <a href="{% url 'repeated_appointment_detail' consulting.id %}"
+                                       class="nav-link">
+                                        <i class="far"></i>
+                                        <p>Повторный приём лечащего врача | {{ consulting.created_at }}</p>
+                                    </a>
+                                </li>
+                            {% endfor %}
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.documents_page }}">
-                            <i class="nav-icon fas fa-file-alt"></i>
+                        <a href="#" class="nav-link {{ active_page.on_duty_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
                             <p>
-                                Документы
-                                <i class="fas fa-angle-left right"></i>
+                                Прием дежурного врача
+                                <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+                            {% for consulting in history.on_duty_doctor_appointment.all %}
+                                <li class="nav-item">
+                                    <a href="{% url 'on_duty_appointment_detail' consulting.id %}"
+                                       class="nav-link">
+                                        <i class="far"></i>
+                                        <p>Прием дежурного врача | {{ consulting.created_at }}</p>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.diet_page }}">
-                            <i class="nav-icon fas fa-utensils"></i>
+                        <a href="#" class="nav-link {{ active_page.ekg_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
                             <p>
-                                Питание
+                                ЭКГ (Электрокардиограмма)
+                                <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+                            {% for consulting in history.ekg_app.all %}
+                                <li class="nav-item">
+                                    <a href="{% url 'ekg_appointment_detail' consulting.id %}"
+                                       class="nav-link">
+                                        <i class="far"></i>
+                                        <p>ЭКГ (Электрокардиограмма) | {{ consulting.created_at }}</p>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link {{ active_page.timetable_page }}">
-                            <i class="nav-icon fas fa-calendar-alt"></i>
+                        <a href="{% url 'final_appointment_create' history.id %}" class="nav-link {{ active_page.ekg_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
                             <p>
-                                Расписание лечения
-                                <span class="badge badge-info right">2</span>
+                                Заключительный прием
+                                <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+
+                                <li class="nav-item">
+                                    <a href="{% url 'final_appointment_create' history.id %}" class="nav-link">
+                                        <i class="far"></i>
+                                        <p>Заключительный прием | {{ final_appointment.created_at }}</p>
+                                    </a>
+                                </li>
+
+                        </ul>
                     </li>
+                </ul>
+
+                <li class="nav-item">
+                    <a href="#"
+                       class="nav-link {{ active_page.proc_main_list_page }}">
+                        <i class="nav-icon fas fa-clipboard-list"></i>
+                        <p>
+                            Основной лист назначений
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#consultations"
+                               class="nav-link {{ active_page.consultings }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Консультации</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#labs"
+                               class="nav-link {{ active_page.labs }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Исследования</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#procedures"
+                               class="nav-link {{ active_page.procedures }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Лечебные процедуры</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#medications"
+                               class="nav-link {{ active_page.medications }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Медикаменты</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link {{ active_page.documents_page }}">
+                        <i class="nav-icon fas fa-file-alt"></i>
+                        <p>
+                            Документы
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link {{ active_page.diet_page }}">
+                        <i class="nav-icon fas fa-utensils"></i>
+                        <p>
+                            Питание
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link {{ active_page.timetable_page }}">
+                        <i class="nav-icon fas fa-calendar-alt"></i>
+                        <p>
+                            Расписание лечения
+                            <span class="badge badge-info right">2</span>
+                        </p>
+                    </a>
+                </li>
 
                 </ul>
             </nav>

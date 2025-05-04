@@ -19,6 +19,7 @@ def illness_history_context(request):
 
     # Example logic to set active page
     path = request.path
+    print(path)
     if '/appointments/init-app/' in path:
         active_page['initial_appointment'] = 'active'
     elif '/appointments/' in path and '/appointments/init-app/' not in path:
@@ -27,6 +28,8 @@ def illness_history_context(request):
         active_page['documents'] = 'active'
     elif '/histories/' in path:
         active_page['title_page'] = 'active'
+    elif '/prescription/' in path:
+        active_page['proc_main_list_page'] = 'active'
 
     if 'appointments/cardiologist/' in path:
         active_page['consulting_cardiologist'] = 'active'
@@ -42,6 +45,14 @@ def illness_history_context(request):
         active_page['ekg_appointment'] = 'active'
     elif '/final-app/' in path:
         active_page['final_appointment'] = 'active'
+    elif '/prescription/procedures/' in path:
+        active_page['procedures'] = 'active'
+    elif '/prescription/consulting/' in path:
+        active_page['consulting'] = 'active'
+    elif '/prescription/labs/' in path:
+        active_page['labs'] = 'active'
+    elif '/prescription/medications/' in path:
+        active_page['medications'] = 'active'
 
     # Try to extract from URL parameters
     if 'history_id' in request.resolver_match.kwargs:

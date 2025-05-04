@@ -82,7 +82,6 @@ class AssignedLabsCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         history_id = self.kwargs.get('illness_history_id')
         context['history'] = get_object_or_404(IllnessHistory, id=history_id)
-        context['active_page'] = {'consulting_and_med_services_page': 'active'}
         context['form_title'] = 'Создать новый прием у дежурного врача'
         return context
 
@@ -109,7 +108,6 @@ class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['history'] = self.object.illness_history
-        context['active_page'] = {'consulting_and_med_services_page': 'active'}
         context['form_title'] = 'Редактировать прием у дежурного врача'
         return context
 

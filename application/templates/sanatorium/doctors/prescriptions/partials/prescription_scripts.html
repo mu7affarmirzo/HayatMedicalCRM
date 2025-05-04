@@ -244,3 +244,64 @@ $(function() {
     });
 });
 </script>
+<script>
+$(function() {
+    // Initialize datetime picker
+    $('#scheduledDatePicker').datetimepicker({
+        format: 'DD.MM.YYYY HH:mm',
+        minDate: moment(),
+        icons: {
+            time: 'far fa-clock',
+            date: 'far fa-calendar',
+            up: 'fas fa-arrow-up',
+            down: 'fas fa-arrow-down',
+            previous: 'fas fa-chevron-left',
+            next: 'fas fa-chevron-right',
+            today: 'fas fa-calendar-check',
+            clear: 'far fa-trash-alt',
+            close: 'far fa-times-circle'
+        }
+    });
+
+    // Filter doctors based on consultation type
+    $('#consultationType').on('change', function() {
+        const consultationType = $(this).val();
+        const doctorSelect = $('#doctorSelect');
+
+        // Reset selection
+        doctorSelect.val('');
+
+        // Hide all doctors first
+        doctorSelect.find('option').each(function() {
+            $(this).hide();
+        });
+
+        // Always show the placeholder
+        doctorSelect.find('option[value=""]').show();
+
+        // Show doctors with matching specialty
+        if (consultationType) {
+            doctorSelect.find('option').each(function() {
+                const specialties = $(this).data('specialties');
+                if (specialties && specialties.includes(consultationType)) {
+                    $(this).show();
+                }
+            });
+        } else {
+            // If no consultation type selected, show all doctors
+            doctorSelect.find('option').show();
+        }
+    });
+
+    // Handle cancel appointment modal
+    $('#cancelAppointmentModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const appointmentId = button.data('id');
+        const modelName = button.data('model');
+
+        const modal = $(this);
+        modal.find('#appointmentId').val(appointmentId);
+        modal.find('#appointmentModel').val(modelName);
+    });
+});
+</script>

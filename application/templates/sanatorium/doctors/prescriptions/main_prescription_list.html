@@ -76,10 +76,13 @@
 
     <!-- Modal Dialogs -->
     {% include 'sanatorium/doctors/prescriptions/partials/labs/lab_modals.html' %}
+    {% include 'sanatorium/doctors/prescriptions/partials/consultation_modal.html' %}
     {% include 'sanatorium/doctors/prescriptions/partials/procedure_modals.html' %}
     {% include 'sanatorium/doctors/prescriptions/partials/medication_modals.html' %}
 {% endblock %}
 
 {% block extra_js %}
     {% include 'sanatorium/doctors/prescriptions/partials/prescription_scripts.html' %}
+    {% comment %} Add this to prescription_scripts.html {% endcomment %}
+
 {% endblock %}

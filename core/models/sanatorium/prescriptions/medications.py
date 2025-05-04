@@ -72,7 +72,7 @@ class PrescribedMedication(BaseAuditModel):
         ]
 
     def __str__(self):
-        return f"{self.medication.name} {self.dosage} {self.frequency} ({self.get_status_display()})"
+        return f"{self.medication.item.name} {self.dosage} {self.frequency} ({self.get_status_display()})"
 
     @property
     def is_active(self):

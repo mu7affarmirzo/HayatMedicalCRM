@@ -1,4 +1,8 @@
 # views.py
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -7,7 +11,8 @@ from django.shortcuts import get_object_or_404
 
 from ...forms.medications_form import PrescribedMedicationForm, MedicationAdministrationForm
 
-from core.models import PrescribedMedication, MedicationAdministration, IllnessHistory
+from core.models import PrescribedMedication, MedicationAdministration, IllnessHistory, MedicationsInStockModel, \
+    MedicationModel
 
 
 # PrescribedMedication Views
@@ -73,6 +78,13 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
         return initial
 
     def form_valid(self, form):
+        medication_id = self.request.POST.get('medication')
+        if medication_id:
+            form.instance.medication_id = medication_id
+        else:
+            # Handle the case where medication is not provided
+            return self.form_invalid(form)
+
         # Set the prescribed_by field to the current user
         form.instance.illness_history = get_object_or_404(IllnessHistory, pk=self.kwargs.get('illness_history_id'))
         form.instance.prescribed_by = self.request.user
@@ -230,3 +242,183 @@ class MedicationAdministrationDeleteView(LoginRequiredMixin, SuccessMessageMixin
     def get_success_url(self):
         return reverse_lazy('prescribed_medication_detail',
                             kwargs={'pk': self.object.prescribed_medication.id})
+
+
+@login_required
+def api_medications_search(request):
+    """
+    AJAX endpoint для поиска медикаментов с фильтрацией и пагинацией.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Метод не поддерживается'}, status=405)
+
+    # Получаем параметры из запроса
+    draw = int(request.POST.get('draw', 1))
+    start = int(request.POST.get('start', 0))
+    length = int(request.POST.get('length', 10))
+    search_term = request.POST.get('search_term', '')
+    category = request.POST.get('category', '')
+    stock_status = request.POST.get('stock_status', '')
+    active_ingredient = request.POST.get('active_ingredient', '')
+    form = request.POST.get('form', '')
+    manufacturer = request.POST.get('manufacturer', '')
+
+    # Базовый запрос с предзагрузкой связанных данных
+    query = MedicationsInStockModel.objects.select_related('item', 'warehouse').filter(warehouse__is_main=True)
+    # Фильтрация по поисковому запросу
+    if search_term:
+        # Используем более простой поиск без вложенных полей
+        query = query.filter(
+            Q(item__name__icontains=search_term)
+        )
+        # query = query.filter(
+        #     Q(item__name__icontains=search_term) |
+        #     Q(income_seria__icontains=search_term)
+        # )
+        print(query)
+
+    # Применяем фильтры
+    if category:
+        query = query.filter(item__category=category)
+
+    if stock_status:
+        if stock_status == 'in-stock':
+            query = query.filter(Q(quantity__gt=0) | Q(unit_quantity__gt=0))
+        elif stock_status == 'low-stock':
+            # Предполагаем, что "заканчивается" означает менее 10 упаковок или есть только единицы
+            query = query.filter(
+                (Q(quantity__gt=0) & Q(quantity__lte=10)) |
+                (Q(quantity=0) & Q(unit_quantity__gt=0))
+            )
+        elif stock_status == 'out-of-stock':
+            query = query.filter(quantity=0, unit_quantity=0)
+
+    if active_ingredient:
+        # Вместо вложенного поиска используем простое сравнение ID
+        query = query.filter(item__active_ingredient=active_ingredient)
+
+    if form:
+        query = query.filter(item__form=form)
+
+    if manufacturer:
+        query = query.filter(item__manufacturer=manufacturer)
+
+    # Получаем общее количество записей и отфильтрованных записей
+    total_records = MedicationsInStockModel.objects.count()
+    total_filtered = query.count()
+
+    # Сортировка и пагинация
+    query = query.order_by('expire_date', 'item__name')[start:start + length]
+
+    # Формируем результат
+    data = []
+    for medication in query:
+        # Определяем статус наличия
+        if medication.quantity > 10:
+            stock_status = 'in-stock'
+        elif medication.quantity > 0 or medication.unit_quantity > 0:
+            stock_status = 'low-stock'
+        else:
+            stock_status = 'out-of-stock'
+
+        # Получаем безопасные данные о препарате
+        item_name = str(medication.item) if medication.item else "Не указан"
+
+        # Предполагаем, что у item есть атрибуты form, active_ingredient, dosage и manufacturer
+        # Но обращаемся к ним безопасно
+        try:
+            form_display = medication.item.form if hasattr(medication.item, 'form') else "Не указана"
+        except:
+            form_display = "Не указана"
+
+        try:
+            active_ingredient = medication.item.active_ingredient if hasattr(medication.item,
+                                                                             'active_ingredient') else "Не указано"
+        except:
+            active_ingredient = "Не указано"
+
+        try:
+            dosage = medication.item.dosage if hasattr(medication.item, 'dosage') else "Не указана"
+        except:
+            dosage = "Не указана"
+
+        try:
+            manufacturer = medication.company if hasattr(medication.item, 'manufacturer') else "Не указан"
+        except:
+            manufacturer = "Не указан"
+
+        # Форматируем срок годности
+        days_left = medication.days_until_expire
+        expire_date_str = medication.expire_date.strftime('%d.%m.%Y') if medication.expire_date else "Не указан"
+        expiry_indicator = ""
+        if days_left < 0:
+            expiry_indicator = " <span class='badge badge-danger'>Просрочен</span>"
+        elif days_left < 30:
+            expiry_indicator = f" <span class='badge badge-warning'>Осталось {days_left} дн.</span>"
+
+        data.append({
+            'id': medication.id,
+            'name': item_name,
+            'form': str(form_display),
+            'active_ingredient': str(active_ingredient),
+            'dosage': str(dosage),
+            'manufacturer': str(manufacturer),
+            'stock_status': stock_status,
+            'quantity': f"{medication.quantity} уп." + (
+                f" {medication.unit_quantity} шт." if medication.unit_quantity > 0 else ""),
+            'warehouse': medication.warehouse.name if medication.warehouse else "Не указан",
+            'expire_date': expire_date_str + expiry_indicator
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': total_filtered,
+        'data': data
+    })
+
+
+@login_required
+def api_medication_details(request):
+    """
+    AJAX endpoint для получения детальной информации о медикаменте.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Метод не поддерживается'}, status=405)
+
+    medication_id = request.POST.get('medication_id')
+
+    try:
+        medication = MedicationsInStockModel.objects.select_related('item', 'warehouse').get(id=medication_id)
+
+        # Формируем данные для шаблона
+        context = {
+            'medication': medication,
+            # Добавляем безопасные свойства
+            'item_name': str(medication.item) if medication.item else "Не указан",
+            'form': str(medication.item.form) if hasattr(medication.item,
+                                                         'form') and medication.item.form else "Не указана",
+            'active_ingredient': str(medication.item.active_ingredient) if hasattr(medication.item,
+                                                                                   'active_ingredient') and medication.item.active_ingredient else "Не указано",
+            'dosage': str(medication.item.dosage) if hasattr(medication.item, 'dosage') else "Не указана",
+            'manufacturer': str(medication.company) if hasattr(medication.item,
+                                                                         'manufacturer') and medication.company else "Не указан",
+            'days_left': medication.days_until_expire
+        }
+
+        try:
+            # Формируем HTML для отображения в модальном окне
+            html = render_to_string('sanatorium/doctors/prescriptions/medications/medication_details.html', context)
+        except:
+            html = None
+
+        # Формируем краткую информацию для отображения в форме
+        info = f"{context['form']}, {context['active_ingredient']}, {context['dosage']}"
+
+        return JsonResponse({
+            'html': html,
+            'name': context['item_name'],
+            'info': info
+        })
+    except MedicationsInStockModel.DoesNotExist:
+        return JsonResponse({'error': 'Медикамент не найден'}, status=404)

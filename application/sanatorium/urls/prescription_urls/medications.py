@@ -7,15 +7,18 @@ from application.sanatorium.views.prescriptions import medications as views
 urlpatterns = [
     # PrescribedMedication URLs
     path('medications/', views.PrescribedMedicationListView.as_view(),
-         name='prescribed_medication_list'),
+         name='medications_list'),
     path('medications/<int:pk>/', views.PrescribedMedicationDetailView.as_view(),
-         name='prescribed_medication_detail'),
+         name='medications_detail'),
     path('medications/create/<int:illness_history_id>', views.PrescribedMedicationCreateView.as_view(),
          name='prescribed_medication_create'),
     path('medications/<int:pk>/update/', views.PrescribedMedicationUpdateView.as_view(),
-         name='prescribed_medication_update'),
+         name='medications_update'),
     path('medications/<int:pk>/delete/', views.PrescribedMedicationDeleteView.as_view(),
-         name='prescribed_medication_delete'),
+         name='medications_delete'),
+
+    path('api/search/', views.api_medications_search, name='api_medications_search'),
+    path('api/details/', views.api_medication_details, name='api_medication_details'),
 
     # MedicationAdministration URLs
     path('administrations/', views.MedicationAdministrationListView.as_view(),

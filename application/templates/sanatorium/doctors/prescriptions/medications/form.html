@@ -1,4 +1,4 @@
-{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% extends 'snippets/base.html' %}
 {% load static %}
 {% block title %}Назначение медикаментов{% endblock %}
 {% block extra_css %}
@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
     <!-- Tempusdominus Bootstrap 4 -->
     <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
     <style>
         .form-group label {
             font-weight: bold;
@@ -20,6 +23,68 @@
         }
         .tab-content {
             padding-top: 20px;
+        }
+        .selected-medication {
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .selected-medication-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        .modal-xl {
+            max-width: 90%;
+        }
+        .filter-section {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+        .medication-details {
+            cursor: pointer;
+            color: #007bff;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+            cursor: pointer;
+        }
+        .highlight {
+            background-color: rgba(255, 193, 7, 0.2);
+        }
+        .selected-row {
+            background-color: rgba(40, 167, 69, 0.2) !important;
+        }
+
+        /* Стили для кнопок выбора способа применения */
+        .route-buttons {
+            gap: 10px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .route-btn {
+            flex: 1 0 30%;
+            text-align: center;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            margin-right: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid #007bff;
+            color: #007bff;
+        }
+        .route-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .route-btn.active {
+            background-color: #007bff;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
     </style>
 {% endblock %}
@@ -35,7 +100,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'prescribed_medication_list' %}">Медикаменты</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'medications_list' %}">Медикаменты</a></li>
                         <li class="breadcrumb-item active">Назначение медикаментов</li>
                     </ol>
                 </div>
@@ -106,8 +171,31 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="{{ form.medication.id_for_label }}" class="required-field">Медикамент</label>
-                                    {{ form.medication }}
+                                    <label for="medication-search" class="required-field">Медикамент</label>
+                                    <div class="input-group">
+                                        <!-- Hidden input for actual form submission -->
+                                        <input type="hidden" name="medication" id="selected-medication-id" value="{{ form.medication.value|default:'' }}">
+
+                                        <!-- Button to open medication search modal -->
+                                        <button type="button" class="btn btn-primary" id="medication-search-btn" data-toggle="modal" data-target="#medication-search-modal">
+                                            <i class="fas fa-search"></i> Найти медикамент
+                                        </button>
+                                    </div>
+
+                                    <!-- Display selected medication information -->
+                                    <div id="selected-medication-container" class="selected-medication mt-2 {% if not form.medication.value %}d-none{% endif %}">
+                                        <div id="selected-medication-name" class="font-weight-bold">
+                                            {% if form.medication.value %}
+                                                {{ selected_medication_name|default:"Выбранный медикамент" }}
+                                            {% endif %}
+                                        </div>
+                                        <div id="selected-medication-info" class="selected-medication-info">
+                                            {% if form.medication.value %}
+                                                {{ selected_medication_info|default:"" }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
                                     {% if form.medication.errors %}
                                         <div class="text-danger">
                                             {{ form.medication.errors }}
@@ -128,8 +216,38 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="{{ form.route.id_for_label }}">Способ применения</label>
-                                    {{ form.route }}
+                                    <label class="required-field">Способ применения</label>
+                                    <!-- Скрытое поле для хранения значения -->
+                                    <input type="hidden" name="route" id="route_value" value="{{ form.route.value|default:'' }}">
+
+                                    <!-- Кнопки выбора способа применения -->
+                                    <div class="route-buttons">
+                                        <div class="route-btn {% if form.route.value == 'oral' %}active{% endif %}" data-value="oral">
+                                            <i class="fas fa-pills mr-1"></i> Перорально
+                                        </div>
+                                        <div class="route-btn {% if form.route.value == 'injection' %}active{% endif %}" data-value="injection">
+                                            <i class="fas fa-syringe mr-1"></i> Инъекция
+                                        </div>
+                                        <div class="route-btn {% if form.route.value == 'topical' %}active{% endif %}" data-value="topical">
+                                            <i class="fas fa-hand-paper mr-1"></i> Наружно
+                                        </div>
+                                        <div class="route-btn {% if form.route.value == 'inhalation' %}active{% endif %}" data-value="inhalation">
+                                            <i class="fas fa-wind mr-1"></i> Ингаляция
+                                        </div>
+                                        <div class="route-btn {% if form.route.value == 'rectal' %}active{% endif %}" data-value="rectal">
+                                            <i class="fas fa-capsules mr-1"></i> Ректально
+                                        </div>
+                                        <div class="route-btn {% if form.route.value == 'other' or not form.route.value %}active{% endif %}" data-value="other">
+                                            <i class="fas fa-ellipsis-h mr-1"></i> Другое
+                                        </div>
+                                    </div>
+
+                                    <!-- При выборе "Другое" показываем текстовое поле -->
+                                    <div id="other_route_container" class="mt-2 {% if form.route.value != 'other' and form.route.value %}d-none{% endif %}">
+                                        <input type="text" class="form-control" id="other_route" placeholder="Укажите способ применения"
+                                            value="{% if form.route.value == 'other' %}{{ form.instance.custom_route }}{% endif %}">
+                                    </div>
+
                                     {% if form.route.errors %}
                                         <div class="text-danger">
                                             {{ form.route.errors }}
@@ -264,7 +382,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Сохранить назначение
                         </button>
-                        <a href="{% url 'prescribed_medication_list' %}" class="btn btn-default">
+                        <a href="{% url 'medications_list' %}" class="btn btn-default">
                             <i class="fas fa-arrow-left"></i> Назад
                         </a>
                     </div>
@@ -273,6 +391,171 @@
             <!-- /.card -->
         </div>
     </section>
+
+    <!-- Medication Search Modal -->
+    <div class="modal fade" id="medication-search-modal" tabindex="-1" role="dialog" aria-labelledby="medication-search-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title" id="medication-search-modal-label">
+                        <i class="fas fa-pills mr-2"></i>Поиск медикаментов
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Filters Section -->
+                    <div class="filter-section mb-3">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="search-term">Поиск по названию</label>
+                                    <input type="text" class="form-control" id="search-term" placeholder="Введите часть названия...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="category-filter">Категория</label>
+                                    <select class="form-control select2" id="category-filter" style="width: 100%;">
+                                        <option value="">Все категории</option>
+                                        <option value="1">Антибиотики</option>
+                                        <option value="2">Анальгетики</option>
+                                        <option value="3">Противовоспалительные</option>
+                                        <option value="4">Антигистаминные</option>
+                                        <option value="5">Сердечно-сосудистые</option>
+                                        <!-- Дополнительные категории... -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="stock-filter">Наличие</label>
+                                    <select class="form-control" id="stock-filter">
+                                        <option value="">Все</option>
+                                        <option value="in-stock">В наличии</option>
+                                        <option value="out-of-stock">Отсутствует</option>
+                                        <option value="low-stock">Заканчивается</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-primary btn-block" id="apply-filters">
+                                        <i class="fas fa-filter mr-1"></i> Применить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="active-ingredient-filter">Действующее вещество</label>
+                                    <select class="form-control select2" id="active-ingredient-filter" style="width: 100%;">
+                                        <option value="">Любое вещество</option>
+                                        <option value="1">Парацетамол</option>
+                                        <option value="2">Ибупрофен</option>
+                                        <option value="3">Амоксициллин</option>
+                                        <option value="4">Метформин</option>
+                                        <!-- Дополнительные активные вещества... -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="form-filter">Форма выпуска</label>
+                                    <select class="form-control select2" id="form-filter" style="width: 100%;">
+                                        <option value="">Любая форма</option>
+                                        <option value="1">Таблетки</option>
+                                        <option value="2">Капсулы</option>
+                                        <option value="3">Сироп</option>
+                                        <option value="4">Инъекции</option>
+                                        <option value="5">Мазь</option>
+                                        <!-- Дополнительные формы выпуска... -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="manufacturer-filter">Производитель</label>
+                                    <select class="form-control select2" id="manufacturer-filter" style="width: 100%;">
+                                        <option value="">Любой производитель</option>
+                                        <option value="1">Байер</option>
+                                        <option value="2">Пфайзер</option>
+                                        <option value="3">Новартис</option>
+                                        <option value="4">Санофи</option>
+                                        <!-- Дополнительные производители... -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-outline-secondary btn-block" id="reset-filters">
+                                        <i class="fas fa-undo mr-1"></i> Сбросить фильтры
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div class="table-responsive">
+                        <table id="medications-table" class="table table-bordered table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="25%">Название</th>
+                                    <th width="15%">Форма выпуска</th>
+                                    <th width="15%">Активное вещество</th>
+                                    <th width="10%">Дозировка</th>
+                                    <th width="15%">Производитель</th>
+                                    <th width="10%">Наличие</th>
+                                    <th width="10%">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Данные будут загружены через AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="select-medication" disabled>
+                        <i class="fas fa-check mr-1"></i> Выбрать медикамент
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medication Details Modal -->
+    <div class="modal fade" id="medication-details-modal" tabindex="-1" role="dialog" aria-labelledby="medication-details-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title" id="medication-details-modal-label">
+                        <i class="fas fa-info-circle mr-2"></i>Детальная информация о медикаменте
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="medication-details-content">
+                        <!-- Содержимое будет загружено через AJAX -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-success" id="select-from-details">
+                        <i class="fas fa-check mr-1"></i> Выбрать этот медикамент
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -280,8 +563,13 @@
     <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
     <!-- Moment.js -->
     <script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+    <script src="{% static 'adminlte3_assets/plugins/moment/locale/ru.js' %}"></script>
     <!-- Tempusdominus Bootstrap 4 -->
     <script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+    <!-- DataTables -->
+    <script src="{% static 'adminlte3_assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'adminlte3_assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+    <script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
     <script>
         $(function() {
             // Initialize Select2
@@ -306,6 +594,25 @@
                 }
             });
 
+            // Handle route buttons
+            $('.route-btn').on('click', function() {
+                // Remove active class from all buttons
+                $('.route-btn').removeClass('active');
+                // Add active class to clicked button
+                $(this).addClass('active');
+
+                // Set the hidden input value
+                var value = $(this).data('value');
+                $('#route_value').val(value);
+
+                // Show/hide the "other" input field
+                if (value === 'other') {
+                    $('#other_route_container').removeClass('d-none');
+                } else {
+                    $('#other_route_container').addClass('d-none');
+                }
+            });
+
             // Auto-calculate duration when start and end dates change
             $('#startDatePicker, #endDatePicker').on('change.datetimepicker', function(e) {
                 calculateDuration();
@@ -323,6 +630,142 @@
 
             // Initialize PRN fields state
             togglePRNFields();
+
+            // Initialize medications DataTable
+            var medicationsTable = $('#medications-table').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'api_medications_search' %}",
+                    "type": "POST",
+                    "data": function(d) {
+                        d.search_term = $('#search-term').val();
+                        d.category = $('#category-filter').val();
+                        d.stock_status = $('#stock-filter').val();
+                        d.active_ingredient = $('#active-ingredient-filter').val();
+                        d.form = $('#form-filter').val();
+                        d.manufacturer = $('#manufacturer-filter').val();
+                        d.csrfmiddlewaretoken = $('input[name=csrfmiddlewaretoken]').val();
+                    }
+                },
+                "columns": [
+                    { "data": "name" },
+                    { "data": "form" },
+                    { "data": "active_ingredient" },
+                    { "data": "dosage" },
+                    { "data": "manufacturer" },
+                    {
+                        "data": "stock_status",
+                        "render": function(data, type, row) {
+                            if (data === 'in-stock') {
+                                return '<span class="badge badge-success">В наличии</span>';
+                            } else if (data === 'low-stock') {
+                                return '<span class="badge badge-warning">Заканчивается</span>';
+                            } else {
+                                return '<span class="badge badge-danger">Нет в наличии</span>';
+                            }
+                        }
+                    },
+                    {
+                        "data": null,
+                        "render": function(data, type, row) {
+                            return '<button type="button" class="btn btn-info btn-sm view-details" data-id="' + row.id + '"><i class="fas fa-info-circle"></i></button>';
+                        }
+                    }
+                ],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Russian.json"
+                },
+                "responsive": true,
+                "autoWidth": false,
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Все"]]
+            });
+
+            // Apply filters
+            $('#apply-filters').on('click', function() {
+                medicationsTable.ajax.reload();
+            });
+
+            // Reset filters
+            $('#reset-filters').on('click', function() {
+                $('#search-term').val('');
+                $('#category-filter').val('').trigger('change.select2');
+                $('#stock-filter').val('');
+                $('#active-ingredient-filter').val('').trigger('change.select2');
+                $('#form-filter').val('').trigger('change.select2');
+                $('#manufacturer-filter').val('').trigger('change.select2');
+                medicationsTable.ajax.reload();
+            });
+
+            // Handle row selection
+            $('#medications-table tbody').on('click', 'tr', function() {
+                // Toggle selection and highlight
+                if ($(this).hasClass('selected-row')) {
+                    $(this).removeClass('selected-row');
+                    $('#select-medication').prop('disabled', true);
+                } else {
+                    $('#medications-table tbody tr').removeClass('selected-row');
+                    $(this).addClass('selected-row');
+                    $('#select-medication').prop('disabled', false);
+                }
+            });
+
+            // Handle view details button
+            $('#medications-table tbody').on('click', '.view-details', function(e) {
+                e.stopPropagation(); // Prevent row selection
+
+                var medicationId = $(this).data('id');
+
+                // Load medication details via AJAX
+                $.ajax({
+                    url: "{% url 'api_medication_details' %}",
+                    type: "POST",
+                    data: {
+                        medication_id: medicationId,
+                        csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function(response) {
+                        // Populate details modal
+                        $('#medication-details-content').html(response.html);
+                        $('#select-from-details').data('id', medicationId);
+                        $('#select-from-details').data('name', response.name);
+                        $('#select-from-details').data('info', response.info);
+
+                        // Show details modal
+                        $('#medication-details-modal').modal('show');
+                    },
+                    error: function() {
+                        alert('Не удалось загрузить информацию о медикаменте');
+                    }
+                });
+            });
+
+            // Handle select from main table
+            $('#select-medication').on('click', function() {
+                var selectedRow = $('#medications-table tbody tr.selected-row');
+                if (selectedRow.length) {
+                    var rowData = medicationsTable.row(selectedRow).data();
+                    selectMedication(rowData.id, rowData.name, rowData.form + ', ' + rowData.active_ingredient + ', ' + rowData.dosage);
+                }
+            });
+
+            // Handle select from details
+            $('#select-from-details').on('click', function() {
+                var medicationId = $(this).data('id');
+                var medicationName = $(this).data('name');
+                var medicationInfo = $(this).data('info');
+
+                selectMedication(medicationId, medicationName, medicationInfo);
+                $('#medication-details-modal').modal('hide');
+            });
+
+            // Search on ENTER key in search field
+            $('#search-term').on('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    medicationsTable.ajax.reload();
+                }
+            });
 
             // Functions
             function calculateDuration() {
@@ -363,25 +806,78 @@
                 }
             }
 
+            function selectMedication(id, name, info) {
+                // Set the hidden input value
+                $('#selected-medication-id').val(id);
+
+                // Update the display
+                $('#selected-medication-name').text(name);
+                $('#selected-medication-info').text(info);
+                $('#selected-medication-container').removeClass('d-none');
+
+                // Close the modal
+                $('#medication-search-modal').modal('hide');
+
+                // Optional: Update the dosage field if available from medication
+                var defaultDosage = extractDosage(info);
+                if (defaultDosage) {
+                    $('#{{ form.dosage.id_for_label }}').val(defaultDosage);
+                }
+            }
+
+            // Helper function to extract dosage from medication info
+            function extractDosage(info) {
+                if (!info) return '';
+
+                // Try to find dosage pattern like "100mg" or "500 мг"
+                var dosageMatch = info.match(/(\d+\s*(?:мг|mg|mcg|мкг|г|g|мл|ml))/i);
+                return dosageMatch ? dosageMatch[0] : '';
+            }
+
             // Form validation
             $('#prescriptionForm').on('submit', function(e) {
                 var isValid = true;
 
-                // Find all required fields
-                $(this).find('.required-field').each(function() {
-                    var inputId = $(this).attr('for');
-                    var input = $('#' + inputId);
+                // Validate medication selection
+                if (!$('#selected-medication-id').val()) {
+                    var medicationField = $('label[for="medication-search"]');
+                    medicationField.closest('.form-group').find('.text-danger').remove();
+                    medicationField.closest('.form-group').append('<div class="text-danger">Пожалуйста, выберите медикамент</div>');
+                    isValid = false;
+                }
 
-                    if (!input.val()) {
-                        input.closest('.form-group').find('.text-danger').remove();
-                        input.closest('.form-group').append('<div class="text-danger">Это поле обязательно для заполнения.</div>');
-                        isValid = false;
+                // Validate route selection
+                if (!$('#route_value').val()) {
+                    var routeField = $('label.required-field').filter(function() {
+                        return $(this).text().trim() === 'Способ применения';
+                    });
+                    routeField.closest('.form-group').find('.text-danger').remove();
+                    routeField.closest('.form-group').append('<div class="text-danger">Пожалуйста, выберите способ применения</div>');
+                    isValid = false;
+                }
+
+                // Validate other required fields
+                $('label.required-field').each(function() {
+                    var fieldId = $(this).attr('for');
+                    if (fieldId && fieldId !== 'medication-search') {
+                        var field = $('#' + fieldId);
+                        if (!field.val()) {
+                            field.closest('.form-group').find('.text-danger').remove();
+                            field.closest('.form-group').append('<div class="text-danger">Это поле обязательно для заполнения</div>');
+                            isValid = false;
+                        }
                     }
                 });
 
                 if (!isValid) {
                     e.preventDefault();
                     return false;
+                }
+
+                // If "other" route is selected, copy the value from text input to hidden field
+                if ($('#route_value').val() === 'other') {
+                    // You might need custom logic here to handle the "other" option
+                    // This could involve adding a custom field to your model or storing in a JSON field
                 }
             });
         });

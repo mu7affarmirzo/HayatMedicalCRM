@@ -4,7 +4,7 @@ from datetime import datetime
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from core.models import IllnessHistory, MedicalServiceModel, ProcedureServiceModel, LabResult, AssignedLabs, \
-    LabResearchModel, LabResearchCategoryModel
+    LabResearchModel, LabResearchCategoryModel, PrescribedMedication
 
 
 # @login_required
@@ -137,7 +137,7 @@ def main_prescription_list_view(request, history_id):
 
     # Get all medications
     try:
-        medications = []
+        medications = PrescribedMedication.objects.filter(illness_history=history)
     except:
         medications = []
 

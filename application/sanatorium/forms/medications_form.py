@@ -19,6 +19,7 @@ class PrescribedMedicationForm(forms.ModelForm):
     class Meta:
         model = PrescribedMedication
         fields = [
+            'medication',
             'dosage',
             'frequency',
             'route',
@@ -33,7 +34,7 @@ class PrescribedMedicationForm(forms.ModelForm):
         widgets = {
             'dosage': forms.TextInput(attrs={'class': 'form-control'}),
             'frequency': forms.Select(attrs={'class': 'form-control select2'}),
-            'route': forms.Select(attrs={'class': 'form-control', 'rows': 2}),
+            'route': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Введите способ применения'}),
             'start_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
             'end_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
             'duration_days': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
@@ -78,6 +79,9 @@ class PrescribedMedicationForm(forms.ModelForm):
         end_date = cleaned_data.get('end_date')
         is_prn = cleaned_data.get('is_prn')
         duration_days = cleaned_data.get('duration_days')
+
+        if not cleaned_data.get('medication'):
+            raise forms.ValidationError("Medication is required")
 
         # Validate that start date is not in the past
         if start_date and start_date < timezone.now().date():

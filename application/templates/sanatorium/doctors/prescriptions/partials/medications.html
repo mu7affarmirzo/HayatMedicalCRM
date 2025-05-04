@@ -7,82 +7,101 @@
 </div>
 
 {% if medications %}
-<div class="table-responsive">
-    <table class="table table-bordered table-hover">
-        <thead>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
             <tr>
                 <th>№</th>
                 <th>Название</th>
                 <th>Дозировка</th>
                 <th>Режим приема</th>
+                <th>Способ применения</th>
                 <th>Начало</th>
                 <th>Окончание</th>
                 <th>Статус</th>
                 <th>Действия</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for med in medications %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ med.medication_name }}</td>
-                <td>{{ med.dosage }}</td>
-                <td>{{ med.frequency }}</td>
-                <td>{{ med.start_date|date:"d.m.Y" }}</td>
-                <td>{{ med.end_date|date:"d.m.Y" }}</td>
-                <td>
-                    <span class="badge status-{{ med.state }}">
-                        {{ med.get_state_display }}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ med.medication.item }}</td>
+                    <td>{{ med.dosage }}</td>
+                    <td>{{ med.get_frequency_display }}</td>
+                    <td>
+                        <span class="route-icon">
+                            {% if med.route == 'oral' %}
+                                <i class="fas fa-pills text-primary mr-1"> Перорально </i>
+                            {% elif med.route == 'injection' %}
+                                <i class="fas fa-syringe text-danger mr-1"> Инъекция </i>
+                            {% elif med.route == 'topical' %}
+                                <i class="fas fa-hand-paper text-info mr-1"> Наружно </i>
+                            {% elif med.route == 'inhalation' %}
+                                <i class="fas fa-wind text-success mr-1"> Ингаляция </i>
+                            {% elif med.route == 'rectal' %}
+                                <i class="fas fa-capsules text-warning mr-1"> Ректально </i>
+                            {% else %}
+                                <i class="fas fa-ellipsis-h text-secondary mr-1"> {{ med.route }}</i>
+                            {% endif %}
+                        </span>
+                        {{ med.get_route_display }}
+                    </td>
+                    <td>{{ med.start_date|date:"d.m.Y" }}</td>
+                    <td>{{ med.end_date|date:"d.m.Y" }}</td>
+                    <td>
+                    <span class="badge status-{{ med.status }}">
+                        {{ med.get_status_display }}
                     </span>
-                </td>
-                <td>
-                    <div class="btn-group btn-group-sm">
-                        <a href="#" class="btn btn-info">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="#" class="btn btn-warning">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="#" class="btn btn-danger">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="8" class="p-0">
-                    {% now "Y-m-d" as current_date %}
-                    {% with start=med.start_date|date:"Y-m-d" end=med.end_date|date:"Y-m-d" %}
-                        {% if med.state == 'assigned' or med.state == 'recommended' %}
-                            <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                <div class="progress-bar bg-warning" style="width: {{ med.progress_percent }}%"
-                                    data-toggle="tooltip"
-                                    title="День {{ med.days_elapsed }} из {{ med.total_days }} дней курса">
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="#" class="btn btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="#" class="btn btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="#" class="btn btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8" class="p-0">
+                        {% now "Y-m-d" as current_date %}
+                        {% with start=med.start_date|date:"Y-m-d" end=med.end_date|date:"Y-m-d" %}
+                            {% if med.state == 'assigned' or med.state == 'recommended' %}
+                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
+                                    <div class="progress-bar bg-warning" style="width: {{ med.progress_percent }}%"
+                                         data-toggle="tooltip"
+                                         title="День {{ med.days_elapsed }} из {{ med.total_days }} дней курса">
+                                    </div>
                                 </div>
-                            </div>
-                        {% elif med.state == 'completed' %}
-                            <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                <div class="progress-bar bg-success" style="width: 100%"></div>
-                            </div>
-                        {% elif med.state == 'cancelled' %}
-                            <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                <div class="progress-bar bg-danger" style="width: 100%"></div>
-                            </div>
-                        {% elif med.state == 'stopped' %}
-                            <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                <div class="progress-bar bg-warning progress-bar-striped" style="width: 100%"></div>
-                            </div>
-                        {% endif %}
-                    {% endwith %}
-                </td>
-            </tr>
+                            {% elif med.state == 'completed' %}
+                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
+                                    <div class="progress-bar bg-success" style="width: 100%"></div>
+                                </div>
+                            {% elif med.state == 'cancelled' %}
+                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
+                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                </div>
+                            {% elif med.state == 'stopped' %}
+                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
+                                    <div class="progress-bar bg-warning progress-bar-striped" style="width: 100%"></div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 {% else %}
-<div class="alert alert-info">
-    <i class="fas fa-info-circle mr-2"></i>
-    Нет назначенных медикаментов
-</div>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle mr-2"></i>
+        Нет назначенных медикаментов
+    </div>
 {% endif %}

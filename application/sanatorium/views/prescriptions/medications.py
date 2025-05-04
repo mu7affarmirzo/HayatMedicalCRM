@@ -67,7 +67,6 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
-    success_message = "Назначение успешно создано"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -119,7 +118,6 @@ class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, Up
     form_class = PrescribedMedicationForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
     context_object_name = 'medication'
-    success_message = "Назначение успешно обновлено"
 
     def form_valid(self, form):
         # Set the last_modified_by field to the current user
@@ -134,7 +132,6 @@ class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, De
     model = PrescribedMedication
     template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
     context_object_name = 'medication'
-    success_message = "Назначение успешно удалено"
 
     def get_success_url(self):
         # Redirect to illness history detail if available
@@ -184,7 +181,6 @@ class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin
     model = MedicationAdministration
     form_class = MedicationAdministrationForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
-    success_message = "Применение лекарства успешно зарегистрировано"
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -233,7 +229,6 @@ class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin
     form_class = MedicationAdministrationForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
     context_object_name = 'administration'
-    success_message = "Применение лекарства успешно обновлено"
 
     def form_valid(self, form):
         # Set the modified_by field to the current user
@@ -248,7 +243,6 @@ class MedicationAdministrationDeleteView(LoginRequiredMixin, SuccessMessageMixin
     model = MedicationAdministration
     template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
     context_object_name = 'administration'
-    success_message = "Применение лекарства успешно удалено"
 
     def get_success_url(self):
         return reverse_lazy('prescribed_medication_detail',

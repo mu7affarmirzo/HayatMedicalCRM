@@ -101,6 +101,13 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
         form.instance.doctor = self.request.user
         form.instance.created_by = self.request.user
         form.instance.modified_by = self.request.user
+
+        # Check if user is the assigned doctor
+        if form.instance.illness_history.doctor == self.request.user:
+            form.instance.state = 'assigned'  # or whatever state indicates direct assignment
+        else:
+            form.instance.state = 'recommended'
+
         return super().form_valid(form)
 
     def get_success_url(self):

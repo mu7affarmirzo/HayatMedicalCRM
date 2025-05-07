@@ -46,7 +46,7 @@ def assign_lab_create(request, history_id):
 class AssignedLabsListView(LoginRequiredMixin, ListView):
     model = AssignedLabs
     template_name = 'sanatorium/doctors/appointments/on_duty_app/list.html'
-    context_object_name = 'appointments'
+    context_object_name = 'assigned_labs'
     paginate_by = 10
 
     def get_queryset(self):
@@ -59,8 +59,8 @@ class AssignedLabsListView(LoginRequiredMixin, ListView):
 
 class AssignedLabsDetailView(LoginRequiredMixin, DetailView):
     model = AssignedLabs
-    template_name = 'sanatorium/doctors/appointments/on_duty_app/detail.html'
-    context_object_name = 'appointment'
+    template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_detail.html'
+    context_object_name = 'assigned_lab'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -100,10 +100,10 @@ class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
     model = AssignedLabs
     form_class = AssignedLabsForm
     template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_form.html'
-    context_object_name = 'appointment'
+    context_object_name = 'assigned_lab'
 
     def get_success_url(self):
-        return reverse('appointment_with_on_duty_doctor_detail', kwargs={'pk': self.object.pk})
+        return reverse('prescription_list', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -118,12 +118,19 @@ class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
 
 class AssignedLabsDeleteView(LoginRequiredMixin, DeleteView):
     model = AssignedLabs
+    context_object_name = 'assigned_lab'
     template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_confirm_delete.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['history'] = self.object.illness_history
+        context['form_title'] = '-'
+        return context
 
     def get_success_url(self):
         messages.success(self.request, "Lab assignment successfully deleted.")
         if self.object.illness_history:
-            return reverse('illness_history_detail', kwargs={'pk': self.object.illness_history.pk})
+            return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
         return reverse('assigned_labs_list')
 
 

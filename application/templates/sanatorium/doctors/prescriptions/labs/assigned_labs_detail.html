@@ -13,18 +13,18 @@
                         <i class="fas fa-flask mr-2"></i>Lab Test Details
                     </h3>
                     <div class="card-tools">
-                        <a href="{% url 'main_prescription_list' %}" class="btn btn-default btn-sm">
+                        <a href="#" class="btn btn-default btn-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Back to List
                         </a>
                         <a href="{% url 'assigned_labs_update' assigned_lab.id %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </a>
-                        <a href="{% url 'assigned_labs_delete' assigned_lab.id %}" class="btn btn-danger btn-sm">
+                        <a href="#" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash mr-1"></i> Delete
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
@@ -39,7 +39,7 @@
                                     <div class="row">
                                         <div class="col-sm-4 text-bold">Patient Name:</div>
                                         <div class="col-sm-8">
-                                            {{ assigned_lab.illness_history.patient.f_name }} 
+                                            {{ assigned_lab.illness_history.patient.f_name }}
                                             {{ assigned_lab.illness_history.patient.l_name }}
                                         </div>
                                     </div>
@@ -77,7 +77,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header bg-info">
@@ -99,7 +99,7 @@
                                     <div class="row">
                                         <div class="col-sm-4 text-bold">Status:</div>
                                         <div class="col-sm-8">
-                                            <span id="lab-status" class="badge 
+                                            <span id="lab-status" class="badge
                                                 {% if assigned_lab.state == 'recommended' %}bg-info
                                                 {% elif assigned_lab.state == 'assigned' %}bg-primary
                                                 {% elif assigned_lab.state == 'dispatched' %}bg-warning
@@ -135,7 +135,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Status update buttons -->
                     <div class="row mt-4">
                         <div class="col-12">
@@ -145,35 +145,35 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="btn-group">
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-info update-status {% if assigned_lab.state == 'recommended' %}active{% endif %}"
                                                 data-state="recommended"
                                                 data-lab-id="{{ assigned_lab.id }}"
                                                 {% if assigned_lab.state == 'recommended' %}disabled{% endif %}>
                                             Recommended
                                         </button>
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-primary update-status {% if assigned_lab.state == 'assigned' %}active{% endif %}"
                                                 data-state="assigned"
                                                 data-lab-id="{{ assigned_lab.id }}"
                                                 {% if assigned_lab.state == 'assigned' %}disabled{% endif %}>
                                             Assigned
                                         </button>
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-warning update-status {% if assigned_lab.state == 'dispatched' %}active{% endif %}"
                                                 data-state="dispatched"
                                                 data-lab-id="{{ assigned_lab.id }}"
                                                 {% if assigned_lab.state == 'dispatched' %}disabled{% endif %}>
                                             Dispatched
                                         </button>
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-success update-status {% if assigned_lab.state == 'results' %}active{% endif %}"
                                                 data-state="results"
                                                 data-lab-id="{{ assigned_lab.id }}"
                                                 {% if assigned_lab.state == 'results' %}disabled{% endif %}>
                                             Results Available
                                         </button>
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-danger update-status {% if assigned_lab.state == 'cancelled' %}active{% endif %}"
                                                 data-state="cancelled"
                                                 data-lab-id="{{ assigned_lab.id }}"
@@ -185,7 +185,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Lab Results Section -->
                     <div class="row mt-4">
                         <div class="col-12">
@@ -302,7 +302,7 @@
             const labId = $(this).data('lab-id');
             const newState = $(this).data('state');
             const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-            
+
             $.ajax({
                 url: `/labs/assigned/${labId}/update-state/${newState}/`,
                 type: 'POST',
@@ -313,7 +313,7 @@
                     if (response.success) {
                         // Update status label and buttons
                         $('#lab-status').removeClass().addClass('badge');
-                        
+
                         if (newState === 'recommended') {
                             $('#lab-status').addClass('bg-info');
                         } else if (newState === 'assigned') {
@@ -325,13 +325,13 @@
                         } else if (newState === 'cancelled' || newState === 'stopped') {
                             $('#lab-status').addClass('bg-danger');
                         }
-                        
+
                         $('#lab-status').text(response.state_display);
-                        
+
                         // Reset buttons
                         $('.update-status').removeClass('active').prop('disabled', false);
                         $(`.update-status[data-state="${newState}"]`).addClass('active').prop('disabled', true);
-                        
+
                         // Show success toast
                         toastr.success('Lab status updated successfully');
                     }
@@ -341,7 +341,7 @@
                 }
             });
         });
-        
+
         // File input display
         $('.custom-file-input').on('change', function() {
             let fileName = $(this).val().split('\\').pop();

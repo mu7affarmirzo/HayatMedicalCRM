@@ -7,7 +7,7 @@ from core.models import (
     BookingDetail, Service, TariffService, Tariff,
     IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
     Warehouse, CompanyModel, MedicationModel, MedicationsInStockModel,
-    RolesModel
+    RolesModel, ProfessionModel
 )
 
 from import_export.admin import ImportExportModelAdmin
@@ -17,6 +17,16 @@ admin.site.site_header = 'Hayat CRM Administration'
 admin.site.site_title = 'Hayat CRM Administration'
 
 admin.site.index_title = 'Welcome to Hayat CRM Administration'
+
+
+@admin.register(DiagnosisTemplate)
+class DiagnosisTemplateAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in DiagnosisTemplate._meta.fields]
+
+
+@admin.register(ProfessionModel)
+class ProfessionModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in ProfessionModel._meta.fields]
 
 
 @admin.register(RolesModel)

@@ -19,6 +19,37 @@ class DoctorRequiredMixin(UserPassesTestMixin):
 
 
 @login_required
+def all_patients_list(request):
+    # # Check if user is a doctor
+    # if not request.user.is_therapist:
+    #     return redirect('home')  # Redirect non-doctors
+
+    # Get all illness histories where the current user is the assigned doctor
+    patient_histories = IllnessHistory.objects.all()
+
+    # Get today's appointments
+    today = timezone.now().date()
+    today_appointments = IllnessHistory.objects.filter(
+        doctor=request.user,
+        booking__start_date__date=today
+    ).count()
+
+    # Get statistics
+    stationary_count = patient_histories.filter(type='stationary').count()
+    ambulatory_count = patient_histories.filter(type='ambulatory').count()
+
+    context = {
+        'patient_histories': patient_histories,
+        'today_appointments': today_appointments,
+        'stationary_count': stationary_count,
+        'ambulatory_count': ambulatory_count,
+        'total_patients': patient_histories.count(),
+    }
+
+    return render(request, 'sanatorium/doctors/illness_histories_dashboard.html', context)
+
+
+@login_required
 def assigned_patients_list(request):
     # # Check if user is a doctor
     # if not request.user.is_therapist:

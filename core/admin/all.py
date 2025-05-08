@@ -7,6 +7,7 @@ from core.models import (
     BookingDetail, Service, TariffService, Tariff,
     IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
     Warehouse, CompanyModel, MedicationModel, MedicationsInStockModel,
+    RolesModel
 )
 
 from import_export.admin import ImportExportModelAdmin
@@ -16,6 +17,11 @@ admin.site.site_header = 'Hayat CRM Administration'
 admin.site.site_title = 'Hayat CRM Administration'
 
 admin.site.index_title = 'Welcome to Hayat CRM Administration'
+
+
+@admin.register(RolesModel)
+class RolesModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in RolesModel._meta.fields]
 
 
 @admin.register(Account)

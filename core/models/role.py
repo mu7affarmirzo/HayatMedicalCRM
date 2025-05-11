@@ -11,12 +11,14 @@ class RolesModel(models.Model):
     # Define role constants for easier access
     ADMIN = 'admin'
     THERAPIST = 'therapist'
+    DOCTOR = 'doctor'
     RECEPTIONIST = 'receptionist'
     MANAGER = 'manager'
 
     # Default roles
     DEFAULT_ROLES = [
         (ADMIN, 'Administrator'),
+        (DOCTOR, 'Doctor'),
         (THERAPIST, 'Therapist'),
         (RECEPTIONIST, 'Receptionist'),
         (MANAGER, 'Manager'),

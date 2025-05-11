@@ -450,7 +450,7 @@ def main_prescription_list_view(request, history_id):
     # Process lab filter parameter if provided
     selected_category = request.GET.get('lab_category', 'all')
 
-    doctors = Account.objects.all()
+    doctors = Account.objects.filter(roles__name="Doctor")
 
     appointments = []
 
@@ -610,3 +610,4 @@ def main_prescription_list_view(request, history_id):
     }
 
     return render(request, 'sanatorium/doctors/prescriptions/main_prescription_list.html', context)
+

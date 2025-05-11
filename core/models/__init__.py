@@ -9,4 +9,5 @@ from .tariffs import *
 from .illness_history import *
 from .lab_research import *
 from .sanatorium import *
+from .documents import *
 from .warehouse import *

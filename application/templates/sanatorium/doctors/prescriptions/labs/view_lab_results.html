@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2>Labs for Illness History #{{ illness_history.id }}</h2>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Assigned Labs</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Lab</th>
+                        <th>Status</th>
+                        <th>Date Assigned</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lab in assigned_labs %}
+                    <tr>
+                        <td>{{ lab.lab.name }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if lab.state == 'recommended' %}badge-secondary
+                                {% elif lab.state == 'assigned' %}badge-primary
+                                {% elif lab.state == 'dispatched' %}badge-info
+                                {% elif lab.state == 'results' %}badge-success
+                                {% elif lab.state == 'cancelled' %}badge-danger
+                                {% elif lab.state == 'stopped' %}badge-warning
+                                {% endif %}">
+                                {{ lab.get_state_display }}
+                            </span>
+                        </td>
+                        <td>{{ lab.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if lab.state == 'dispatched' %}
+                            <button type="button" class="btn btn-success btn-sm add-result-btn" 
+                                    data-toggle="modal" data-target="#add-result-modal" 
+                                    data-labid="{{ lab.id }}">
+                                <i class="fas fa-plus"></i> Add Result
+                            </button>
+                            {% endif %}
+                            
+                            {% if lab.state == 'results' %}
+                            <a href="{% url 'view_lab_results' lab.id %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> View Results
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No labs assigned yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Result Modal -->
+<div class="modal fade" id="add-result-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h4 class="modal-title">Add Lab Result</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="lab-result-form" action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="result-comments">Comments</label>
+                        <textarea class="form-control" id="result-comments" name="comments" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="result-file">Attach File</label>
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="result-file" name="attached_file">
+                                <label class="custom-file-label" for="result-file">Choose file</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save Result</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+    // Custom file input
+    $(document).on('change', '.custom-file-input', function() {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').addClass("selected").html(fileName);
+    });
+    
+    // Set the form action URL dynamically when the modal is opened
+    $('.add-result-btn').on('click', function() {
+        let labId = $(this).data('labid');
+        $('#lab-result-form').attr('action', '/add-lab-result/' + labId + '/');
+    });
+});
+</script>
+{% endblock %}

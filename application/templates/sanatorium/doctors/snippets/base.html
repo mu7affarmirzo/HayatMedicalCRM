@@ -105,7 +105,7 @@
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo -->
-        <a href="{% url 'dashboard' %}" class="brand-link">
+        <a href="{% url 'doctors_main_screen' %}" class="brand-link">
             <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Medical Center"
                  style="height: 40px; max-height: none; opacity: 0.9;">
             <span class="brand-text font-weight-light"></span>
@@ -339,7 +339,7 @@
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link {{ active_page.documents_page }}">
+                    <a href="{% url 'documents_view' history.id %}" class="nav-link {{ active_page.documents_page }}">
                         <i class="nav-icon fas fa-file-alt"></i>
                         <p>
                             Документы

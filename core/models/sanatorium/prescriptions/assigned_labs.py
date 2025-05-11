@@ -71,3 +71,4 @@ class AssignedLabResult(BaseAuditModel):
 
     def __str__(self):
         return f"Lab result for {self.assigned_lab} on {self.result_date}"
+

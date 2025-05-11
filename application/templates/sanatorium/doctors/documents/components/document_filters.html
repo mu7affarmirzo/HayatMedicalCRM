@@ -1,0 +1,60 @@
+{% load static %}
+<!-- Document Filters Component -->
+<div class="card card-outline card-primary mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Фильтры документов</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <form id="documentFilterForm">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Тип документа</label>
+                        <select class="form-control select2" multiple>
+                            <option>Результаты анализов</option>
+                            <option>Заключение врача</option>
+                            <option>Согласие пациента</option>
+                            <option>УЗИ</option>
+                            <option>ЭКГ</option>
+                            <option>Прочее</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Дата загрузки</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="far fa-calendar-alt"></i>
+                                </span>
+                            </div>
+                            <input type="text" class="form-control float-right" id="date-range-filter">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Поиск по названию</label>
+                        <input type="text" class="form-control" placeholder="Введите название документа">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter mr-1"></i> Применить фильтры
+                    </button>
+                    <button type="reset" class="btn btn-default">
+                        <i class="fas fa-undo mr-1"></i> Сбросить
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

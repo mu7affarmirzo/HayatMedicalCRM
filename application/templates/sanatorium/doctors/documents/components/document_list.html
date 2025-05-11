@@ -1,0 +1,166 @@
+{% load static %}
+<!-- Document List Component -->
+<div class="document-list">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="m-0">Найдено результатов: {{ documents|length }}</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default" id="view-grid">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button type="button" class="btn btn-default" id="view-list">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid View (default) -->
+    <div class="row document-grid-view">
+        {% for document in documents %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card document-card mb-4">
+                <div class="card-body text-center pt-4">
+                    {% if document.file_format == 'pdf' %}
+                    <i class="far fa-file-pdf text-danger document-icon mb-3"></i>
+                    {% elif document.file_format == 'doc' or document.file_format == 'docx' %}
+                    <i class="far fa-file-word text-primary document-icon mb-3"></i>
+                    {% elif document.file_format == 'xls' or document.file_format == 'xlsx' %}
+                    <i class="far fa-file-excel text-success document-icon mb-3"></i>
+                    {% elif document.file_format == 'jpg' or document.file_format == 'jpeg' or document.file_format == 'png' %}
+                    <i class="far fa-file-image text-info document-icon mb-3"></i>
+                    {% else %}
+                    <i class="far fa-file text-secondary document-icon mb-3"></i>
+                    {% endif %}
+
+                    <h5 class="card-title">{{ document.assigned_lab.lab.name }}</h5>
+                    <p class="card-text text-muted">
+                        {% if document.file_format %}{{ document.file_format|upper }}{% else %}Результат{% endif %}
+                        <br>
+                        <small>Дата: {{ document.result_date|date:"d.m.Y" }}</small>
+                    </p>
+                    {% if document.comments %}
+                    <div class="mt-2">
+                        <small class="text-muted">{{ document.comments|truncatechars:60 }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="btn-group d-flex">
+                        {% if document.attached_file %}
+                        <button type="button" class="btn btn-sm btn-outline-primary preview-document"
+                                data-document-id="{{ document.id }}"
+                                data-document-name="{{ document.assigned_lab.lab.name }}"
+                                data-document-url="{{ document.attached_file.url }}"
+                                data-document-type="{% if document.file_format == 'jpg' or document.file_format == 'jpeg' or document.file_format == 'png' %}image{% else %}{{ document.file_format }}{% endif %}">
+                            <i class="fas fa-eye"></i> Просмотр
+                        </button>
+                        <a href="{{ document.attached_file.url }}" download class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-download"></i> Скачать
+                        </a>
+                        {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-primary" disabled>
+                            <i class="fas fa-eye"></i> Нет файла
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-document"
+                                data-document-id="{{ document.id }}"
+                                data-document-name="{{ document.assigned_lab.lab.name }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="icon fas fa-info"></i> Нет результатов анализов</h5>
+                В этой категории пока нет результатов анализов. Они появятся здесь после загрузки результатов лабораторных исследований.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- List View (toggled via JS) -->
+    <div class="document-list-view" style="display: none;">
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px">#</th>
+                            <th>Название анализа</th>
+                            <th>Формат файла</th>
+                            <th>Дата результата</th>
+                            <th>Комментарий</th>
+                            <th style="width: 200px">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ document.assigned_lab.lab.name }}</td>
+                            <td>{% if document.file_format %}{{ document.file_format|upper }}{% else %}-{% endif %}</td>
+                            <td>{{ document.result_date|date:"d.m.Y H:i" }}</td>
+                            <td>{{ document.comments|truncatechars:60|default:"-" }}</td>
+                            <td>
+                                {% if document.attached_file %}
+                                <button type="button" class="btn btn-xs btn-outline-primary preview-document"
+                                        data-document-id="{{ document.id }}"
+                                        data-document-name="{{ document.assigned_lab.lab.name }}"
+                                        data-document-url="{{ document.attached_file.url }}"
+                                        data-document-type="{% if document.file_format == 'jpg' or document.file_format == 'jpeg' or document.file_format == 'png' %}image{% else %}{{ document.file_format }}{% endif %}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <a href="{{ document.attached_file.url }}" download class="btn btn-xs btn-outline-success">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% else %}
+                                <button type="button" class="btn btn-xs btn-outline-secondary" disabled>
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-xs btn-outline-danger delete-document"
+                                        data-document-id="{{ document.id }}"
+                                        data-document-name="{{ document.assigned_lab.lab.name }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Нет результатов анализов в этой категории</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    // Toggle between grid and list view
+    $("#view-grid").click(function() {
+        $(".document-grid-view").show();
+        $(".document-list-view").hide();
+        $(this).addClass("active");
+        $("#view-list").removeClass("active");
+    });
+
+    $("#view-list").click(function() {
+        $(".document-grid-view").hide();
+        $(".document-list-view").show();
+        $(this).addClass("active");
+        $("#view-grid").removeClass("active");
+    });
+
+    // Initialize with grid view active
+    $("#view-grid").addClass("active");
+});
+</script>

@@ -11,5 +11,6 @@ urlpatterns = [
     path('histories/', include('application.sanatorium.urls.illness_histories')),
     path('patients/', include('application.sanatorium.urls.patients')),
     path('prescription/', include('application.sanatorium.urls.prescriptions')),
+    path('documents/', include('application.sanatorium.urls.documents')),
 
 ]

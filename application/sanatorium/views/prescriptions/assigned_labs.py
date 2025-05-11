@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -8,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 
 from application.sanatorium.forms.assigned_labs_form import AssignedLabsForm
-from core.models import AssignedLabs, LabResearchModel, LabResearchCategoryModel, IllnessHistory
+from core.models import AssignedLabs, LabResearchModel, LabResearchCategoryModel, IllnessHistory, AssignedLabResult
 
 
 @login_required
@@ -168,6 +169,7 @@ def get_labs_by_category(request):
     return JsonResponse({'labs': labs_data})
 
 
+@login_required
 def update_lab_state(request, pk, new_state):
     if request.method == 'POST':
         assigned_lab = get_object_or_404(AssignedLabs, pk=pk)
@@ -187,3 +189,127 @@ def update_lab_state(request, pk, new_state):
         })
 
     return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+
+
+# @login_required
+# @require_POST
+# def update_lab_state(request, lab_id, new_state):
+#     """
+#     Обновление статуса назначенного лабораторного анализа через AJAX запрос.
+#
+#     Args:
+#         request: HTTP запрос
+#         lab_id: ID назначенного анализа
+#         new_state: Новый статус (recommended, assigned, dispatched, results, cancelled, stopped)
+#
+#     Returns:
+#         JsonResponse с результатом операции
+#     """
+#     try:
+#         # Проверка, что статус является допустимым
+#         if new_state not in dict(AssignedLabs.STATE_CHOICES):
+#             return JsonResponse({'success': False, 'error': 'Недопустимый статус'}, status=400)
+#
+#         # Получение назначенного анализа
+#         assigned_lab = get_object_or_404(AssignedLabs, id=lab_id)
+#
+#         # Проверка прав доступа (опционально - настройте согласно вашей логике)
+#         # if assigned_lab.illness_history.doctor != request.user:
+#         #    return JsonResponse({'success': False, 'error': _('Нет прав доступа')}, status=403)
+#
+#         # Специальная обработка для перехода в статус 'results'
+#         if new_state == 'results' and assigned_lab.state != 'results':
+#             # Проверяем наличие результатов
+#             if not assigned_lab.lab_results.exists():
+#                 return JsonResponse({
+#                     'success': False,
+#                     'error': 'Невозможно установить статус "Результаты доступны" без добавления результатов'
+#                 }, status=400)
+#
+#         # Обновление статуса
+#         old_state = assigned_lab.state
+#         assigned_lab.state = new_state
+#         assigned_lab.modified_by = request.user
+#         assigned_lab.save()
+#
+#         # Получение отображаемого значения статуса
+#         state_display = dict(AssignedLabs.STATE_CHOICES).get(new_state, new_state)
+#
+#         # Возвращаем успешный ответ
+#         return JsonResponse({
+#             'success': True,
+#             'state': new_state,
+#             'state_display': state_display,
+#             'old_state': old_state
+#         })
+#
+#     except Exception as e:
+#         # Обработка ошибок
+#         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def add_lab_result(request, assigned_lab_id):
+    """
+    View to handle the submission of lab results from the modal form.
+    """
+    assigned_lab = get_object_or_404(AssignedLabs, id=assigned_lab_id)
+
+    # Check if the assigned lab is in a state where results can be added
+    if assigned_lab.state not in ['dispatched', 'results']:
+        messages.error(request, "Lab results can only be added for dispatched labs.")
+        return redirect('assigned_labs_detail', pk=assigned_lab.id)
+
+    try:
+        # Extract data from the form
+        comments = request.POST.get('comments', '')
+        attached_file = request.FILES.get('attached_file', None)
+
+        # Create a new lab result
+        lab_result = AssignedLabResult(
+            assigned_lab=assigned_lab,
+            comments=comments,
+            attached_file=attached_file,
+            created_by=request.user,
+            modified_by=request.user
+        )
+        lab_result.save()
+
+        # Update the state of the assigned lab
+        assigned_lab.state = 'results'
+        assigned_lab.save()
+
+        messages.success(request, "Lab result added successfully.")
+
+        # Handle AJAX requests
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'message': 'Lab result added successfully'})
+
+        return redirect('assigned_labs_detail', pk=assigned_lab.id)
+
+    except Exception as e:
+        messages.error(request, f"Error adding lab result: {str(e)}")
+
+        # Handle AJAX requests
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        print('Exception occured!')
+        return redirect('assigned_labs_detail', pk=assigned_lab.id)
+
+
+@login_required
+def view_lab_results(request, assigned_lab_id):
+    """
+    View to display all results for a specific assigned lab.
+    """
+    assigned_lab = get_object_or_404(AssignedLabs, id=assigned_lab_id)
+    lab_results = AssignedLabResult.objects.filter(assigned_lab=assigned_lab)
+
+    context = {
+        'assigned_lab': assigned_lab,
+        'lab_results': lab_results,
+    }
+    return render(request, 'sanatorium/doctors/prescriptions/labs/view_lab_results.html', context)
+
+

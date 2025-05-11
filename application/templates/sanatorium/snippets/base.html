@@ -43,7 +43,7 @@
             </li>
             {% if request.user.is_superuser %}
                 <li class="nav-item d-none d-sm-inline-block">
-                    <a href="#" class="nav-link">Статистика</a>
+                    <a href="{% url 'doctor_appointments' %}" class="nav-link">Консультации</a>
                 </li>
             {% endif %}
             <li class="nav-item d-none d-sm-inline-block">

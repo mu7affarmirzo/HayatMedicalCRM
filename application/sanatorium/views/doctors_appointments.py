@@ -106,7 +106,6 @@ def doctor_appointments(request):
                     patient = app.illness_history.patient
                     patient_name = getattr(patient, 'full_name', str(patient))
                     patient_id = patient.id
-                print(app_info.get('url_name'))
                 all_appointments.append({
                     'id': app.id,
                     'type': app_info['display'],
@@ -115,8 +114,9 @@ def doctor_appointments(request):
                     'patient_id': patient_id,
                     'date': app.created_at,
                     'state': app.state,
-                    'url': f'/doctor/appointments/{app_type}/{app.id}/',
-                    'cito': getattr(app, 'cito', False)
+                    'url': app_info.get('url_name'),
+                    'cito': getattr(app, 'cito', False),
+                    'object': app
                 })
 
     # Sort by date (most recent first)

@@ -1,7 +1,7 @@
 {% extends 'sanatorium/doctors/snippets/base.html' %}
 {% load static %}
 
-{% block title %}Повторный приём #{{ appointment.id }} | {{ appointment.illness_history.patient.full_name }}{% endblock %}
+{% block title %}Заключительный приём #{{ appointment.id }} | {{ appointment.illness_history.patient.full_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -60,13 +60,13 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">Повторный приём #{{ appointment.id }}</h1>
+                <h1 class="m-0">Заключительный приём #{{ appointment.id }}</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Главная</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
-                    <li class="breadcrumb-item active">Повторный приём</li>
+                    <li class="breadcrumb-item active">Заключительный приём</li>
                 </ol>
             </div>
         </div>
@@ -234,7 +234,7 @@
                         <div class="data-section">
                             <h5 class="data-label">Диагноз</h5>
                             <div class="p-2 bg-light rounded">
-                                {{ appointment.diagnosis|default:"Не указано" }}
+                                {{ appointment.diagnosis.name|default:"Не указано" }}
                             </div>
                         </div>
 
@@ -249,7 +249,7 @@
             </div>
 
             <div class="card-footer">
-                <a href="{% url 'repeated_appointment_update' appointment.id %}" class="btn btn-warning">
+                <a href="{% url 'final_appointment_update' appointment.id %}" class="btn btn-warning">
                     <i class="fas fa-edit mr-1"></i> Редактировать
                 </a>
 {#                <a href="{% url 'repeated_appointment_delete' appointment.id %}" class="btn btn-danger">#}

@@ -41,7 +41,9 @@ def get_redirect_url_for_role(user):
 def login_view(request):
     """Login view with role-based redirection"""
     if request.user.is_authenticated:
-        return redirect_by_role(request.user)
+        x = redirect_by_role(request.user)
+        return x
+        # return redirect_by_role(request.user)
 
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -74,6 +76,7 @@ def logout_view(request):
 def redirect_by_role(user):
     """Redirect user based on their primary role"""
     main_role = user.get_main_role()
+    print(main_role, user.roles)
 
     if main_role == RolesModel.ADMIN:
         return redirect('admin_dashboard')
@@ -82,7 +85,7 @@ def redirect_by_role(user):
     elif main_role == RolesModel.THERAPIST:
         return redirect('therapist_dashboard')
     elif main_role == RolesModel.RECEPTIONIST:
-        return redirect('reception_dashboard')
+        return redirect('doctors_main_screen')
 
     # Default fallback
     return redirect('default_dashboard')

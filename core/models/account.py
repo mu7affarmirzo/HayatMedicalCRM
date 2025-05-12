@@ -76,6 +76,8 @@ class Account(AbstractBaseUser):
             return RolesModel.THERAPIST
         elif self.has_role(RolesModel.RECEPTIONIST):
             return RolesModel.RECEPTIONIST
+        elif self.has_role(RolesModel.DOCTOR):
+            return RolesModel.DOCTOR
         return None
 
     # For checking permissions. to keep it simple all admin have ALL permissons

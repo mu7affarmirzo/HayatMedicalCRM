@@ -3,141 +3,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Medical Center | Log in</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Medical Center | Log in</title>
 
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
-  <style>
-    .login-page {
-      background: url("{% static 'adminlte3_assets/dist/img/background_wallpaper.jpg' %}") no-repeat center center;
-      background-size: cover;
-      position: relative;
-      background-attachment: fixed;
-      image-rendering: -webkit-optimize-contrast; /* Improves image clarity in webkit browsers */
-    }
-    .login-page::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.2); /* Darker overlay instead of white */
-      z-index: 0;
-    }
-    .login-box {
-      position: relative;
-      z-index: 1;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-      margin-top: 2vh;
-    }
-    .login-logo {
-      margin-bottom: 20px;
-      position: relative;
-      z-index: 1;
-    }
-    .login-logo img {
-      max-height: 100px; /* Larger logo */
-      filter: drop-shadow(0px 0px 5px rgba(255, 255, 255, 0.8)); /* Makes logo stand out */
-    }
-    .card {
-      border-radius: 10px;
-      border: none;
-      background-color: rgba(255, 255, 255, 0.95); /* More opaque card background */
-    }
-    .card-header {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-    .btn-primary {
-      background-color: #0073b7;
-      border-color: #0073b7;
-    }
-    .btn-primary:hover {
-      background-color: #005b8f;
-      border-color: #005b8f;
-    }
-    .login-title {
-      color: #0073b7;
-      font-weight: 600;
-    }
-    .medical-icon {
-      color: #0073b7;
-    }
-  </style>
+    <style>
+        .login-page {
+            background: url("{% static 'adminlte3_assets/dist/img/background_wallpaper.jpg' %}") no-repeat center center;
+            background-size: cover;
+            position: relative;
+            background-attachment: fixed;
+            image-rendering: -webkit-optimize-contrast; /* Improves image clarity in webkit browsers */
+        }
+
+        .login-page::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2); /* Darker overlay instead of white */
+            z-index: 0;
+        }
+
+        .login-box {
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            margin-top: 2vh;
+        }
+
+        .login-logo {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-logo img {
+            max-height: 100px; /* Larger logo */
+            filter: drop-shadow(0px 0px 5px rgba(255, 255, 255, 0.8)); /* Makes logo stand out */
+        }
+
+        .card {
+            border-radius: 10px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.95); /* More opaque card background */
+        }
+
+        .card-header {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .btn-primary {
+            background-color: #0073b7;
+            border-color: #0073b7;
+        }
+
+        .btn-primary:hover {
+            background-color: #005b8f;
+            border-color: #005b8f;
+        }
+
+        .login-title {
+            color: #0073b7;
+            font-weight: 600;
+        }
+
+        .medical-icon {
+            color: #0073b7;
+        }
+    </style>
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
-  <!-- Login Logo -->
-  <div class="login-logo">
-    <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Medical Center Logo">
-  </div>
-  <!-- /.login-logo -->
-  <div class="card">
-    <div class="card-header text-center">
-      <h4 class="login-title">Staff Login Portal</h4>
-      <p class="login-box-msg">Sign in to start your session</p>
+    <!-- Login Logo -->
+    <div class="login-logo">
+        <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Medical Center Logo">
     </div>
-    <div class="card-body login-card-body">
-      <form action="#" method="post">
-        <div class="input-group mb-3">
-          <input type="email" class="form-control" placeholder="Email">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-envelope"></span>
-            </div>
-          </div>
+    <!-- /.login-logo -->
+    <div class="card">
+        <div class="card-header text-center">
+            <h4 class="login-title">Staff Login Portal</h4>
+            <p class="login-box-msg">Sign in to start your session</p>
         </div>
-        <div class="input-group mb-3">
-          <input type="password" class="form-control" placeholder="Password">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-lock"></span>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-8">
-            <div class="icheck-primary">
-              <input type="checkbox" id="remember">
-              <label for="remember">
-                Remember Me
-              </label>
-            </div>
-          </div>
-          <!-- /.col -->
-          <div class="col-4">
-            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-          </div>
-          <!-- /.col -->
-        </div>
-      </form>
+        <div class="card-body login-card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="input-group mb-3">
+                    <input name="email" type="email" class="form-control" placeholder="Email">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-envelope"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <input name="password" type="password" class="form-control" placeholder="Password">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <div class="icheck-primary">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">
+                                Remember Me
+                            </label>
+                        </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                    </div>
+                    <!-- /.col -->
+                </div>
+            </form>
 
-      <div class="social-auth-links text-center mb-3">
-        <p>- OR -</p>
-        <a href="#" class="btn btn-block btn-outline-primary">
-          <i class="fas fa-id-card-alt mr-2"></i> Login with Staff ID
-        </a>
-      </div>
-      <!-- /.social-auth-links -->
+            <div class="social-auth-links text-center mb-3">
+                <p>- OR -</p>
+                <a href="#" class="btn btn-block btn-outline-primary">
+                    <i class="fas fa-id-card-alt mr-2"></i> Login with Staff ID
+                </a>
+            </div>
+            <!-- /.social-auth-links -->
 
-      <p class="mb-1">
-        <a href="#">I forgot my password</a>
-      </p>
-      <p class="mb-0">
-        <a href="#" class="text-center">Request access credentials</a>
-      </p>
+            <p class="mb-1">
+                <a href="#">I forgot my password</a>
+            </p>
+            <p class="mb-0">
+                <a href="#" class="text-center">Request access credentials</a>
+            </p>
+        </div>
+        <!-- /.login-card-body -->
+        <div class="card-footer text-center bg-light">
+            <small>© 2025 Medical Center. All rights reserved.</small>
+        </div>
     </div>
-    <!-- /.login-card-body -->
-    <div class="card-footer text-center bg-light">
-      <small>© 2025 Medical Center. All rights reserved.</small>
-    </div>
-  </div>
 </div>
 <!-- /.login-box -->
 

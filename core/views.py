@@ -11,19 +11,12 @@ from core.forms import LoginForm  # We'll create this next
 
 # Move this to settings.py for better organization
 USER_ROLE_REDIRECTS = {
-    'warehouse': 'warehouse_v2:main_screen',
-    'logus.reception': 'logus_auth:main_screen',
-    'massage.reception': 'massage_reception:main_screen',
-    'sanatorium.staff': 'sanatorium_staff:main_screen',
-    'sanatorium.nurse': 'sanatorium_nurse:main_screen',
-    'sanatorium.admin': 'sanatorium_admin:main_screen',
-    'sanatorium.doctor': 'sanatorium_doctors:main_screen',
-    'sanatorium.dispatcher': 'sanatorium_dispatchers:main_screen',
-    'sanatorium.procedure_specs': 'sanatorium_procedure_specs:main_screen',
+    'doctor': 'doctors_main_screen'
 }
 
 # Default if no role match is found
-DEFAULT_REDIRECT = 'warehouse_v2:main_screen'
+DEFAULT_REDIRECT = 'home'
+
 
 def get_redirect_url_for_role(user):
     """Get the appropriate redirect URL based on user's role"""
@@ -51,14 +44,14 @@ def login_view(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             user = authenticate(request, email=email, password=password)
-
+            print(user.get_main_role, '----------------')
             if user is not None and user.is_active:
                 login(request, user)
                 next_url = request.GET.get('next')
                 if next_url:
                     return redirect(next_url)
                 # return redirect_by_role(user)
-                return redirect(get_redirect_url_for_role(user))
+                return redirect_by_role(request.user)
             else:
                 messages.error(request, 'Invalid email or password.')
     else:
@@ -76,7 +69,8 @@ def logout_view(request):
 def redirect_by_role(user):
     """Redirect user based on their primary role"""
     main_role = user.get_main_role()
-    print(main_role, user.roles)
+
+    print(main_role, '===============', user.roles.all())
 
     if main_role == RolesModel.ADMIN:
         return redirect('admin_dashboard')
@@ -85,8 +79,9 @@ def redirect_by_role(user):
     elif main_role == RolesModel.THERAPIST:
         return redirect('therapist_dashboard')
     elif main_role == RolesModel.RECEPTIONIST:
+        return redirect('logus_dashboard')
+    elif main_role == RolesModel.DOCTOR:
         return redirect('doctors_main_screen')
-
     # Default fallback
     return redirect('default_dashboard')
 

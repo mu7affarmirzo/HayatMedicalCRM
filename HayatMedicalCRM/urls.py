@@ -24,10 +24,10 @@ from core.views import login_view, logout_view, admin_dashboard, manager_dashboa
     reception_dashboard, default_dashboard
 
 urlpatterns = [
-    path('login/', login_view, name='login'),
+    path('', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
 
-    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('main-dashboard', TemplateView.as_view(template_name='index.html'), name='home'),
     path('modules/apps', TemplateView.as_view(template_name='application.html'), name='apps'),
 
     path('admin/', admin.site.urls),

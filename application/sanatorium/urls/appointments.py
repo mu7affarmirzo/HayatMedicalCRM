@@ -10,3 +10,4 @@ urlpatterns = [
     path('ekg-app/', include('application.sanatorium.urls.appointment_urls.ekg_app')),
     path('final-app/', include('application.sanatorium.urls.appointment_urls.final_app')),
 ]
+

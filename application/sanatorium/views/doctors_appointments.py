@@ -35,34 +35,42 @@ def doctor_appointments(request):
     appointment_types = {
         'cardiologist': {
             'model': ConsultingWithCardiologistModel,
-            'display': 'Консультация кардиолога'
+            'url_name': 'cardiologist_consulting_detail',
+            'display': 'Консультация кардиолога',
         },
         'final': {
             'model': FinalAppointmentWithDoctorModel,
+            'url_name': 'final_appointment_detail',
             'display': 'Заключительный приём'
         },
         'on_duty': {
             'model': AppointmentWithOnDutyDoctorModel,
+            'url_name': 'on_duty_appointment_detail',
             'display': 'Приём у дежурного врача'
         },
         'initial': {
             'model': InitialAppointmentWithDoctorModel,
+            'url_name': 'initial_appointment_detail',
             'display': 'Первичный приём'
         },
         'repeated': {
             'model': RepeatedAppointmentWithDoctorModel,
+            'url_name': 'repeated_appointment_detail',
             'display': 'Повторный приём'
         },
         'ekg': {
             'model': EkgAppointmentModel,
+            'url_name': 'ekg_appointment_detail',
             'display': 'ЭКГ обследование'
         },
         'on_arrival': {
             'model': AppointmentWithOnDutyDoctorOnArrivalModel,
+            'url_name': 'on_arrival_consulting_detail',
             'display': 'Приём по прибытии'
         },
         'neurologist': {
             'model': ConsultingWithNeurologistModel,
+            'url_name': 'neurologist_consulting_detail',
             'display': 'Консультация невролога'
         }
     }
@@ -98,7 +106,7 @@ def doctor_appointments(request):
                     patient = app.illness_history.patient
                     patient_name = getattr(patient, 'full_name', str(patient))
                     patient_id = patient.id
-
+                print(app_info.get('url_name'))
                 all_appointments.append({
                     'id': app.id,
                     'type': app_info['display'],

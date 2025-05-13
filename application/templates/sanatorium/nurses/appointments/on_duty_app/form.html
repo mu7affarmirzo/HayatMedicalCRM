@@ -1,0 +1,202 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if appointment %}Редактирование приема{% else %}Новый прием{% endif %} у дежурного врача
+{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ form_title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">
+                        {% if appointment %}Редактирование приема{% else %}Новый прием{% endif %}
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            {% if appointment %}
+                                <i class="fas fa-edit"></i> Редактирование приема у дежурного врача
+                            {% else %}
+                                <i class="fas fa-plus"></i> Новый прием у дежурного врача
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <p><strong>Пожалуйста, исправьте следующие ошибки:</strong></p>
+                                    <ul>
+                                        {% for field in form %}
+                                            {% for error in field.errors %}
+                                                <li>{{ field.label }}: {{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.complaints.id_for_label }}">{{ form.complaints.label }}</label>
+                                        {{ form.complaints }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.objective_data.id_for_label }}">{{ form.objective_data.label }}</label>
+                                        {{ form.objective_data }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.arterial_high_low.id_for_label }}">{{ form.arterial_high_low.label }}</label>
+                                        {{ form.arterial_high_low }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.arterial_high.id_for_label }}">{{ form.arterial_high.label }}</label>
+                                        {{ form.arterial_high }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.arterial_low.id_for_label }}">{{ form.arterial_low.label }}</label>
+                                        {{ form.arterial_low }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.imt.id_for_label }}">{{ form.imt.label }}</label>
+                                        {{ form.imt }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.diagnosis.id_for_label }}">{{ form.diagnosis.label }}</label>
+                                        {{ form.diagnosis }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.summary.id_for_label }}">{{ form.summary.label }}</label>
+                                        {{ form.summary }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.recommendation.id_for_label }}">{{ form.recommendation.label }}</label>
+                                        {{ form.recommendation }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.for_sanatorium_treatment.id_for_label }}">{{ form.for_sanatorium_treatment.label }}</label>
+                                        {{ form.for_sanatorium_treatment }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.state.id_for_label }}">{{ form.state.label }}</label>
+                                        {{ form.state }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            {{ form.cito }}
+                                            <label class="form-check-label" for="{{ form.cito.id_for_label }}">
+                                                {{ form.cito.label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                {% if appointment %}Сохранить изменения{% else %}Создать прием{% endif %}
+                            </button>
+                            <a href="{% if appointment %}{% url 'appointment_with_on_duty_doctor_detail' appointment.id %}{% else %}{% url 'illness_history_detail' history.id %}{% endif %}" class="btn btn-default">
+                                Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div><!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+    $(function () {
+        //Initialize Select2 Elements
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

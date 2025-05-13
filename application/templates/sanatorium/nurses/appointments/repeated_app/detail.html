@@ -1,0 +1,281 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Повторный приём #{{ appointment.id }} | {{ appointment.illness_history.patient.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-box {
+        min-height: 80px;
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    }
+    .info-box-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    .info-box-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .info-box-number {
+        font-weight: 700;
+    }
+    .tab-content {
+        padding-top: 15px;
+    }
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .data-section {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .data-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .data-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Повторный приём #{{ appointment.id }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">Повторный приём</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="row">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Patient and visit info -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user mr-1"></i> Информация о пациенте
+                        </h3>
+                        <div class="card-tools">
+                            <span class="badge {% if appointment.state == 'Приём завершён' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ appointment.state }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box d-flex">
+                                    <span class="info-box-icon bg-info">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Пациент</span>
+                                        <span class="info-box-number">{{ appointment.illness_history.patient.full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box d-flex">
+                                    <span class="info-box-icon bg-success">
+                                        <i class="fas fa-calendar"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Дата приёма</span>
+                                        <span class="info-box-number">{{ appointment.created_at|date:"d.m.Y H:i" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box d-flex">
+                                    <span class="info-box-icon bg-warning">
+                                        <i class="fas fa-user-md"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Врач</span>
+                                        <span class="info-box-number">{{ appointment.doctor.full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box d-flex">
+                                    <span class="info-box-icon bg-danger">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Cito</span>
+                                        <span class="info-box-number">{% if appointment.cito %}Да{% else %}Нет{% endif %}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-heartbeat mr-1"></i> Показатели
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="small-box bg-gradient-info">
+                                    <div class="inner">
+                                        <h3>{{ appointment.arterial_high }}<sup style="font-size: 20px">/{{ appointment.arterial_low }}</sup></h3>
+                                        <p>Давление</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-heartbeat"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="small-box bg-gradient-success">
+                                    <div class="inner">
+                                        <h3>{{ appointment.imt|default:"--" }}</h3>
+                                        <p>ИМТ</p>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="fas fa-weight"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs for details -->
+        <div class="card card-primary card-outline card-tabs">
+            <div class="card-header p-0 pt-1 border-bottom-0">
+                <ul class="nav nav-tabs" id="appointment-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="examination-tab" data-toggle="pill" href="#examination" role="tab">
+                            <i class="fas fa-stethoscope mr-1"></i> Данные осмотра
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="conclusion-tab" data-toggle="pill" href="#conclusion" role="tab">
+                            <i class="fas fa-clipboard-check mr-1"></i> Заключение
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="appointment-tabs-content">
+                    <!-- Examination tab -->
+                    <div class="tab-pane fade show active" id="examination" role="tabpanel">
+                        <div class="data-section">
+                            <h5 class="data-label">Жалобы пациента</h5>
+                            <div class="p-2 bg-light rounded">
+                                {{ appointment.complaint|default:"Не указано"|linebreaks }}
+                            </div>
+                        </div>
+
+                        <div class="data-section">
+                            <h5 class="data-label">Объективные данные</h5>
+                            <div class="p-2 bg-light rounded">
+                                {{ appointment.objective_data|default:"Не указано"|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conclusion tab -->
+                    <div class="tab-pane fade" id="conclusion" role="tabpanel">
+                        <div class="data-section">
+                            <h5 class="data-label">Диагноз</h5>
+                            <div class="p-2 bg-light rounded">
+                                {{ appointment.diagnosis|default:"Не указано" }}
+                            </div>
+                        </div>
+
+                        <div class="data-section">
+                            <h5 class="data-label">Заключение</h5>
+                            <div class="p-2 bg-light rounded">
+                                {{ appointment.summary|default:"Не указано"|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <a href="{% url 'repeated_appointment_update' appointment.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit mr-1"></i> Редактировать
+                </a>
+{#                <a href="{% url 'repeated_appointment_delete' appointment.id %}" class="btn btn-danger">#}
+{#                    <i class="fas fa-trash mr-1"></i> Удалить#}
+{#                </a>#}
+                <a href="{% url 'illness_history_detail' appointment.illness_history.id %}" class="btn btn-default float-right">
+                    <i class="fas fa-arrow-left mr-1"></i> Назад к истории болезни
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function () {
+        // Keep tab active after page refresh
+        $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
+            localStorage.setItem('activeAppointmentTab', $(e.target).attr('href'));
+        });
+
+        var activeTab = localStorage.getItem('activeAppointmentTab');
+        if(activeTab){
+            $('#appointment-tabs a[href="' + activeTab + '"]').tab('show');
+        }
+    });
+</script>
+{% endblock %}

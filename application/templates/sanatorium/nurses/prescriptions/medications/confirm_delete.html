@@ -1,0 +1,36 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Удаление назначения{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <h1 class="h3 mb-2 text-gray-800">Удаление назначения</h1>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Подтверждение удаления</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Внимание!</h4>
+                <p>Вы собираетесь удалить назначение:</p>
+                <p><strong>{{ medication.medication.name }}</strong> для пациента <strong>{{ medication.illness_history.patient.full_name }}</strong></p>
+                <p>Это действие нельзя будет отменить. Все данные о применении этого лекарства также будут удалены.</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <button type="submit" class="btn btn-danger">Подтвердить удаление</button>
+                    <a href="{% url 'prescribed_medication_detail' medication.id %}" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

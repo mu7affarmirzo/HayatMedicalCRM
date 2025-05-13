@@ -1,0 +1,331 @@
+{% extends "sanatorium/doctors/snippets/base.html" %}
+{% load static %}
+{% block title %}Первичный прием лечащего врача | {{ appointment.illness_history.patient.full_name }}{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Первичный прием лечащего врача</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">Первичный прием</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Уведомление!</h5>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    <div class="row">
+        <!-- Left column -->
+        <div class="col-md-6">
+            <!-- Basic Information -->
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Основная информация</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Лечащий врач:</dt>
+                        <dd class="col-sm-7">{{ appointment.doctor.full_name }}</dd>
+
+                        <dt class="col-sm-5">Дата создания:</dt>
+                        <dd class="col-sm-7">{{ appointment.created_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-5">Состояние приема:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge {% if appointment.state == 'Приём завершён' %}bg-success{% elif appointment.state == 'Пациент на прием не явился' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ appointment.state }}
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Complaints and Anamnesis -->
+            <div class="card card-info">
+                <div class="card-header">
+                    <h3 class="card-title">Жалобы и анамнез</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5>Жалобы</h5>
+                    <p>{{ appointment.complaint}}</p>
+
+                    <h5>Anamnesis morbi</h5>
+                    <p>{{ appointment.anamnesis_morbi}}</p>
+
+                    <h5>Anamnesis vitae</h5>
+                    <p>{{ appointment.anamnesis_vitae}}</p>
+
+                    <h5>Контакт с инфекционными заболеваниями</h5>
+                    <p>{{ appointment.contact_with_infectious }}</p>
+
+                    <h5>Дополнительная информация</h5>
+                    <dl class="row">
+                        <dt class="col-sm-6">Контакт с ОРВИ:</dt>
+                        <dd class="col-sm-6">{{ appointment.contact_with_orvi }}</dd>
+
+                        <dt class="col-sm-6">Выезд за пределы страны в последние 2 месяца:</dt>
+                        <dd class="col-sm-6">{{ appointment.is_away_two_month }}</dd>
+
+                        <dt class="col-sm-6">Перенесенные инфекционные заболевания:</dt>
+                        <dd class="col-sm-6">{{ appointment.transferred_infectious}}</dd>
+
+                        <dt class="col-sm-6">Пребывание в больнице:</dt>
+                        <dd class="col-sm-6">{{ appointment.staying_hospital}}</dd>
+
+                        <dt class="col-sm-6">Переливания крови:</dt>
+                        <dd class="col-sm-6">{{ appointment.receiving_blood_transfusions}}</dd>
+
+                        <dt class="col-sm-6">Хирургические вмешательства за последние 6 месяцев:</dt>
+                        <dd class="col-sm-6">{{ appointment.surgical_massive_interventions_six_months}}</dd>
+
+                        <dt class="col-sm-6">Посещения стоматолога за последние 6 месяцев:</dt>
+                        <dd class="col-sm-6">{{ appointment.dentist_visits_last_six_months}}</dd>
+
+                        <dt class="col-sm-6">Профессиональные токсические воздействия:</dt>
+                        <dd class="col-sm-6">{{ appointment.profession_toxics}}</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="card card-success">
+                <!-- Status praesens objectivus -->
+                <div class="card-header">
+                    <h3 class="card-title">Status praesens objectivus</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Общее состояние:</dt>
+                        <dd class="col-sm-7">{{ appointment.general_state}}</dd>
+
+                        <dt class="col-sm-5">Сознание:</dt>
+                        <dd class="col-sm-7">{{ appointment.consciousness}}</dd>
+
+                        <dt class="col-sm-5">Конституция:</dt>
+                        <dd class="col-sm-7">{{ appointment.constitution}}</dd>
+
+                        <dt class="col-sm-5">Кожные покровы:</dt>
+                        <dd class="col-sm-7">{{ appointment.skin}}</dd>
+
+                        <dt class="col-sm-5">Тургор кожи:</dt>
+                        <dd class="col-sm-7">{{ appointment.skin_turgor}}</dd>
+
+                        <dt class="col-sm-5">Температура (°C):</dt>
+                        <dd class="col-sm-7">{{ appointment.temperature}}</dd>
+
+                        <dt class="col-sm-5">Рост (см):</dt>
+                        <dd class="col-sm-7">{{ appointment.height}}</dd>
+
+                        <dt class="col-sm-5">Вес (кг):</dt>
+                        <dd class="col-sm-7">{{ appointment.weight}}</dd>
+
+                        <dt class="col-sm-5">Сердцебиение (уд/мин):</dt>
+                        <dd class="col-sm-7">{{ appointment.heart_beat}}</dd>
+
+                        <dt class="col-sm-5">Артериальное давление (верхнее):</dt>
+                        <dd class="col-sm-7">{{ appointment.arterial_high}}</dd>
+
+                        <dt class="col-sm-5">Артериальное давление (нижнее):</dt>
+                        <dd class="col-sm-7">{{ appointment.arterial_low}}</dd>
+
+                        <dt class="col-sm-5">ИМТ:</dt>
+                        <dd class="col-sm-7">{{ appointment.imt}}</dd>
+
+                        <dt class="col-sm-5">Избыточный вес (кг):</dt>
+                        <dd class="col-sm-7">{{ appointment.extra_weight}}</dd>
+
+                        <dt class="col-sm-5">Отеки, пастозность:</dt>
+                        <dd class="col-sm-7">{{ appointment.swelling_pastiness}}</dd>
+
+                        <dt class="col-sm-5">Лимфатические узлы:</dt>
+                        <dd class="col-sm-7">{{ appointment.lymph_nodes}}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-md-6">
+
+            <!-- Systems Examination -->
+            <div class="card card-warning">
+                <div class="card-header">
+                    <h3 class="card-title">Системы органов</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5>Костно-мышечная система</h5>
+                    <dl class="row">
+                        <dt class="col-sm-5">Деформации:</dt>
+                        <dd class="col-sm-7">{{ appointment.deformations}}</dd>
+
+                        <dt class="col-sm-5">Контрактуры:</dt>
+                        <dd class="col-sm-7">{{ appointment.contractures}}</dd>
+
+                        <dt class="col-sm-5">Ограничения движений:</dt>
+                        <dd class="col-sm-7">{{ appointment.movement_restrictions}}</dd>
+                    </dl>
+
+                    <h5>Дыхательная система</h5>
+                    <dl class="row">
+                        <dt class="col-sm-5">Частота дыхания:</dt>
+                        <dd class="col-sm-7">{{ appointment.respiratory_frequency}}</dd>
+
+                        <dt class="col-sm-5">Тип дыхания:</dt>
+                        <dd class="col-sm-7">{{ appointment.breathing_type}}</dd>
+
+                        <dt class="col-sm-5">Аускультативное дыхание:</dt>
+                        <dd class="col-sm-7">{{ appointment.auscultative_breathing}}</dd>
+
+                        <dt class="col-sm-5">Хрипы:</dt>
+                        <dd class="col-sm-7">{{ appointment.wheezing}}</dd>
+
+                        <dt class="col-sm-5">Перкуссия легких:</dt>
+                        <dd class="col-sm-7">{{ appointment.lungs_percussion}}</dd>
+                    </dl>
+
+                    <h5>Сердечно-сосудистая система</h5>
+                    <dl class="row">
+                        <dt class="col-sm-5">Границы сердца:</dt>
+                        <dd class="col-sm-7">{{ appointment.heart_edge}}</dd>
+
+                        <dt class="col-sm-5">Тоны сердца:</dt>
+                        <dd class="col-sm-7">{{ appointment.heart_tones}}</dd>
+
+                        <dt class="col-sm-5">АД левая рука:</dt>
+                        <dd class="col-sm-7">{{ appointment.ad_left}}</dd>
+
+                        <dt class="col-sm-5">АД правая рука:</dt>
+                        <dd class="col-sm-7">{{ appointment.ad_right}}</dd>
+
+                        <dt class="col-sm-5">Пульс левая рука:</dt>
+                        <dd class="col-sm-7">{{ appointment.ps_left}}</dd>
+
+                        <dt class="col-sm-5">Пульс правая рука:</dt>
+                        <dd class="col-sm-7">{{ appointment.ps_right}}</dd>
+                    </dl>
+
+                    <h5>Органы пищеварения</h5>
+                    <dl class="row">
+                        <dt class="col-sm-5">Аппетит:</dt>
+                        <dd class="col-sm-7">{{ appointment.appetit}}</dd>
+
+                        <dt class="col-sm-5">Язык:</dt>
+                        <dd class="col-sm-7">{{ appointment.tongue}}</dd>
+
+                        <dt class="col-sm-5">Живот:</dt>
+                        <dd class="col-sm-7">{{ appointment.stomach}}</dd>
+
+                        <dt class="col-sm-5">Печень:</dt>
+                        <dd class="col-sm-7">{{ appointment.liver}}</dd>
+
+                        <dt class="col-sm-5">Селезенка:</dt>
+                        <dd class="col-sm-7">{{ appointment.spleen}}</dd>
+
+                        <dt class="col-sm-5">Стул:</dt>
+                        <dd class="col-sm-7">{{ appointment.stool}}</dd>
+
+                        <dt class="col-sm-5">Частота стула:</dt>
+                        <dd class="col-sm-7">{{ appointment.stool_frequency}}</dd>
+                    </dl>
+
+                    <h5>Мочевыделительная система</h5>
+                    <dl class="row">
+                        <dt class="col-sm-5">Мочевыделение:</dt>
+                        <dd class="col-sm-7">{{ appointment.urinary_system}}</dd>
+
+                        <dt class="col-sm-5">Симптом поколачивания:</dt>
+                        <dd class="col-sm-7">{{ appointment.effleurage_symptoms}}</dd>
+
+                        <dt class="col-sm-5">Щитовидная железа:</dt>
+                        <dd class="col-sm-7">{{ appointment.thyroid}}</dd>
+
+                        <dt class="col-sm-5">Нервная система:</dt>
+                        <dd class="col-sm-7">{{ appointment.nerve_system}}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnosis and Summary -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Диагноз и заключение</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Диагноз:</h5>
+                            {% if appointment.diagnosis %}
+                                <p>{{ appointment.diagnosis.name }}</p>
+                                <p><small>Код МКБ: {{ appointment.diagnosis.mkb_code }}</small></p>
+                            {% else %}
+                                <p>Диагноз не указан</p>
+                            {% endif %}
+
+                            <h5>CITO:</h5>
+                            <p>{{ appointment.cito}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Заключение:</h5>
+                            <p>{{ appointment.summary}}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'initial_appointment_update' history.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-default float-right">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}

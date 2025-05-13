@@ -1,0 +1,649 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+{% block title %}{% if consulting %}Редактирование{% else %}Новая{% endif %} консультация невролога | {% if consulting %}{{ consulting.illness_history.patient.full_name }}{% else %}{{ history.patient.full_name }}{% endif %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+    .tab-content {
+        padding-top: 15px;
+    }
+    .form-section-heading {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if consulting %}Редактирование{% else %}Новая{% endif %} консультация невролога</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    {% if consulting %}
+                        <li class="breadcrumb-item"><a href="{% url 'neurologist_consulting_detail' history.id consulting.id %}">Консультация невролога</a></li>
+                        <li class="breadcrumb-item active">Редактирование</li>
+                    {% else %}
+                    <li class="breadcrumb-item active">Новая консультация невролога</li>
+                    {% endif %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Уведомление!</h5>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <h5><i class="icon fas fa-ban"></i> Ошибка!</h5>
+            Пожалуйста, исправьте ошибки в форме.
+        </div>
+        {% endif %}
+
+        <!-- Tabs for form sections -->
+        <div class="card card-primary card-outline card-tabs">
+            <div class="card-header p-0 pt-1 border-bottom-0">
+                <ul class="nav nav-tabs" id="neuro-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="basic-tab" data-toggle="pill" href="#basic" role="tab">
+                            <i class="fas fa-info-circle mr-1"></i> Основная информация
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="eye-tab" data-toggle="pill" href="#eye" role="tab">
+                            <i class="fas fa-eye mr-1"></i> Органы зрения
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="face-tab" data-toggle="pill" href="#face" role="tab">
+                            <i class="fas fa-smile mr-1"></i> Лицо и полость рта
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="muscle-tab" data-toggle="pill" href="#muscle" role="tab">
+                            <i class="fas fa-dumbbell mr-1"></i> Мышечная система
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="balance-tab" data-toggle="pill" href="#balance" role="tab">
+                            <i class="fas fa-balance-scale mr-1"></i> Равновесие
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="spine-tab" data-toggle="pill" href="#spine" role="tab">
+                            <i class="fas fa-stream mr-1"></i> Позвоночник
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="conclusion-tab" data-toggle="pill" href="#conclusion" role="tab">
+                            <i class="fas fa-clipboard-check mr-1"></i> Заключение
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content" id="neuro-tabs-content">
+                    <!-- Basic Information Tab -->
+                    <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.state.id_for_label }}">Состояние приема</label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                    <div class="text-danger">{{ form.state.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                {{ form.is_familiar_with_anamnesis }}
+                                <label for="{{ form.is_familiar_with_anamnesis.id_for_label }}" class="custom-control-label">
+                                    Ознакомлен с анамнезом
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.complaint.id_for_label }}">Жалобы</label>
+                            {{ form.complaint }}
+                            {% if form.complaint.errors %}
+                            <div class="text-danger">{{ form.complaint.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.anamnesis.id_for_label }}">Анамнез</label>
+                            {{ form.anamnesis }}
+                            {% if form.anamnesis.errors %}
+                            <div class="text-danger">{{ form.anamnesis.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Eye Examination Tab -->
+                    <div class="tab-pane fade" id="eye" role="tabpanel">
+                        <h4 class="form-section-heading">Исследование органов зрения</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.palpebral_fissures.id_for_label }}">Глазные щели</label>
+                                    {{ form.palpebral_fissures }}
+                                    {% if form.palpebral_fissures.errors %}
+                                    <div class="text-danger">{{ form.palpebral_fissures.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.pupils.id_for_label }}">Зрачки</label>
+                                    {{ form.pupils }}
+                                    {% if form.pupils.errors %}
+                                    <div class="text-danger">{{ form.pupils.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.reaction_on_pupils.id_for_label }}">Реакция зрачков</label>
+                                    {{ form.reaction_on_pupils }}
+                                    {% if form.reaction_on_pupils.errors %}
+                                    <div class="text-danger">{{ form.reaction_on_pupils.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.aye_frame_movement.id_for_label }}">Движение глазных яблок</label>
+                                    {{ form.aye_frame_movement }}
+                                    {% if form.aye_frame_movement.errors %}
+                                    <div class="text-danger">{{ form.aye_frame_movement.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.nystagmus.id_for_label }}">Нистагм</label>
+                            {{ form.nystagmus }}
+                            {% if form.nystagmus.errors %}
+                            <div class="text-danger">{{ form.nystagmus.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Face and Oral Examination Tab -->
+                    <div class="tab-pane fade" id="face" role="tabpanel">
+                        <h4 class="form-section-heading">Исследование лица и полости рта</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.face.id_for_label }}">Лицо</label>
+                                    {{ form.face }}
+                                    {% if form.face.errors %}
+                                    <div class="text-danger">{{ form.face.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.tongue.id_for_label }}">Язык</label>
+                                    {{ form.tongue }}
+                                    {% if form.tongue.errors %}
+                                    <div class="text-danger">{{ form.tongue.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.soft_sk.id_for_label }}">Мягкое нёбо</label>
+                                    {{ form.soft_sk }}
+                                    {% if form.soft_sk.errors %}
+                                    <div class="text-danger">{{ form.soft_sk.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.phonation_swallowing.id_for_label }}">Фонация и глотание</label>
+                                    {{ form.phonation_swallowing }}
+                                    {% if form.phonation_swallowing.errors %}
+                                    <div class="text-danger">{{ form.phonation_swallowing.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Muscle System Tab -->
+                    <div class="tab-pane fade" id="muscle" role="tabpanel">
+                        <h4 class="form-section-heading">Исследование мышечной системы</h4>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.reflexes.id_for_label }}">Рефлексы</label>
+                                    {{ form.reflexes }}
+                                    {% if form.reflexes.errors %}
+                                    <div class="text-danger">{{ form.reflexes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.muscle_strength.id_for_label }}">Мышечная сила</label>
+                                    {{ form.muscle_strength }}
+                                    {% if form.muscle_strength.errors %}
+                                    <div class="text-danger">{{ form.muscle_strength.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.muscle_tones.id_for_label }}">Мышечный тонус</label>
+                                    {{ form.muscle_tones }}
+                                    {% if form.muscle_tones.errors %}
+                                    <div class="text-danger">{{ form.muscle_tones.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Глубокие рефлексы</h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.deep_reflexes_hand.id_for_label }}">Рука</label>
+                                    {{ form.deep_reflexes_hand }}
+                                    {% if form.deep_reflexes_hand.errors %}
+                                    <div class="text-danger">{{ form.deep_reflexes_hand.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.deep_reflexes_foot.id_for_label }}">Нога</label>
+                                    {{ form.deep_reflexes_foot }}
+                                    {% if form.deep_reflexes_foot.errors %}
+                                    <div class="text-danger">{{ form.deep_reflexes_foot.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.stylo_radial.id_for_label }}">Шиловидно-лучевые</label>
+                                    {{ form.stylo_radial }}
+                                    {% if form.stylo_radial.errors %}
+                                    <div class="text-danger">{{ form.stylo_radial.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.biceps.id_for_label }}">С двуглавой мышцы плеча</label>
+                                    {{ form.biceps }}
+                                    {% if form.biceps.errors %}
+                                    <div class="text-danger">{{ form.biceps.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.triceps.id_for_label }}">С трехглавой мышцы плеча</label>
+                                    {{ form.triceps }}
+                                    {% if form.triceps.errors %}
+                                    <div class="text-danger">{{ form.triceps.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.knees.id_for_label }}">Коленные</label>
+                                    {{ form.knees }}
+                                    {% if form.knees.errors %}
+                                    <div class="text-danger">{{ form.knees.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.achilles.id_for_label }}">Ахилловы</label>
+                                    {{ form.achilles }}
+                                    {% if form.achilles.errors %}
+                                    <div class="text-danger">{{ form.achilles.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.abdominal.id_for_label }}">Брюшные</label>
+                            {{ form.abdominal }}
+                            {% if form.abdominal.errors %}
+                            <div class="text-danger">{{ form.abdominal.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.pathological_reflexes.id_for_label }}">Патологические рефлексы</label>
+                            {{ form.pathological_reflexes }}
+                            {% if form.pathological_reflexes.errors %}
+                            <div class="text-danger">{{ form.pathological_reflexes.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Balance Tab -->
+                    <div class="tab-pane fade" id="balance" role="tabpanel">
+                        <h4 class="form-section-heading">Равновесие и координация</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.romberg_position.id_for_label }}">Положение в позе Ромберга</label>
+                                    {{ form.romberg_position }}
+                                    {% if form.romberg_position.errors %}
+                                    <div class="text-danger">{{ form.romberg_position.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.complicated_position.id_for_label }}">В усложненной позе Ромберга</label>
+                                    {{ form.complicated_position }}
+                                    {% if form.complicated_position.errors %}
+                                    <div class="text-danger">{{ form.complicated_position.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.finger_test.id_for_label }}">Пальценосовая проба</label>
+                                    {{ form.finger_test }}
+                                    {% if form.finger_test.errors %}
+                                    <div class="text-danger">{{ form.finger_test.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.heel_knee_test.id_for_label }}">Пяточно-коленная проба</label>
+                                    {{ form.heel_knee_test }}
+                                    {% if form.heel_knee_test.errors %}
+                                    <div class="text-danger">{{ form.heel_knee_test.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.gait.id_for_label }}">Походка</label>
+                            {{ form.gait }}
+                            {% if form.gait.errors %}
+                            <div class="text-danger">{{ form.gait.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <h4 class="form-section-heading mt-4">Другие неврологические исследования</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.sensitivity.id_for_label }}">Чувствительность</label>
+                                    {{ form.sensitivity }}
+                                    {% if form.sensitivity.errors %}
+                                    <div class="text-danger">{{ form.sensitivity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.cognitive_test.id_for_label }}">Когнитивный тест</label>
+                                    {{ form.cognitive_test }}
+                                    {% if form.cognitive_test.errors %}
+                                    <div class="text-danger">{{ form.cognitive_test.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.emotional_volitional_sphere.id_for_label }}">Эмоционально-волевая сфера</label>
+                                    {{ form.emotional_volitional_sphere }}
+                                    {% if form.emotional_volitional_sphere.errors %}
+                                    <div class="text-danger">{{ form.emotional_volitional_sphere.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.insomnia.id_for_label }}">Бессонница</label>
+                                    {{ form.insomnia }}
+                                    {% if form.insomnia.errors %}
+                                    <div class="text-danger">{{ form.insomnia.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spine Tab -->
+                    <div class="tab-pane fade" id="spine" role="tabpanel">
+                        <h4 class="form-section-heading">Исследование позвоночника</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.movements_in_the_cervical_spine.id_for_label }}">Движения в шейном отделе</label>
+                                    {{ form.movements_in_the_cervical_spine }}
+                                    {% if form.movements_in_the_cervical_spine.errors %}
+                                    <div class="text-danger">{{ form.movements_in_the_cervical_spine.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.movements_in_the_spinal_spine.id_for_label }}">Движения в поясничном отделе</label>
+                                    {{ form.movements_in_the_spinal_spine }}
+                                    {% if form.movements_in_the_spinal_spine.errors %}
+                                    <div class="text-danger">{{ form.movements_in_the_spinal_spine.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.spinous_processes.id_for_label }}">Болезненность остистых отростков</label>
+                                    {{ form.spinous_processes }}
+                                    {% if form.spinous_processes.errors %}
+                                    <div class="text-danger">{{ form.spinous_processes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.paravertebral_points.id_for_label }}">Болезненность паравертебральных точек</label>
+                                    {{ form.paravertebral_points }}
+                                    {% if form.paravertebral_points.errors %}
+                                    <div class="text-danger">{{ form.paravertebral_points.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.lasegues_symptom.id_for_label }}">Симптом Ласега</label>
+                            {{ form.lasegues_symptom }}
+                            {% if form.lasegues_symptom.errors %}
+                            <div class="text-danger">{{ form.lasegues_symptom.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Conclusion Tab -->
+                    <div class="tab-pane fade" id="conclusion" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        {{ form.cito }}
+                                        <label for="{{ form.cito.id_for_label }}" class="custom-control-label">CITO (срочно)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.for_sanatorium_treatment.id_for_label }}">Для санаторно-курортного лечения</label>
+                                    {{ form.for_sanatorium_treatment }}
+                                    {% if form.for_sanatorium_treatment.errors %}
+                                    <div class="text-danger">{{ form.for_sanatorium_treatment.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.summary.id_for_label }}">Заключение</label>
+                            {{ form.summary }}
+                            {% if form.summary.errors %}
+                            <div class="text-danger">{{ form.summary.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.recommendation.id_for_label }}">Рекомендации</label>
+                            {{ form.recommendation }}
+                            {% if form.recommendation.errors %}
+                            <div class="text-danger">{{ form.recommendation.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+                {% if consulting %}
+                <a href="{% url 'neurologist_consulting_detail' history.id consulting.id %}" class="btn btn-default">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                {% else %}
+                <a href="{% url 'neurologist_consulting_list' history.id %}" class="btn btn-default">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+    $(function () {
+        //Initialize Select2 Elements
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Make sure each tab has at least one validated field
+        $('form').on('submit', function() {
+            var hasErrors = false;
+            var firstErrorTab = null;
+
+            // Check each tab for errors
+            $('.tab-pane').each(function(index) {
+                var tabId = $(this).attr('id');
+                var tabHasError = false;
+
+                $(this).find(':input').each(function() {
+                    if (!this.checkValidity()) {
+                        tabHasError = true;
+                        hasErrors = true;
+                    }
+                });
+
+                if (tabHasError && !firstErrorTab) {
+                    firstErrorTab = tabId;
+                }
+            });
+
+            // Switch to the first tab with errors
+            if (hasErrors && firstErrorTab) {
+                $('#neuro-tabs a[href="#' + firstErrorTab + '"]').tab('show');
+                return false;
+            }
+
+            return true;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Детали лабораторного теста{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-flask mr-2"></i>Детали лабораторного теста
+                    </h3>
+                    <div class="card-tools">
+                        <a href="#" class="btn btn-default btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Вернуться к списку
+                        </a>
+                        <a href="{% url 'assigned_labs_update' assigned_lab.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit mr-1"></i> Редактировать
+                        </a>
+                        <a href="#" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash mr-1"></i> Удалить
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-user-injured mr-2"></i>Информация о пациенте
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if assigned_lab.illness_history.patient %}
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Имя пациента:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.f_name }}
+                                            {{ assigned_lab.illness_history.patient.l_name }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Дата рождения:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.date_of_birth|date:"M d, Y" }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Возраст:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.age }} лет
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Пол:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.formatted_gender }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Телефон:</div>
+                                        <div class="col-sm-8">
+                                            {{ assigned_lab.illness_history.patient.mobile_phone_number|default:"Не указан" }}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">Информация о пациенте недоступна</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-flask mr-2"></i>Информация о тесте
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Название теста:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.lab.name }}</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Категория:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.lab.category.name }}</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Статус:</div>
+                                        <div class="col-sm-8">
+                                            <span id="lab-status" class="badge
+                                                {% if assigned_lab.state == 'recommended' %}bg-info
+                                                {% elif assigned_lab.state == 'assigned' %}bg-primary
+                                                {% elif assigned_lab.state == 'dispatched' %}bg-warning
+                                                {% elif assigned_lab.state == 'results' %}bg-success
+                                                {% elif assigned_lab.state == 'cancelled' or assigned_lab.state == 'stopped' %}bg-danger
+                                                {% endif %}">
+                                                {{ assigned_lab.get_state_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Стоимость:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.lab.price }} руб.</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Время выполнения:</div>
+                                        <div class="col-sm-8">
+                                            {% if assigned_lab.lab.cito %}
+                                                {{ assigned_lab.lab.deadline_cito }} часов (CITO)
+                                            {% else %}
+                                                {{ assigned_lab.lab.deadline|default:"Не указано" }} часов
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-bold">Дата назначения:</div>
+                                        <div class="col-sm-8">{{ assigned_lab.created_at|date:"M d, Y H:i" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lab Results Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-success">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-file-medical-alt mr-2"></i>Результаты теста
+                                    </h5>
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#add-result-modal">
+                                            <i class="fas fa-plus mr-1"></i> Добавить результат
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if assigned_lab.lab_results.all %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Дата</th>
+                                                    <th>Комментарии</th>
+                                                    <th>Файл</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for result in assigned_lab.lab_results.all %}
+                                                <tr>
+                                                    <td>{{ result.result_date|date:"M d, Y H:i" }}</td>
+                                                    <td>{{ result.comments|default:"Без комментариев" }}</td>
+                                                    <td>
+                                                        {% if result.attached_file %}
+                                                        <a href="{{ result.attached_file.url }}" target="_blank" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-file-download mr-1"></i>
+                                                            Скачать ({{ result.file_format|upper }})
+                                                        </a>
+                                                        {% else %}
+                                                        <span class="text-muted">Файл не прикреплен</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <a href="#" class="btn btn-warning btn-sm">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <a href="#" class="btn btn-danger btn-sm">
+                                                                <i class="fas fa-trash"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle mr-2"></i>Результаты еще не добавлены.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Result Modal -->
+<div class="modal fade" id="add-result-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h4 class="modal-title">Добавить результат теста</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'add_lab_result' assigned_lab.id %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="result-comments">Комментарии</label>
+                        <textarea class="form-control" id="result-comments" name="comments" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="result-file">Прикрепить файл</label>
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="result-file" name="attached_file">
+                                <label class="custom-file-label" for="result-file">Выбрать файл</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-success">Сохранить результат</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,194 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Документы - История болезни #{{ history.id }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/dropzone/min/dropzone.min.css' %}">
+<style>
+    .document-card {
+        transition: all 0.3s;
+    }
+    .document-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .document-icon {
+        font-size: 2.5rem;
+    }
+    .doc-preview {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .dropzone {
+        min-height: 150px;
+        border: 2px dashed #3c8dbc;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    .dropzone .dz-message {
+        margin: 2em 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Документы</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни #{{ history.id }}</a></li>
+                    <li class="breadcrumb-item active">Документы</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Tabs -->
+        <div class="card">
+            <div class="card-header p-2">
+                <ul class="nav nav-pills">
+                    <li class="nav-item"><a class="nav-link active" href="#all-documents" data-toggle="tab">Все документы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#medical-results" data-toggle="tab">Результаты исследований</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#consents" data-toggle="tab">Согласия</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#reports" data-toggle="tab">Отчеты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#upload-new" data-toggle="tab">Загрузить новый</a></li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- All Documents Tab -->
+                    <div class="tab-pane active" id="all-documents">
+                        {% include "sanatorium/doctors/documents/components/document_filters.html" %}
+                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=all_documents %}
+                    </div>
+                    
+                    <!-- Medical Results Tab -->
+                    <div class="tab-pane" id="medical-results">
+                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=medical_results %}
+                    </div>
+                    
+                    <!-- Consents Tab -->
+                    <div class="tab-pane" id="consents">
+                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=consents %}
+                    </div>
+                    
+                    <!-- Reports Tab -->
+                    <div class="tab-pane" id="reports">
+                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=reports %}
+                    </div>
+                    
+                    <!-- Upload New Document Tab -->
+                    <div class="tab-pane" id="upload-new">
+                        {% include "sanatorium/doctors/documents/components/document_upload.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Document Preview Modal -->
+{% include "sanatorium/doctors/documents/components/document_preview_modal.html" %}
+
+<!-- Document Delete Confirmation Modal -->
+{% include "sanatorium/doctors/documents/components/document_delete_modal.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/dropzone/min/dropzone.min.js' %}"></script>
+<script>
+$(function () {
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+    
+    // Initialize Dropzone
+    Dropzone.autoDiscover = false;
+    
+    var myDropzone = new Dropzone("#document-dropzone", {
+        url: "{% url 'document_upload' history.id %}",
+        paramName: "file",
+        maxFilesize: 10, // MB
+        acceptedFiles: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx",
+        addRemoveLinks: true,
+        dictDefaultMessage: "Перетащите файлы сюда или нажмите для загрузки",
+        dictRemoveFile: "Удалить",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        init: function() {
+            this.on("success", function(file, response) {
+                if (response.success) {
+                    // Optionally refresh the document list or show a success message
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    this.removeFile(file);
+                    alert("Ошибка: " + response.error);
+                }
+            });
+        }
+    });
+    
+    // Document preview handler
+    $(".preview-document").on("click", function() {
+        var documentId = $(this).data("document-id");
+        var documentName = $(this).data("document-name");
+        var documentUrl = $(this).data("document-url");
+        var documentType = $(this).data("document-type");
+        
+        $("#previewModalLabel").text(documentName);
+        
+        // Clear previous content
+        $("#documentPreviewContent").empty();
+        
+        // Different preview based on file type
+        if (documentType === "pdf") {
+            $("#documentPreviewContent").html('<iframe src="' + documentUrl + '" width="100%" height="450" style="border: none;"></iframe>');
+        } else if (documentType === "image") {
+            $("#documentPreviewContent").html('<img src="' + documentUrl + '" class="img-fluid" alt="' + documentName + '">');
+        } else {
+            $("#documentPreviewContent").html('<div class="alert alert-info">Предпросмотр недоступен. <a href="' + documentUrl + '" class="btn btn-sm btn-primary ml-2" target="_blank">Открыть файл</a></div>');
+        }
+        
+        $("#documentPreviewModal").modal("show");
+    });
+    
+    // Document delete handler
+    $(".delete-document").on("click", function() {
+        var documentId = $(this).data("document-id");
+        var documentName = $(this).data("document-name");
+        
+        $("#deleteDocumentName").text(documentName);
+        $("#deleteDocumentForm").attr("action", "{% url 'document_delete' 0 %}".replace("0", documentId));
+        
+        $("#documentDeleteModal").modal("show");
+    });
+    
+    // Filter handling
+    $("#documentFilterForm").on("submit", function(e) {
+        e.preventDefault();
+        // You'd typically handle filtering via AJAX or a form submission
+        // This is a placeholder for that functionality
+        alert("Фильтры применены (демо)");
+    });
+});
+</script>
+{% endblock %}

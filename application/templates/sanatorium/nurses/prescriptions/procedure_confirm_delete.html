@@ -1,0 +1,73 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Удаление процедуры | Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Удаление процедуры</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни #{{ history.series_number }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'main_prescription_list' history.id %}">Лист назначений</a></li>
+                    <li class="breadcrumb-item active">Удаление процедуры</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="card card-danger">
+            <div class="card-header">
+                <h3 class="card-title">Подтверждение удаления</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5><i class="icon fas fa-ban"></i> Внимание!</h5>
+                    Вы собираетесь удалить процедуру "{{ procedure.medical_service.name }}" из листа назначений.
+                    Эта операция не может быть отменена. Все данные о сеансах также будут удалены.
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-3">Название процедуры:</dt>
+                    <dd class="col-sm-9">{{ procedure.medical_service.name }}</dd>
+
+                    <dt class="col-sm-3">Терапевт:</dt>
+                    <dd class="col-sm-9">{{ procedure.therapist.full_name|default:"Не назначен" }}</dd>
+
+                    <dt class="col-sm-3">Количество сеансов:</dt>
+                    <dd class="col-sm-9">{{ procedure.quantity }}</dd>
+
+                    <dt class="col-sm-3">Выполнено сеансов:</dt>
+                    <dd class="col-sm-9">{{ procedure.proceeded_sessions }}</dd>
+
+                    <dt class="col-sm-3">Статус:</dt>
+                    <dd class="col-sm-9"><span class="badge status-{{ procedure.state }}">{{ procedure.get_state_display }}</span></dd>
+                </dl>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash mr-1"></i> Подтвердить удаление
+                        </button>
+                        <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default ml-2">
+                            <i class="fas fa-times mr-1"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

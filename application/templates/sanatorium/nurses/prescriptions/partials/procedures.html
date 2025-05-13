@@ -1,0 +1,177 @@
+{% load static %}
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a href="{% url 'procedure_create' history.id %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Добавить лечебную процедуру
+        </a>
+    </div>
+</div>
+
+{% if procedures %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>№</th>
+                <th>Название</th>
+                <th>Терапевт</th>
+                <th>Начало</th>
+                <th>Частота</th>
+                <th>Прогресс</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for procedure in procedures %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ procedure.medical_service.name }}</td>
+                    <td>{{ procedure.therapist.full_name|default:"Не назначен" }}</td>
+                    <td>{{ procedure.start_date|date:"d.m.Y" }}</td>
+                    <td>{{ procedure.frequency }}</td>
+                    <td>
+                        <div class="position-relative" style="height: 24px;">
+                            <div class="progress" style="height: 24px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                     role="progressbar"
+                                     style="width: {{ procedure.progres_percentile }}%"
+                                     aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ procedure.quantity }}">
+                                </div>
+                            </div>
+                            <div class="position-absolute d-flex justify-content-center align-items-center"
+                                 style="top: 0; left: 0; right: 0; bottom: 0; font-weight: bold;">
+                                <span>{{ procedure.proceeded_sessions }}/{{ procedure.quantity }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                    <span class="badge status-{{ procedure.state }}">
+                        {{ procedure.get_state_display }}
+                    </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'procedure_detail' procedure.id %}" class="btn btn-info" title="Просмотр">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'procedure_edit' procedure.id %}" class="btn btn-warning"
+                               title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-primary" data-toggle="modal"
+                                    data-target="#sessionModal{{ procedure.id }}" title="Управление сеансами">
+                                <i class="fas fa-calendar-check"></i>
+                            </button>
+                            <a href="{% url 'procedure_delete' procedure.id %}" class="btn btn-danger" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Session overview section -->
+    <div class="mt-4">
+        <h5>Краткий обзор сеансов</h5>
+        <div class="row">
+            {% for procedure in procedures %}
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ procedure.medical_service.name }}</h3>
+                            <div class="card-tools">
+                                <span class="badge status-{{ procedure.state }}">{{ procedure.get_state_display }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body pb-0">
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width: {{ procedure.progres_percentile }}%"
+                                     aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ procedure.quantity }}">
+                                </div>
+                            </div>
+                            <div class="text-center mb-3">
+                                <span class="badge bg-success">{{ procedure.proceeded_sessions }}</span>
+                                из
+                                <span class="badge bg-secondary">{{ procedure.quantity }}</span>
+                                сеансов выполнено
+                            </div>
+                            <div class="text-center mb-3">
+                                <button class="btn btn-sm btn-primary" data-toggle="modal"
+                                        data-target="#sessionModal{{ procedure.id }}">
+                                    <i class="fas fa-calendar-check mr-1"></i> Управление сеансами
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0 pt-0">
+                            <ul class="list-group list-group-flush">
+                                <!-- Show only the next 3 upcoming sessions -->
+                                {% for session in procedure.individual_sessions.all|slice:":3" %}
+                                    <li class="list-group-item {% if session.status == 'completed' %}bg-light{% endif %}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                <span>
+                                    {% if session.status == 'completed' %}
+                                        <i class="fas fa-check-circle text-success mr-1"></i>
+                                    {% elif session.status == 'pending' %}
+                                        <i class="fas fa-clock text-warning mr-1"></i>
+                                    {% elif session.status == 'canceled' %}
+                                        <i class="fas fa-times-circle text-danger mr-1"></i>
+                                    {% endif %}
+                                    Сеанс #{{ session.session_number }}
+                                </span>
+                                            <span class="badge status-{{ session.status }}">{{ session.get_status_display }}</span>
+                                        </div>
+                                        {% if session.therapist %}
+                                            <small class="text-muted">Терапевт: {{ session.therapist.full_name }}</small>
+                                            <br>
+                                        {% endif %}
+                                        {% if session.completed_at %}
+                                            <small class="text-muted">Проведен:
+                                                {{ session.completed_at|date:"d.m.Y H:i" }}</small>
+                                        {% endif %}
+
+                                        <!-- Progress indicator for each session -->
+                                        <div class="progress progress-xs mt-2">
+                                            {% if session.status == 'completed' %}
+                                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                                            {% elif session.status == 'pending' %}
+                                                <div class="progress-bar bg-warning" style="width: 0%"></div>
+                                            {% elif session.status == 'canceled' %}
+                                                <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                    {% empty %}
+                                    <li class="list-group-item">Нет запланированных сеансов</li>
+                                {% endfor %}
+                                {% if procedure.individual_sessions.all|length > 3 %}
+                                    <li class="list-group-item text-center">
+                                        <button class="btn btn-sm btn-link" data-toggle="modal"
+                                                data-target="#sessionModal{{ procedure.id }}">
+                                            Показать все сеансы ({{ procedure.individual_sessions.all|length }})
+                                        </button>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle mr-2"></i>
+        Нет назначенных лечебных процедур
+    </div>
+{% endif %}

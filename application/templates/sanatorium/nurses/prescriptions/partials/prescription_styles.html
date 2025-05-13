@@ -1,0 +1,113 @@
+<style>
+    /* Status badges */
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .status-in_progress {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+    .status-completed {
+        background-color: #28a745;
+        color: #fff;
+    }
+    .status-canceled {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+    /* Timeline styles for procedure progress */
+    .timeline-item {
+        position: relative;
+        padding-left: 40px;
+        margin-bottom: 15px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        border: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-marker.completed {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+
+    .timeline-marker.pending {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
+    }
+
+    .timeline-marker.canceled {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .timeline-connector {
+        position: absolute;
+        left: 15px;
+        top: 30px;
+        width: 2px;
+        background-color: #dee2e6;
+        height: calc(100% - 15px);
+    }
+
+    /* Tab content styling */
+    .tab-content {
+        padding: 15px 0;
+    }
+
+    /* Card hover effects */
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Service category badges */
+    .category-consultation {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .category-examination {
+        background-color: #9b59b6;
+        color: white;
+    }
+
+    .category-procedure {
+        background-color: #2ecc71;
+        color: white;
+    }
+
+    .category-medication {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    /* Progress bar animation */
+    @keyframes progress-bar-stripes {
+        from { background-position: 1rem 0; }
+        to { background-position: 0 0; }
+    }
+
+    .progress-bar-animated {
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+</style>

@@ -1,0 +1,394 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+
+{% block title %}Консультация кардиолога | {{ consulting.illness_history.patient.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+    .detail-label {
+        font-weight: 500;
+        color: #5c5c5c;
+    }
+    .file-link {
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 5px;
+    }
+    .file-link i {
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Консультация кардиолога</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">Консультация кардиолога</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Уведомление!</h5>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    <div class="row">
+        <!-- Left column -->
+        <div class="col-md-6">
+            <!-- Basic Information -->
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Основная информация</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Врач-кардиолог:</dt>
+                        <dd class="col-sm-7">{{ consulting.doctor.full_name }}</dd>
+
+                        <dt class="col-sm-5">Дата консультации:</dt>
+                        <dd class="col-sm-7">{{ consulting.created_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-5">Состояние приема:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge {% if consulting.state == 'Приём завершён' %}bg-success{% elif consulting.state == 'Пациент на прием не явился' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ consulting.state }}
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Complaints and Anamnesis -->
+            <div class="card card-info">
+                <div class="card-header">
+                    <h3 class="card-title">Жалобы и анамнез</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5>Жалобы</h5>
+                    <dl class="row">
+                        <dt class="col-sm-6">Кардиологические жалобы:</dt>
+                        <dd class="col-sm-6">{{ consulting.has_cardio_complaints|yesno:"Да,Нет" }}</dd>
+
+                        <dt class="col-sm-6">Неврологические жалобы:</dt>
+                        <dd class="col-sm-6">{{ consulting.has_nerve_complaints|yesno:"Да,Нет" }}</dd>
+                    </dl>
+
+                    <h5>Другие жалобы</h5>
+                    <p>{{ consulting.other_complaints|default:"Не указано" }}</p>
+
+                    <h5>История заболевания</h5>
+                    <p>{{ consulting.history_of_illness|default:"Не указано" }}</p>
+
+                    <h5>Наследственность</h5>
+                    <p>{{ consulting.inheritance|default:"Не указано" }}</p>
+                </div>
+            </div>
+
+            <!-- Vitals -->
+            <div class="card card-success">
+                <div class="card-header">
+                    <h3 class="card-title">Основные показатели</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl>
+                                <dt class="detail-label">Рост (см):</dt>
+                                <dd>{{ consulting.height|default:"Не указано" }}</dd>
+
+                                <dt class="detail-label">Вес (кг):</dt>
+                                <dd>{{ consulting.weight|default:"Не указано" }}</dd>
+
+                                <dt class="detail-label">ИМТ:</dt>
+                                <dd>{{ consulting.imt|default:"Не указано" }}</dd>
+
+                                <dt class="detail-label">Интерпретация ИМТ:</dt>
+                                <dd>{{ consulting.imt_interpretation|default:"Не указано" }}</dd>
+                            </dl>
+                        </div>
+
+                        <div class="col-md-6">
+                            <dl>
+                                <dt class="detail-label">Пульс (общий):</dt>
+                                <dd>{{ consulting.pulse_general|default:"Не указано" }} уд/мин</dd>
+
+                                <dt class="detail-label">Артериальное давление:</dt>
+                                <dd>
+                                    {% if consulting.arterial_high_low %}
+                                        {{ consulting.arterial_high_low }}
+                                    {% elif consulting.arterial_high and consulting.arterial_low %}
+                                        {{ consulting.arterial_high }}/{{ consulting.arterial_low }}
+                                    {% else %}
+                                        Не указано
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-md-6">
+            <!-- Body Examination -->
+            <div class="card card-warning">
+                <div class="card-header">
+                    <h3 class="card-title">Осмотр тела</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Телосложение:</dt>
+                        <dd class="col-sm-7">{{ consulting.body_figure }}</dd>
+
+                        <dt class="col-sm-5">Кожные покровы:</dt>
+                        <dd class="col-sm-7">{{ consulting.skin }}</dd>
+
+                        <dt class="col-sm-5">Склеры и видимые слизистые:</dt>
+                        <dd class="col-sm-7">{{ consulting.sclera_visible_mucosa }}</dd>
+
+                        <dt class="col-sm-5">Щитовидная железа:</dt>
+                        <dd class="col-sm-7">{{ consulting.thyroids }}</dd>
+                    </dl>
+
+                    <h5>Лимфатические узлы</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Шейные:</dt>
+                        <dd class="col-sm-8">{{ consulting.cervical }}</dd>
+
+                        <dt class="col-sm-4">Подмышечные:</dt>
+                        <dd class="col-sm-8">{{ consulting.axillary }}</dd>
+
+                        <dt class="col-sm-4">Паховые:</dt>
+                        <dd class="col-sm-8">{{ consulting.inguinal }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Heart Examination -->
+            <div class="card card-danger">
+                <div class="card-header">
+                    <h3 class="card-title">Сердечно-сосудистая система</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl>
+                                <dt class="detail-label">Пульс:</dt>
+                                <dd>{{ consulting.pulse_per_min|default:"Не указано" }} уд/мин, {{ consulting.pulse }}</dd>
+
+                                <dt class="detail-label">Дефицит пульса:</dt>
+                                <dd>{{ consulting.fault_of_pulse }}</dd>
+
+                                <dt class="detail-label">Артериальное давление:</dt>
+                                <dd>
+                                    {% if consulting.heart_arterial_high and consulting.heart_arterial_low %}
+                                        {{ consulting.heart_arterial_high }}/{{ consulting.heart_arterial_low }}
+                                    {% else %}
+                                        Не указано
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+
+                        <div class="col-md-6">
+                            <dl>
+                                <dt class="detail-label">Тоны сердца:</dt>
+                                <dd>{{ consulting.heart_tone }}</dd>
+
+                                {% if consulting.i_tone %}
+                                <dt class="detail-label">I тон:</dt>
+                                <dd>{{ consulting.i_tone }}</dd>
+                                {% endif %}
+
+                                {% if consulting.ii_tone %}
+                                <dt class="detail-label">II тон:</dt>
+                                <dd>{{ consulting.ii_tone }}</dd>
+                                {% endif %}
+
+                                {% if consulting.noise %}
+                                <dt class="detail-label">Шум:</dt>
+                                <dd>{{ consulting.noise }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+
+                    <h5 class="mt-3">Границы сердца</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Левая:</dt>
+                        <dd class="col-sm-8">{{ consulting.left_heart_edges }}</dd>
+
+                        <dt class="col-sm-4">Правая:</dt>
+                        <dd class="col-sm-8">{{ consulting.right_heart_edges }}</dd>
+
+                        <dt class="col-sm-4">Верхняя:</dt>
+                        <dd class="col-sm-8">{{ consulting.upper_heart_edges }}</dd>
+                    </dl>
+
+                    <h5 class="mt-3">Сосудистая система</h5>
+                    <dl class="row">
+                        <dt class="col-sm-6">Пульсация артерий:</dt>
+                        <dd class="col-sm-6">{{ consulting.arterial_pulse_stop|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Варикозное расширение вен:</dt>
+                        <dd class="col-sm-6">{{ consulting.varicose_veins_of_superficial_veins }}</dd>
+
+                        <dt class="col-sm-6">Трофические изменения кожи:</dt>
+                        <dd class="col-sm-6">{{ consulting.trophic_skin_changes }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Respiratory System -->
+            <div class="card card-secondary">
+                <div class="card-header">
+                    <h3 class="card-title">Дыхательная система</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">ЧДД (в минуту):</dt>
+                        <dd class="col-sm-6">{{ consulting.chdd_per_minute|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Форма грудной клетки:</dt>
+                        <dd class="col-sm-6">{{ consulting.chest_shape }}</dd>
+                    </dl>
+
+                    <hr>
+
+                    <dl class="row">
+                        <dt class="col-sm-12">При сравнительной перкуссии над легочными полями звук:</dt>
+                        <dd class="col-sm-12">{{ consulting.pulmonary_fields }}</dd>
+
+                        <dt class="col-sm-4">При аускультации дыхание:</dt>
+                        <dd class="col-sm-8">{{ consulting.auscultation_breathing }}</dd>
+
+                        <dt class="col-sm-4">Хрипы:</dt>
+                        <dd class="col-sm-8">{{ consulting.wheezing }}</dd>
+
+                        {% if consulting.pleural_friction_rub %}
+                        <dt class="col-sm-4">Шум трения плевры:</dt>
+                        <dd class="col-sm-8">{{ consulting.pleural_friction_rub }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnosis and Recommendations -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Заключение и рекомендации</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Срочность</h5>
+                            <p>
+                                {% if consulting.cito %}
+                                <span class="badge badge-danger">CITO (Срочно)</span>
+                                {% else %}
+                                <span class="badge badge-secondary">Обычный режим</span>
+                                {% endif %}
+                            </p>
+
+                            <h5>Для санаторно-курортного лечения</h5>
+                            <p>
+                                {% if consulting.for_sanatorium_treatment %}
+                                <span class="badge
+                                    {% if consulting.for_sanatorium_treatment == 'Показан' %}badge-success
+                                    {% elif consulting.for_sanatorium_treatment == 'Не показан' %}badge-warning
+                                    {% else %}badge-danger{% endif %}">
+                                    {{ consulting.for_sanatorium_treatment }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">Не указано</span>
+                                {% endif %}
+                            </p>
+
+                            {% if consulting.file %}
+                            <h5>Прикрепленный файл</h5>
+                            <a href="{{ consulting.file.url }}" class="file-link" target="_blank">
+                                <i class="fas fa-file"></i> {{ consulting.file.name|slice:"15:" }}
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Заключение</h5>
+                            <p>{{ consulting.summary|default:"Заключение не указано"|linebreaks }}</p>
+
+                            <h5>Рекомендации</h5>
+                            <p>{{ consulting.recommendation|default:"Рекомендации не указаны"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'cardiologist_consulting_update' history.id consulting.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-default float-right">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}

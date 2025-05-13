@@ -1,0 +1,105 @@
+<div class="row">
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box">
+      <span class="info-box-icon bg-info elevation-1"><i class="fas fa-stethoscope"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Консультации</span>
+        <span class="info-box-number">
+          {{ completed_consultations }} / {{ consultation_count }}
+          <small>({{ completed_consultations_percent|floatformat:1 }}%)</small>
+        </span>
+        <div class="progress">
+          <div class="progress-bar bg-info" style="width: {{ completed_consultations_percent }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box">
+      <span class="info-box-icon bg-success elevation-1"><i class="fas fa-flask"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Лабораторные тесты</span>
+        <span class="info-box-number">
+          {{ completed_lab_tests }} / {{ lab_count }}
+          <small>({{ lab_completion_percent|floatformat:1 }}%)</small>
+        </span>
+        <div class="progress">
+          <div class="progress-bar bg-success" style="width: {{ lab_completion_percent }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box">
+      <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-procedures"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Процедуры</span>
+        <span class="info-box-number">
+          {{ total_completed_sessions }} / {{ total_sessions }}
+          <small>({{ total_procedures_percent|floatformat:1 }}%)</small>
+        </span>
+        <div class="progress">
+          <div class="progress-bar bg-warning" style="width: {{ total_procedures_percent }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box">
+      <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-pills"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Медикаменты</span>
+        <span class="info-box-number">
+          {{ active_medications }} / {{ medication_count }}
+          <small>({{ active_medications_percent|floatformat:1 }}%)</small>
+        </span>
+        <div class="progress">
+          <div class="progress-bar bg-danger" style="width: {{ active_medications_percent }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-user-md mr-1"></i>
+          История болезни #{{ history.series_number }}
+        </h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <table class="table">
+          <tbody>
+            <tr>
+              <td style="width: 200px;"><strong>Пациент:</strong></td>
+              <td>{{ history.patient.full_name }} ({{ history.patient.age }} лет)</td>
+            </tr>
+            <tr>
+              <td><strong>Дата поступления:</strong></td>
+              <td>{{ history.registration_date|date:"d.m.Y" }}</td>
+            </tr>
+            <tr>
+              <td><strong>Врач:</strong></td>
+              <td>{{ history.doctor.full_name }}</td>
+            </tr>
+            <tr>
+              <td><strong>Диагноз:</strong></td>
+              <td>{{ history.diagnosis|default:"Не указан" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

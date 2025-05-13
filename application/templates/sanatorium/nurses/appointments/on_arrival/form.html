@@ -1,0 +1,493 @@
+{% extends "sanatorium/doctors/snippets/base.html" %}
+{% load static %}
+{% block title %}{% if appointment %}Редактирование{% else %}Новый{% endif %} приём дежурного врача при поступлении | {% if appointment %}{{ appointment.illness_history.patient.full_name }}{% else %}{{ history.patient.full_name }}{% endif %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+    .tab-content {
+        padding-top: 15px;
+    }
+    .form-section-heading {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if appointment %}Редактирование{% else %}Новый{% endif %} приём дежурного врача при поступлении</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    {% if appointment %}
+                    <li class="breadcrumb-item"><a href="{% url 'on_arrival_consulting_detail' history.id appointment.id %}">Приём дежурного врача</a></li>
+                    <li class="breadcrumb-item active">Редактирование</li>
+                    {% else %}
+                    <li class="breadcrumb-item active">Новый приём дежурного врача при поступлении</li>
+                    {% endif %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Уведомление!</h5>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <h5><i class="icon fas fa-ban"></i> Ошибка!</h5>
+            Пожалуйста, исправьте ошибки в форме.
+        </div>
+        {% endif %}
+
+        <!-- Tabs for form sections -->
+        <div class="card card-primary card-outline card-tabs">
+            <div class="card-header p-0 pt-1 border-bottom-0">
+                <ul class="nav nav-tabs" id="arrival-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="basic-tab" data-toggle="pill" href="#basic" role="tab">
+                            <i class="fas fa-info-circle mr-1"></i> Основная информация
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="arrival-info-tab" data-toggle="pill" href="#arrival-info" role="tab">
+                            <i class="fas fa-plane-arrival mr-1"></i> Информация о прибытии
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="medical-history-tab" data-toggle="pill" href="#medical-history" role="tab">
+                            <i class="fas fa-notes-medical mr-1"></i> Медицинский анамнез
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="patient-conditions-tab" data-toggle="pill" href="#patient-conditions" role="tab">
+                            <i class="fas fa-allergies mr-1"></i> Состояние пациента
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="examination-tab" data-toggle="pill" href="#examination" role="tab">
+                            <i class="fas fa-stethoscope mr-1"></i> Данные осмотра
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content" id="arrival-tabs-content">
+                    <!-- Basic Information Tab -->
+                    <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.state.id_for_label }}">Состояние приема</label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                    <div class="text-danger">{{ form.state.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.complaints.id_for_label }}">Жалобы</label>
+                            {{ form.complaints }}
+                            {% if form.complaints.errors %}
+                            <div class="text-danger">{{ form.complaints.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.arv_number.id_for_label }}">{{ form.arv_number.label }}</label>
+                            {{ form.arv_number }}
+                            {% if form.arv_number.errors %}
+                            <div class="text-danger">{{ form.arv_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Arrival Information Tab -->
+                    <div class="tab-pane fade" id="arrival-info" role="tabpanel">
+                        <h4 class="form-section-heading">Информация о прибытии</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.ayes_shells.id_for_label }}">{{ form.ayes_shells.label }}</label>
+                                    {{ form.ayes_shells }}
+                                    {% if form.ayes_shells.errors %}
+                                    <div class="text-danger">{{ form.ayes_shells.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.from_to_sanatorium.id_for_label }}">{{ form.from_to_sanatorium.label }}</label>
+                                    {{ form.from_to_sanatorium }}
+                                    {% if form.from_to_sanatorium.errors %}
+                                    <div class="text-danger">{{ form.from_to_sanatorium.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.road_crossed.id_for_label }}">{{ form.road_crossed.label }}</label>
+                            {{ form.road_crossed }}
+                            {% if form.road_crossed.errors %}
+                            <div class="text-danger">{{ form.road_crossed.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Medical History Tab -->
+                    <div class="tab-pane fade" id="medical-history" role="tabpanel">
+                        <h4 class="form-section-heading">Медицинский анамнез</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.abroad_for_last_years.id_for_label }}">{{ form.abroad_for_last_years.label }}</label>
+                                    {{ form.abroad_for_last_years }}
+                                    {% if form.abroad_for_last_years.errors %}
+                                    <div class="text-danger">{{ form.abroad_for_last_years.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.virus_hepatitis.id_for_label }}">{{ form.virus_hepatitis.label }}</label>
+                                    {{ form.virus_hepatitis }}
+                                    {% if form.virus_hepatitis.errors %}
+                                    <div class="text-danger">{{ form.virus_hepatitis.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.tuberculosis.id_for_label }}">{{ form.tuberculosis.label }}</label>
+                                    {{ form.tuberculosis }}
+                                    {% if form.tuberculosis.errors %}
+                                    <div class="text-danger">{{ form.tuberculosis.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.malarias.id_for_label }}">{{ form.malarias.label }}</label>
+                                    {{ form.malarias }}
+                                    {% if form.malarias.errors %}
+                                    <div class="text-danger">{{ form.malarias.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.venerian_illness.id_for_label }}">{{ form.venerian_illness.label }}</label>
+                                    {{ form.venerian_illness }}
+                                    {% if form.venerian_illness.errors %}
+                                    <div class="text-danger">{{ form.venerian_illness.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.dizanteri.id_for_label }}">{{ form.dizanteri.label }}</label>
+                                    {{ form.dizanteri }}
+                                    {% if form.dizanteri.errors %}
+                                    <div class="text-danger">{{ form.dizanteri.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.helminthic_infestations.id_for_label }}">{{ form.helminthic_infestations.label }}</label>
+                                    {{ form.helminthic_infestations }}
+                                    {% if form.helminthic_infestations.errors %}
+                                    <div class="text-danger">{{ form.helminthic_infestations.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.had_contact_with_inf_people.id_for_label }}">{{ form.had_contact_with_inf_people.label }}</label>
+                                    {{ form.had_contact_with_inf_people }}
+                                    {% if form.had_contact_with_inf_people.errors %}
+                                    <div class="text-danger">{{ form.had_contact_with_inf_people.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                {{ form.had_stul_for }}
+                                <label for="{{ form.had_stul_for.id_for_label }}" class="custom-control-label">
+                                    {{ form.had_stul_for.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient Conditions Tab -->
+                    <div class="tab-pane fade" id="patient-conditions" role="tabpanel">
+                        <h4 class="form-section-heading">Состояние пациента</h4>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.allergy.id_for_label }}">{{ form.allergy.label }}</label>
+                                    {{ form.allergy }}
+                                    {% if form.allergy.errors %}
+                                    <div class="text-danger">{{ form.allergy.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.meteolabilisis.id_for_label }}">{{ form.meteolabilisis.label }}</label>
+                                    {{ form.meteolabilisis }}
+                                    {% if form.meteolabilisis.errors %}
+                                    <div class="text-danger">{{ form.meteolabilisis.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.non_carrying_prods.id_for_label }}">{{ form.non_carrying_prods.label }}</label>
+                                    {{ form.non_carrying_prods }}
+                                    {% if form.non_carrying_prods.errors %}
+                                    <div class="text-danger">{{ form.non_carrying_prods.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.stull_issues.id_for_label }}">{{ form.stull_issues.label }}</label>
+                                    {{ form.stull_issues }}
+                                    {% if form.stull_issues.errors %}
+                                    <div class="text-danger">{{ form.stull_issues.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.has_always_pills.id_for_label }}">{{ form.has_always_pills.label }}</label>
+                            {{ form.has_always_pills }}
+                            {% if form.has_always_pills.errors %}
+                            <div class="text-danger">{{ form.has_always_pills.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Examination Tab -->
+                    <div class="tab-pane fade" id="examination" role="tabpanel">
+                        <h4 class="form-section-heading">Данные осмотра</h4>
+
+                        <div class="form-group">
+                            <label for="{{ form.objective_data.id_for_label }}">{{ form.objective_data.label }}</label>
+                            {{ form.objective_data }}
+                            {% if form.objective_data.errors %}
+                            <div class="text-danger">{{ form.objective_data.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.temperature.id_for_label }}">{{ form.temperature.label }}</label>
+                                    {{ form.temperature }}
+                                    {% if form.temperature.errors %}
+                                    <div class="text-danger">{{ form.temperature.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.arterial_high.id_for_label }}">{{ form.arterial_high.label }}</label>
+                                    {{ form.arterial_high }}
+                                    {% if form.arterial_high.errors %}
+                                    <div class="text-danger">{{ form.arterial_high.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.arterial_low.id_for_label }}">{{ form.arterial_low.label }}</label>
+                                    {{ form.arterial_low }}
+                                    {% if form.arterial_low.errors %}
+                                    <div class="text-danger">{{ form.arterial_low.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.imt.id_for_label }}">{{ form.imt.label }}</label>
+                                    {{ form.imt }}
+                                    {% if form.imt.errors %}
+                                    <div class="text-danger">{{ form.imt.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.pulse.id_for_label }}">{{ form.pulse.label }}</label>
+                                    {{ form.pulse }}
+                                    {% if form.pulse.errors %}
+                                    <div class="text-danger">{{ form.pulse.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.diet.id_for_label }}">{{ form.diet.label }}</label>
+                                    {{ form.diet }}
+                                    {% if form.diet.errors %}
+                                    <div class="text-danger">{{ form.diet.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.regime.id_for_label }}">{{ form.regime.label }}</label>
+                                    {{ form.regime }}
+                                    {% if form.regime.errors %}
+                                    <div class="text-danger">{{ form.regime.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+                {% if appointment %}
+                <a href="{% url 'on_arrival_consulting_detail' appointment.id %}" class="btn btn-default">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                {% else %}
+                <a href="{% url 'on_arrival_consulting_list' history.id %}" class="btn btn-default">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+    $(function () {
+        //Initialize Select2 Elements
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Update arterial_high_low when arterial_high and arterial_low change
+        $('#{{ form.arterial_high.id_for_label }}, #{{ form.arterial_low.id_for_label }}').on('change', function() {
+            var high = $('#{{ form.arterial_high.id_for_label }}').val();
+            var low = $('#{{ form.arterial_low.id_for_label }}').val();
+
+            if (high && low) {
+                $('#{{ form.arterial_high_low.id_for_label }}').val(high + '/' + low);
+
+                // Calculate BMI if height and weight are available
+                var weight = high; // For BMI calculation, assuming weight is in arterial_high
+                var height = low / 100; // For BMI calculation, assuming height is in arterial_low
+                if (weight > 0 && height > 0) {
+                    var bmi = Math.round(weight / (height * height));
+                    $('#{{ form.imt.id_for_label }}').val(bmi);
+                }
+            }
+        });
+
+        // Make sure each tab has at least one validated field
+        $('form').on('submit', function() {
+            var hasErrors = false;
+            var firstErrorTab = null;
+
+            // Check each tab for errors
+            $('.tab-pane').each(function(index) {
+                var tabId = $(this).attr('id');
+                var tabHasError = false;
+
+                $(this).find(':input').each(function() {
+                    if (!this.checkValidity()) {
+                        tabHasError = true;
+                        hasErrors = true;
+                    }
+                });
+
+                if (tabHasError && !firstErrorTab) {
+                    firstErrorTab = tabId;
+                }
+            });
+
+            // Switch to the first tab with errors
+            if (hasErrors && firstErrorTab) {
+                $('#arrival-tabs a[href="#' + firstErrorTab + '"]').tab('show');
+                return false;
+            }
+
+            return true;
+        });
+    });
+</script>
+{% endblock %}

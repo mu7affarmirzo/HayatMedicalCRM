@@ -1,0 +1,11 @@
+{#{% for service in services %}#}
+{#    <option value="{{ service.id }}" data-price="{{ service.price }}">{{ service.name }}</option>#}
+{#{% endfor %}#}
+<!-- templates/application/procedures/services_dropdown_list_options.html -->
+<option value="">Выберите услугу</option>
+{% for service in services %}
+    <option value="{{ service.id }}">{{ service.name }}</option>
+{% endfor %}
+{% if not services %}
+    <option value="" disabled>Нет доступных услуг для выбранного типа</option>
+{% endif %}

@@ -1,0 +1,416 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Hayat Medical Center{% endblock %}</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fontawesome-free/css/all.min.css' %}">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet"
+          href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/dist/css/adminlte.min.css' %}">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet"
+          href="{% static 'adminlte3_assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- Left navbar links -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="{% url "doctors_main_screen" %}" class="nav-link">Главная</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
+                    Создать <span class="caret"></span>
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация
+                        кардиолога первичная</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация
+                        невролога первичная</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр
+                        дежурного врача при поступлении</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный
+                        приём лечащего врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_duty_appointment_create' history.id %}">Прием
+                        дежурного врача</a>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'ekg_appointment_create' history.id %}">ЭКГ
+                        (Электрокардиограмма)</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'final_appointment_create' history.id %}">Заключительный
+                        прием лечащего врача</a>
+                </div>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="{% url 'prescription_list' history.id %}" class="nav-link">Основноый лист назначений</a>
+            </li>
+        </ul>
+
+        <!-- Right navbar links -->
+        <ul class="navbar-nav ml-auto">
+            <!-- User Dropdown Menu -->
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#">
+                    <i class="fas fa-user-circle"></i> {{ request.user.full_name }}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <span class="dropdown-item dropdown-header">Управление аккаунтом</span>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user-cog mr-2"></i> Профиль
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'logout' %}" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Выйти
+                    </a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Brand Logo -->
+        <a href="{% url 'doctors_main_screen' %}" class="brand-link">
+            <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Medical Center"
+                 style="height: 40px; max-height: none; opacity: 0.9;">
+            <span class="brand-text font-weight-light"></span>
+        </a>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Sidebar user panel (optional) -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="image">
+                    <img src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" class="img-circle elevation-2"
+                         alt="User Image">
+                </div>
+                <div class="info">
+                    <a href="#" class="d-block">{{ request.user.full_name }}</a>
+                </div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                    data-accordion="false">
+                    <li class="nav-item">
+                        <a href="{% url 'illness_history_detail' history.id %}"
+                           class="nav-link {{ active_page.title_page }}">
+                            <i class="nav-icon fas fa-home"></i>
+                            <p>Титульная страница</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'initial_appointment_detail' history.id %}"
+                           class="nav-link {{ active_page.initial_appointment }}">
+                            <i class="nav-icon fas fa-user-md"></i>
+                            <p>Первичный прием лечащего врача</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {{ active_page.consulting_and_med_services_page }}">
+                            <i class="nav-icon fas fa-stethoscope"></i>
+                            <p>
+                                Консультации и повторные приемы
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item ">
+                                <a href="#" class="nav-link {{ active_page.consulting_cardiologist }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>
+                                        Консультация кардиолога
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    {% for consulting in history.cardiologist_consulting.all %}
+                                        <li class="nav-item">
+                                            <a href="{% url 'cardiologist_consulting_detail' consulting.id %}"
+                                               class="nav-link">
+                                                <i class="far"></i>
+                                                <p>Консультация кардиолога | {{ consulting.created_at }}</p>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link {{ active_page.consulting_neurologist }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>
+                                        Консультация невролога
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    {% for consulting in history.neurologist_consulting.all %}
+                                        <li class="nav-item">
+                                            <a href="{% url 'neurologist_consulting_detail' consulting.id %}"
+                                               class="nav-link">
+                                                <i class="far"></i>
+                                                <p>Консультация невролога | {{ consulting.created_at }}</p>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            <li class="nav-item ">
+                                <a href="#" class="nav-link {{ active_page.consulting_on_arrival }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>
+                                        Осмотр дежурного врача при поступлении
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    {% for consulting in history.on_duty_doctor_on_arr_appointment.all %}
+                                        <li class="nav-item">
+                                            <a href="{% url 'on_arrival_consulting_detail' consulting.id %}"
+                                               class="nav-link">
+                                                <i class="far"></i>
+                                                <p>Осмотр дежурного врача при поступлении
+                                                    | {{ consulting.created_at }}</p>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {{ active_page.repeated_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>
+                                Повторный приём лечащего врача
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+                            {% for consulting in history.repeated_appointment.all %}
+                                <li class="nav-item">
+                                    <a href="{% url 'repeated_appointment_detail' consulting.id %}"
+                                       class="nav-link">
+                                        <i class="far"></i>
+                                        <p>Повторный приём лечащего врача | {{ consulting.created_at }}</p>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {{ active_page.on_duty_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>
+                                Прием дежурного врача
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+                            {% for consulting in history.on_duty_doctor_appointment.all %}
+                                <li class="nav-item">
+                                    <a href="{% url 'on_duty_appointment_detail' consulting.id %}"
+                                       class="nav-link">
+                                        <i class="far"></i>
+                                        <p>Прием дежурного врача | {{ consulting.created_at }}</p>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {{ active_page.ekg_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>
+                                ЭКГ (Электрокардиограмма)
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+                            {% for consulting in history.ekg_app.all %}
+                                <li class="nav-item">
+                                    <a href="{% url 'ekg_appointment_detail' consulting.id %}"
+                                       class="nav-link">
+                                        <i class="far"></i>
+                                        <p>ЭКГ (Электрокардиограмма) | {{ consulting.created_at }}</p>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'final_appointment_create' history.id %}" class="nav-link {{ active_page.ekg_appointment }}">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>
+                                Заключительный прием
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <div class="dropdown-divider"></div>
+
+                                <li class="nav-item">
+                                    <a href="{% url 'final_appointment_create' history.id %}" class="nav-link">
+                                        <i class="far"></i>
+                                        <p>Заключительный прием | {{ final_appointment.created_at }}</p>
+                                    </a>
+                                </li>
+
+                        </ul>
+                    </li>
+                </ul>
+
+                <li class="nav-item">
+                    <a href="#"
+                       class="nav-link {{ active_page.proc_main_list_page }}">
+                        <i class="nav-icon fas fa-clipboard-list"></i>
+                        <p>
+                            Основной лист назначений
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#consultations"
+                               class="nav-link {{ active_page.consultings }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Консультации</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#labs"
+                               class="nav-link {{ active_page.labs }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Исследования</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#procedures"
+                               class="nav-link {{ active_page.procedures }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Лечебные процедуры</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'prescription_list' history.id %}#medications"
+                               class="nav-link {{ active_page.medications }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Медикаменты</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'documents_view' history.id %}" class="nav-link {{ active_page.documents_page }}">
+                        <i class="nav-icon fas fa-file-alt"></i>
+                        <p>
+                            Документы
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link {{ active_page.diet_page }}">
+                        <i class="nav-icon fas fa-utensils"></i>
+                        <p>
+                            Питание
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link {{ active_page.timetable_page }}">
+                        <i class="nav-icon fas fa-calendar-alt"></i>
+                        <p>
+                            Расписание лечения
+                            <span class="badge badge-info right">2</span>
+                        </p>
+                    </a>
+                </li>
+
+                </ul>
+            </nav>
+            <!-- /.sidebar-menu -->
+        </div>
+        <!-- /.sidebar -->
+    </aside>
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        {% block content %}{% endblock %}
+    </div>
+    <!-- /.content-wrapper -->
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; 2023-{% now "Y" %} <a href="#">Hayat Baby Massage Center</a>.</strong>
+        Все права защищены.
+        <div class="float-right d-none d-sm-inline-block">
+            <b>Версия</b> 1.0
+        </div>
+    </footer>
+
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- Control sidebar content goes here -->
+    </aside>
+    <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+
+<!-- jQuery -->
+<script src="{% static 'adminlte3_assets/plugins/jquery/jquery.min.js' %}"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="{% static 'adminlte3_assets/plugins/jquery-ui/jquery-ui.min.js' %}"></script>
+<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+<script>
+    $.widget.bridge('uibutton', $.ui.button)
+</script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- daterangepicker -->
+<script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.js' %}"></script>
+<!-- Tempusdominus Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+<!-- overlayScrollbars -->
+<script src="{% static 'adminlte3_assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'adminlte3_assets/dist/js/adminlte.js' %}"></script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>
+

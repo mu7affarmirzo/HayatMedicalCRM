@@ -1,0 +1,96 @@
+{% extends "snippets/base.html" %}
+{% load static %}
+
+{% block title %}Закрытие истории болезни - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Закрытие истории болезни</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'doctor_dashboard' %}">Панель врача</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_list' %}">Истории болезни</a></li>
+                    <li class="breadcrumb-item active">Закрытие</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h3 class="card-title">Подтверждение закрытия</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h5><i class="icon fas fa-info"></i> Информация</h5>
+                            <p>Вы собираетесь закрыть историю болезни <strong>#{{ object.series_number }}</strong> для пациента <strong>{{ object.patient.full_name }}</strong>.</p>
+                            <p>После закрытия истории болезни, в нее нельзя будет вносить изменения.</p>
+                        </div>
+
+                        <div class="callout callout-info">
+                            <h5>Информация о записи:</h5>
+                            <ul>
+                                <li><strong>Тип лечения:</strong> {{ object.get_type_display }}</li>
+                                <li><strong>Статус:</strong> {{ object.get_state_display }}</li>
+                                <li><strong>Дата создания:</strong> {{ object.created_at|date:"d.m.Y H:i" }}</li>
+                                <li><strong>Диагноз:</strong> {{ object.diagnosis.name|default:"Не установлен" }}</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input class="custom-control-input" type="checkbox" id="confirm_diagnosis" required>
+                                <label for="confirm_diagnosis" class="custom-control-label">Я подтверждаю, что итоговый диагноз установлен правильно</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <form method="post" id="close_form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning" id="close_button" disabled>
+                                <i class="fas fa-check-circle mr-1"></i> Закрыть историю болезни
+                            </button>
+                            <a href="{% url 'illness_history_detail' object.id %}" class="btn btn-default">
+                                <i class="fas fa-times mr-1"></i> Отмена
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(function () {
+    // Enable/disable submit button based on checkbox
+    $('#confirm_diagnosis').on('change', function() {
+      $('#close_button').prop('disabled', !this.checked);
+    });
+
+    // Form submission validation
+    $('#close_form').on('submit', function(e) {
+      if (!$('#confirm_diagnosis').is(':checked')) {
+        e.preventDefault();
+        alert('Пожалуйста, подтвердите правильность диагноза');
+      }
+    });
+  });
+</script>
+{% endblock %}

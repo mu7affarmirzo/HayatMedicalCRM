@@ -1,0 +1,161 @@
+{% comment %} sanatorium/doctors/prescriptions/partials/consultation_modals.html {% endcomment %}
+
+<!-- Add Consultation Modal -->
+<div class="modal fade" id="addConsultationModal" tabindex="-1" role="dialog" aria-labelledby="addConsultationLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title" id="addConsultationLabel">Назначить консультацию</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'create_appointment' history.id %}" method="post">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="consultationType">Тип консультации</label>
+                                <select class="form-control" id="consultationType" name="consultation_type" required>
+                                    <option value="">Выберите тип консультации</option>
+                                    <option value="cardiologist">Консультация кардиолога</option>
+                                    <option value="neurologist">Консультация невролога</option>
+                                    <option value="ekg">ЭКГ</option>
+                                    <option value="onduty">Приём у дежурного врача</option>
+                                    <option value="repeated">Повторный приём</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="doctorSelect">Врач</label>
+                                <select class="form-control" id="doctorSelect" name="doctor_id" required>
+                                    <option value="">Выберите врача</option>
+                                    {% for doctor in doctors %}
+                                        <option value="{{ doctor.id }}"
+                                                data-specialties="{{ doctor.specialties }}">
+                                            {{ doctor.full_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="scheduledDate">Дата и время приёма</label>
+                                <div class="input-group date" id="scheduledDatePicker" data-target-input="nearest">
+                                    <input type="text" class="form-control datetimepicker-input"
+                                           id="scheduledDate" name="scheduled_date"
+                                           data-target="#scheduledDatePicker" required>
+                                    <div class="input-group-append" data-target="#scheduledDatePicker"
+                                         data-toggle="datetimepicker">
+                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="prioritySelect">Приоритет</label>
+                                <select class="form-control" id="prioritySelect" name="priority">
+                                    <option value="normal">Обычный</option>
+                                    <option value="urgent">Срочно (CITO)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Примечания</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Назначить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Appointment Modal -->
+<div class="modal fade" id="cancelAppointmentModal" tabindex="-1" role="dialog" aria-labelledby="cancelAppointmentLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title" id="cancelAppointmentLabel">Отменить консультацию</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'cancel_appointment' history.id %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="appointmentId" name="appointment_id">
+                <input type="hidden" id="appointmentModel" name="model_name">
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите отменить эту консультацию?</p>
+                    <div class="form-group">
+                        <label for="cancelReason">Причина отмены</label>
+                        <textarea class="form-control" id="cancelReason" name="cancel_reason" rows="3"
+                                  required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-danger">Отменить консультацию</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+    <script>
+        $(function () {
+            // Define a mapping between consultation types and required specialties
+            const specialtyMapping = {
+                'cardiologist': 'cardiologist',
+                'neurologist': 'neurologist',
+                'ekg': 'cardiologist', // Assuming EKG is done by cardiologists
+                'onduty': 'on_duty',   // Assuming this is a specialty code for on-duty doctors
+                'repeated': ''         // No specific specialty required for repeated consultations
+            };
+
+            // Function to filter doctors based on selected consultation type
+            function filterDoctors() {
+                const selectedType = $('#consultationType').val();
+                const requiredSpecialty = specialtyMapping[selectedType] || '';
+
+                // Show or hide options based on specialty
+                $('#doctorSelect option').each(function () {
+                    if ($(this).val() === '') return; // Skip the "Select doctor" option
+
+                    const doctorSpecialties = $(this).data('specialties').toString().split(',');
+
+                    // Show doctor if no specific specialty is required OR if doctor has the required specialty
+                    if (requiredSpecialty === '' || doctorSpecialties.includes(requiredSpecialty)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                        // If the hidden option was selected, reset the selection
+                        if ($(this).is(':selected')) {
+                            $('#doctorSelect').val('');
+                        }
+                    }
+                });
+            }
+
+            // Bind the filter function to the consultation type dropdown
+            $('#consultationType').on('change', filterDoctors);
+
+            // Run filter on page load in case a consultation type is pre-selected
+            filterDoctors();
+        });
+    </script>
+{% endblock %}

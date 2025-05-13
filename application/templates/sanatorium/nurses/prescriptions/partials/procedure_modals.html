@@ -1,0 +1,369 @@
+{% load static %}
+
+<!-- Sessions Management Modal for each procedure -->
+{% for procedure in procedures %}
+<div class="modal fade" id="sessionModal{{ procedure.id }}" tabindex="-1" role="dialog" aria-labelledby="sessionModalLabel{{ procedure.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sessionModalLabel{{ procedure.id }}">
+                    <i class="fas fa-calendar-check mr-2"></i>Управление сеансами
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Procedure Info -->
+                <div class="card card-primary card-outline mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ procedure.medical_service.name }}</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm">
+                            <tr>
+                                <th style="width: 30%">Терапевт</th>
+                                <td>{{ procedure.therapist.full_name|default:"Не назначен" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Начало</th>
+                                <td>{{ procedure.start_date|date:"d.m.Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Частота</th>
+                                <td>{{ procedure.frequency }}</td>
+                            </tr>
+                            <tr>
+                                <th>Прогресс</th>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success progress-bar-proc-{{ procedure.id }}"
+                                             role="progressbar"
+                                             style="width: {{ procedure.progres_percentile }}%"
+                                             aria-valuenow="{{ procedure.proceeded_sessions }}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="{{ procedure.quantity }}">
+                                            <span class="progress-text-proc-{{ procedure.id }}">{{ procedure.proceeded_sessions }}/{{ procedure.quantity }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Individual Sessions Management -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="sessions-table-{{ procedure.id }}">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th style="width: 20%">Статус</th>
+                                <th style="width: 25%">Терапевт</th>
+                                <th style="width: 25%">Дата выполнения</th>
+                                <th style="width: 25%">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in procedure.individual_sessions.all %}
+                            <tr id="session-row-{{ session.id }}" class="{% if session.status == 'completed' %}table-success{% elif session.status == 'canceled' %}table-danger{% endif %}">
+                                <td>{{ session.session_number }}</td>
+                                <td id="session-status-cell-{{ session.id }}">
+                                    <span class="badge status-{{ session.status }}" id="session-status-badge-{{ session.id }}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                </td>
+                                <td id="session-therapist-{{ session.id }}">{{ session.therapist.full_name|default:"-" }}</td>
+                                <td id="session-completed-date-{{ session.id }}">{{ session.completed_at|date:"d.m.Y H:i"|default:"-" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary update-session-btn"
+                                            data-toggle="modal"
+                                            data-target="#editSessionModal{{ session.id }}"
+                                            data-session-id="{{ session.id }}"
+                                            data-procedure-id="{{ procedure.id }}">
+                                        <i class="fas fa-edit mr-1"></i> Изменить статус
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Individual Session Edit Modals -->
+{% for session in procedure.individual_sessions.all %}
+<div class="modal fade" id="editSessionModal{{ session.id }}" tabindex="-1" role="dialog" aria-labelledby="editSessionModalLabel{{ session.id }}" aria-hidden="true" data-procedure-id="{{ procedure.id }}">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSessionModalLabel{{ session.id }}">
+                    <i class="fas fa-edit mr-2"></i>Обновить статус сеанса #{{ session.session_number }}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="updateSessionForm{{ session.id }}" class="session-update-form" method="post" action="{% url 'update_session_status' session.id %}" data-procedure-id="{{ procedure.id }}" data-session-id="{{ session.id }}">
+                {% csrf_token %}
+                <!-- Hidden field for the next URL -->
+                <input type="hidden" name="next_url" id="next_url{{ session.id }}" value="{{ request.path }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="status{{ session.id }}">Статус:</label>
+                        <select class="form-control" id="status{{ session.id }}" name="status">
+                            <option value="pending" {% if session.status == 'pending' %}selected{% endif %}>Ожидает</option>
+                            <option value="completed" {% if session.status == 'completed' %}selected{% endif %}>Выполнен</option>
+                            <option value="canceled" {% if session.status == 'canceled' %}selected{% endif %}>Отменен</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes{{ session.id }}">Примечания:</label>
+                        <textarea class="form-control" id="notes{{ session.id }}" name="notes" rows="3">{{ session.notes }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-primary save-session-btn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
+
+<!-- JavaScript for handling AJAX session updates -->
+<script>
+$(function() {
+    // AJAX form submission for session updates
+    $('.session-update-form').on('submit', function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var url = form.attr('action');
+        var sessionId = form.data('session-id');
+        var procedureId = form.data('procedure-id');
+        var statusValue = $('#status' + sessionId).val();
+        var statusText = $('#status' + sessionId + ' option:selected').text();
+        var notes = $('#notes' + sessionId).val();
+
+        // Disable submit button to prevent double submission
+        form.find('.save-session-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Сохранение...');
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(),
+            dataType: 'json', // Ensure jQuery expects JSON
+            success: function(data) {
+                // Re-enable submit button
+                form.find('.save-session-btn').prop('disabled', false).html('Сохранить');
+
+                if (data.success) {
+                    // Close the edit session modal
+                    $('#editSessionModal' + sessionId).modal('hide');
+
+                    // Check if we need to redirect
+                    if (data.redirect_url) {
+                        // Show success message in a small notification
+                        var successMessage = $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">' +
+                            '<i class="fas fa-check-circle mr-2"></i>' + data.message +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true">&times;</span></button></div>');
+                        $('body').append(successMessage);
+
+                        // Store success message in session storage for display after redirect
+                        sessionStorage.setItem('statusUpdateSuccess', data.message);
+
+                        // Redirect after a short delay
+                        setTimeout(function() {
+                            window.location.href = data.redirect_url;
+                        }, 1000);
+
+                        return;
+                    }
+
+                    // If no redirect, update the UI
+                    // Show success message in a small notification
+                    var successMessage = $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">' +
+                        '<i class="fas fa-check-circle mr-2"></i>' + data.message +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span></button></div>');
+                    $('body').append(successMessage);
+
+                    setTimeout(function() {
+                        successMessage.alert('close');
+                    }, 3000);
+
+                    // Update the session row in the sessions table
+                    updateSessionRow(sessionId, statusValue, statusText, data);
+
+                    // Update the main procedure progress
+                    if (data.procedure_data) {
+                        updateProcedureProgress(procedureId, data.procedure_data);
+                    }
+
+                    // Ensure the procedures modal stays open
+                    $('#sessionModal' + procedureId).modal('show');
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ошибка',
+                        text: data.message
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                // Re-enable submit button
+                form.find('.save-session-btn').prop('disabled', false).html('Сохранить');
+
+                var errorMessage = 'Произошла ошибка при обновлении статуса сеанса';
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMessage = response.message;
+                    }
+                } catch (e) {
+                    console.error("Error parsing error response:", e);
+                    if (xhr.responseText) {
+                        errorMessage += ": " + xhr.responseText.substring(0, 100) + "...";
+                    }
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ошибка',
+                    text: errorMessage
+                });
+            }
+        });
+    });
+
+    // Check for success message from previous redirect
+    $(document).ready(function() {
+        var successMessage = sessionStorage.getItem('statusUpdateSuccess');
+        if (successMessage) {
+            // Display the success message
+            var alertMessage = $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">' +
+                '<i class="fas fa-check-circle mr-2"></i>' + successMessage +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span></button></div>');
+            $('body').append(alertMessage);
+
+            setTimeout(function() {
+                alertMessage.alert('close');
+            }, 3000);
+
+            // Clear the message from session storage
+            sessionStorage.removeItem('statusUpdateSuccess');
+        }
+    });
+
+    // Function to update session row in the table
+    function updateSessionRow(sessionId, statusValue, statusText, data) {
+        // Update status badge
+        var statusBadge = $('#session-status-badge-' + sessionId);
+        statusBadge.removeClass('status-pending status-completed status-canceled');
+        statusBadge.addClass('status-' + statusValue);
+        statusBadge.text(statusText);
+
+        // Update row class
+        var sessionRow = $('#session-row-' + sessionId);
+        sessionRow.removeClass('table-success table-danger');
+        if (statusValue === 'completed') {
+            sessionRow.addClass('table-success');
+        } else if (statusValue === 'canceled') {
+            sessionRow.addClass('table-danger');
+        }
+
+        // Update completion date if status is completed
+        if (statusValue === 'completed' && data.completed_at) {
+            $('#session-completed-date-' + sessionId).text(data.completed_at);
+        } else if (statusValue !== 'completed') {
+            $('#session-completed-date-' + sessionId).text('-');
+        }
+
+        // Update therapist if provided
+        if (data.therapist_name) {
+            $('#session-therapist-' + sessionId).text(data.therapist_name);
+        }
+
+        // Update the small session cards in the dashboard view if they exist
+        var dashboardSessionItem = $('.session-item-' + sessionId);
+        if (dashboardSessionItem.length > 0) {
+            dashboardSessionItem.removeClass('session-pending session-completed session-canceled');
+            dashboardSessionItem.addClass('session-' + statusValue);
+
+            var statusIcon = dashboardSessionItem.find('.session-status-icon');
+            statusIcon.removeClass('fa-clock fa-check-circle fa-times-circle text-warning text-success text-danger');
+
+            if (statusValue === 'completed') {
+                statusIcon.addClass('fa-check-circle text-success');
+            } else if (statusValue === 'pending') {
+                statusIcon.addClass('fa-clock text-warning');
+            } else if (statusValue === 'canceled') {
+                statusIcon.addClass('fa-times-circle text-danger');
+            }
+
+            dashboardSessionItem.find('.session-status-badge').removeClass('status-pending status-completed status-canceled')
+                .addClass('status-' + statusValue).text(statusText);
+        }
+    }
+
+    // Function to update procedure progress
+    function updateProcedureProgress(procedureId, procedureData) {
+        // Update progress bar
+        var progressBar = $('.progress-bar-proc-' + procedureId);
+        var newPercentage = procedureData.progress_percentage || 0;
+        progressBar.css('width', newPercentage + '%');
+        progressBar.attr('aria-valuenow', procedureData.completed_sessions);
+
+        // Update progress text
+        var progressText = $('.progress-text-proc-' + procedureId);
+        progressText.text(procedureData.completed_sessions + '/' + procedureData.total_sessions);
+
+        // Update procedure status badges if they exist
+        var statusBadges = $('.procedure-status-' + procedureId);
+        if (statusBadges.length > 0) {
+            statusBadges.removeClass('status-pending status-in_progress status-completed status-canceled');
+            statusBadges.addClass('status-' + procedureData.status);
+            statusBadges.text(procedureData.status_display);
+        }
+
+        // Update main procedure progress bar if it exists
+        var mainProgressBar = $('#main-procedure-progress-' + procedureId);
+        if (mainProgressBar.length > 0) {
+            mainProgressBar.css('width', newPercentage + '%');
+            mainProgressBar.attr('aria-valuenow', procedureData.completed_sessions);
+
+            var mainProgressText = $('#main-procedure-progress-text-' + procedureId);
+            if (mainProgressText.length > 0) {
+                mainProgressText.text(procedureData.completed_sessions + '/' + procedureData.total_sessions);
+            }
+        }
+    }
+
+    // Handle modal open/close to maintain state
+    $('.update-session-btn').on('click', function() {
+        // Store the procedure ID to reopen the correct modal after session update
+        var procedureId = $(this).data('procedure-id');
+        sessionStorage.setItem('activeModalProcedureId', procedureId);
+    });
+
+    // Reopen the procedures modal when the edit session modal is closed
+    $('.modal').on('hidden.bs.modal', function() {
+        var procedureId = sessionStorage.getItem('activeModalProcedureId');
+        if (procedureId && $(this).attr('id').includes('editSession')) {
+            $('#sessionModal' + procedureId).modal('show');
+        }
+    });
+});
+</script>

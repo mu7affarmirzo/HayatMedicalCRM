@@ -1,0 +1,358 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+{% block title %}Консультация невролога | {{ consulting.illness_history.patient.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+    .detail-label {
+        font-weight: 500;
+        color: #5c5c5c;
+    }
+    .section-heading {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        color: #444;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Консультация невролога</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item active">Консультация невролога</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Уведомление!</h5>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    <div class="row">
+        <!-- Left column -->
+        <div class="col-md-6">
+            <!-- Basic Information -->
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Основная информация</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Врач-невролог:</dt>
+                        <dd class="col-sm-7">{{ consulting.doctor.full_name }}</dd>
+
+                        <dt class="col-sm-5">Дата консультации:</dt>
+                        <dd class="col-sm-7">{{ consulting.created_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-5">Состояние приема:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge {% if consulting.state == 'Приём завершён' %}bg-success{% elif consulting.state == 'Пациент на прием не явился' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ consulting.state }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">Ознакомлен с анамнезом:</dt>
+                        <dd class="col-sm-7">{{ consulting.is_familiar_with_anamnesis|yesno:"Да,Нет" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Complaints and Anamnesis -->
+            <div class="card card-info">
+                <div class="card-header">
+                    <h3 class="card-title">Жалобы и анамнез</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5>Жалобы</h5>
+                    <p>{{ consulting.complaint|default:"Не указано"|linebreaks }}</p>
+
+                    <h5>Анамнез</h5>
+                    <p>{{ consulting.anamnesis|default:"Не указано"|linebreaks }}</p>
+                </div>
+            </div>
+
+            <!-- Eye Examination -->
+            <div class="card card-success">
+                <div class="card-header">
+                    <h3 class="card-title">Исследование органов зрения</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Глазные щели:</dt>
+                        <dd class="col-sm-7">{{ consulting.palpebral_fissures|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Зрачки:</dt>
+                        <dd class="col-sm-7">{{ consulting.pupils|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Реакция зрачков:</dt>
+                        <dd class="col-sm-7">{{ consulting.reaction_on_pupils|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Движение глазных яблок:</dt>
+                        <dd class="col-sm-7">{{ consulting.aye_frame_movement|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Нистагм:</dt>
+                        <dd class="col-sm-7">{{ consulting.nystagmus|default:"Не указано" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Face and Oral Examination -->
+            <div class="card card-warning">
+                <div class="card-header">
+                    <h3 class="card-title">Исследование лица и полости рта</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Лицо:</dt>
+                        <dd class="col-sm-7">{{ consulting.face|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Язык:</dt>
+                        <dd class="col-sm-7">{{ consulting.tongue|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Мягкое нёбо:</dt>
+                        <dd class="col-sm-7">{{ consulting.soft_sk|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Фонация и глотание:</dt>
+                        <dd class="col-sm-7">{{ consulting.phonation_swallowing|default:"Не указано" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-md-6">
+            <!-- Muscle Examination -->
+            <div class="card card-danger">
+                <div class="card-header">
+                    <h3 class="card-title">Исследование мышечной системы</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Рефлексы:</dt>
+                        <dd class="col-sm-7">{{ consulting.reflexes|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Мышечная сила:</dt>
+                        <dd class="col-sm-7">{{ consulting.muscle_strength|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Мышечный тонус:</dt>
+                        <dd class="col-sm-7">{{ consulting.muscle_tones|default:"Не указано" }}</dd>
+                    </dl>
+
+                    <h5 class="section-heading">Глубокие рефлексы</h5>
+                    <dl class="row">
+                        <dt class="col-sm-6">Рука:</dt>
+                        <dd class="col-sm-6">{{ consulting.deep_reflexes_hand|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Нога:</dt>
+                        <dd class="col-sm-6">{{ consulting.deep_reflexes_foot|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Шиловидно-лучевые:</dt>
+                        <dd class="col-sm-6">{{ consulting.stylo_radial|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">С двуглавой мышцы плеча:</dt>
+                        <dd class="col-sm-6">{{ consulting.biceps|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">С трехглавой мышцы плеча:</dt>
+                        <dd class="col-sm-6">{{ consulting.triceps|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Коленные:</dt>
+                        <dd class="col-sm-6">{{ consulting.knees|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Ахилловы:</dt>
+                        <dd class="col-sm-6">{{ consulting.achilles|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Брюшные:</dt>
+                        <dd class="col-sm-6">{{ consulting.abdominal|default:"Не указано" }}</dd>
+                    </dl>
+
+                    <h5 class="section-heading">Патологические рефлексы</h5>
+                    <p>{{ consulting.pathological_reflexes|default:"Не указано" }}</p>
+                </div>
+            </div>
+
+            <!-- Balance and Coordination -->
+            <div class="card card-secondary">
+                <div class="card-header">
+                    <h3 class="card-title">Равновесие и координация</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">Положение в позе Ромберга:</dt>
+                        <dd class="col-sm-6">{{ consulting.romberg_position|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">В усложненной позе Ромберга:</dt>
+                        <dd class="col-sm-6">{{ consulting.complicated_position|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Пальценосовая проба:</dt>
+                        <dd class="col-sm-6">{{ consulting.finger_test|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Пяточно-коленная проба:</dt>
+                        <dd class="col-sm-6">{{ consulting.heel_knee_test|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Походка:</dt>
+                        <dd class="col-sm-6">{{ consulting.gait|default:"Не указано" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Other Neurological and Spine Examination -->
+            <div class="card card-light">
+                <div class="card-header">
+                    <h3 class="card-title">Другие неврологические обследования</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Чувствительность:</dt>
+                        <dd class="col-sm-7">{{ consulting.sensitivity|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Когнитивный тест:</dt>
+                        <dd class="col-sm-7">{{ consulting.cognitive_test|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Эмоционально-волевая сфера:</dt>
+                        <dd class="col-sm-7">{{ consulting.emotional_volitional_sphere|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-5">Бессонница:</dt>
+                        <dd class="col-sm-7">{{ consulting.insomnia|default:"Не указано" }}</dd>
+                    </dl>
+
+                    <h5 class="section-heading">Исследование позвоночника</h5>
+                    <dl class="row">
+                        <dt class="col-sm-6">Движения в шейном отделе:</dt>
+                        <dd class="col-sm-6">{{ consulting.movements_in_the_cervical_spine|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Движения в поясничном отделе:</dt>
+                        <dd class="col-sm-6">{{ consulting.movements_in_the_spinal_spine|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Болезненность остистых отростков:</dt>
+                        <dd class="col-sm-6">{{ consulting.spinous_processes|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Болезненность паравертебральных точек:</dt>
+                        <dd class="col-sm-6">{{ consulting.paravertebral_points|default:"Не указано" }}</dd>
+
+                        <dt class="col-sm-6">Симптом Ласега:</dt>
+                        <dd class="col-sm-6">{{ consulting.lasegues_symptom|default:"Не указано" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnosis and Recommendations -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Заключение и рекомендации</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Срочность</h5>
+                            <p>
+                                {% if consulting.cito %}
+                                <span class="badge badge-danger">CITO (Срочно)</span>
+                                {% else %}
+                                <span class="badge badge-secondary">Обычный режим</span>
+                                {% endif %}
+                            </p>
+
+                            <h5>Для санаторно-курортного лечения</h5>
+                            <p>
+                                {% if consulting.for_sanatorium_treatment %}
+                                <span class="badge
+                                    {% if consulting.for_sanatorium_treatment == 'Показан' %}badge-success
+                                    {% elif consulting.for_sanatorium_treatment == 'Не показан' %}badge-warning
+                                    {% else %}badge-danger{% endif %}">
+                                    {{ consulting.for_sanatorium_treatment }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">Не указано</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Заключение</h5>
+                            <p>{{ consulting.summary|default:"Заключение не указано"|linebreaks }}</p>
+
+                            <h5>Рекомендации</h5>
+                            <p>{{ consulting.recommendation|default:"Рекомендации не указаны"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'neurologist_consulting_update' history.id consulting.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{% url 'neurologist_consulting_list' history.id %}" class="btn btn-default">
+                        <i class="fas fa-list"></i> К списку
+                    </a>
+                    <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-default float-right">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django.urls import path
-from application.sanatorium.views.doctors_viewset.appointment_views.final_app import (
+from application.sanatorium.views.nurses_viewset.appointment_views.final_app import (
     FinalAppointmentListView,
     FinalAppointmentDetailView,
     FinalAppointmentUpdateView, FinalAppointmentCreateOrUpdateView,

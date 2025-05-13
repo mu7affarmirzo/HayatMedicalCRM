@@ -10,7 +10,7 @@ from application.sanatorium.forms.neurologist_app_form import ConsultingWithNeur
 class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
     model = ConsultingWithNeurologistModel
     form_class = ConsultingWithNeurologistForm
-    template_name = 'sanatorium/doctors/appointments/neurologist/form.html'
+    template_name = 'sanatorium/nurses/appointments/neurologist/form.html'
 
     def get_success_url(self):
         return reverse_lazy('neurologist_consulting_detail',
@@ -31,7 +31,7 @@ class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
 
 class NeurologistConsultingListView(LoginRequiredMixin, ListView):
     model = ConsultingWithNeurologistModel
-    template_name = 'sanatorium/doctors/appointments/neurologist/list.html'
+    template_name = 'sanatorium/nurses/appointments/neurologist/list.html'
     context_object_name = 'consultings'
 
     def get_queryset(self):
@@ -48,7 +48,7 @@ class NeurologistConsultingListView(LoginRequiredMixin, ListView):
 
 class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
     model = ConsultingWithNeurologistModel
-    template_name = 'sanatorium/doctors/appointments/neurologist/detail.html'
+    template_name = 'sanatorium/nurses/appointments/neurologist/detail.html'
     context_object_name = 'consulting'
 
     def get_context_data(self, **kwargs):
@@ -61,7 +61,7 @@ class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
 class NeurologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
     model = ConsultingWithNeurologistModel
     form_class = ConsultingWithNeurologistForm
-    template_name = 'sanatorium/doctors/appointments/neurologist/form.html'
+    template_name = 'sanatorium/nurses/appointments/neurologist/form.html'
 
     def get_success_url(self):
         return reverse_lazy('neurologist_consulting_detail',

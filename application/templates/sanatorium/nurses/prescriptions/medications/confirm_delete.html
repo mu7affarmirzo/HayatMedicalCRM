@@ -27,7 +27,7 @@
                 {% csrf_token %}
                 <div class="form-group">
                     <button type="submit" class="btn btn-danger">Подтвердить удаление</button>
-                    <a href="{% url 'prescribed_medication_detail' medication.id %}" class="btn btn-secondary">Отмена</a>
+                    <a href="{% url 'nurses:prescribed_medication_detail' medication.id %}" class="btn btn-secondary">Отмена</a>
                 </div>
             </form>
         </div>

@@ -12,7 +12,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' history.id %}">История болезни</a></li>
                     <li class="breadcrumb-item active">Консультации невролога</li>
                 </ol>
             </div>
@@ -38,7 +38,7 @@
                 <i class="fas fa-list mr-1"></i> Список консультаций невролога
             </h3>
             <div class="card-tools">
-                <a href="{% url 'neurologist_consulting_create' history.id %}" class="btn btn-primary btn-sm">
+                <a href="{% url 'nurses:neurologist_consulting_create' history.id %}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Новая консультация
                 </a>
             </div>
@@ -76,13 +76,13 @@
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                <a href="{% url 'neurologist_consulting_detail' history.id consulting.id %}" class="btn btn-info btn-sm" title="Просмотреть">
+                                <a href="{% url 'nurses:neurologist_consulting_detail' history.id consulting.id %}" class="btn btn-info btn-sm" title="Просмотреть">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{% url 'neurologist_consulting_update' history.id consulting.id %}" class="btn btn-warning btn-sm" title="Редактировать">
+                                <a href="{% url 'nurses:neurologist_consulting_update' history.id consulting.id %}" class="btn btn-warning btn-sm" title="Редактировать">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'neurologist_consulting_delete' history.id consulting.id %}" class="btn btn-danger btn-sm" title="Удалить">
+                                <a href="{% url 'nurses:neurologist_consulting_delete' history.id consulting.id %}" class="btn btn-danger btn-sm" title="Удалить">
                                     <i class="fas fa-trash-alt"></i>
                                 </a>
                             </td>
@@ -99,7 +99,7 @@
             {% endif %}
         </div>
         <div class="card-footer">
-            <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-default">
+            <a href="{% url 'nurses:illness_history_detail' history.id %}" class="btn btn-default">
                 <i class="fas fa-arrow-left"></i> Назад к истории болезни
             </a>
         </div>

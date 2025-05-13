@@ -1,5 +1,5 @@
 from django.urls import path
-from application.sanatorium.views.doctors_viewset.illness_history import (
+from application.sanatorium.views.nurses_viewset.illness_history import (
     IllnessHistoryListView,
     IllnessHistoryCreateView,
     IllnessHistoryUpdateView,

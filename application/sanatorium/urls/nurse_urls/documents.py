@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.doctors_viewset import documents as views
+from application.sanatorium.views.nurses_viewset import documents as views
 
 urlpatterns = [
     path('history/<int:pk>/', views.documents_view, name='documents_view'),

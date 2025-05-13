@@ -15,7 +15,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Панель врача</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'nurses:doctors_main_screen' %}">Панель врача</a></li>
                     <li class="breadcrumb-item active">Карта пациента</li>
                 </ol>
             </div>
@@ -56,7 +56,7 @@
                             </li>
                         </ul>
 
-                        <a href="{% url 'patient_edit' history.id %}" class="btn btn-primary btn-block">
+                        <a href="{% url 'nurses:patient_edit' history.id %}" class="btn btn-primary btn-block">
                             <i class="fas fa-edit"></i> Редактировать
                         </a>
                     </div>

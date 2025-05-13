@@ -29,7 +29,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' history.id %}">История болезни</a></li>
                     <li class="breadcrumb-item active">Приём дежурного врача при поступлении</li>
                 </ol>
             </div>
@@ -252,13 +252,13 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-body text-right">
-                    <a href="{% url 'on_arrival_consulting_update' appointment.id %}" class="btn btn-primary">
+                    <a href="{% url 'nurses:on_arrival_consulting_update' appointment.id %}" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Редактировать
                     </a>
-                    <a href="{% url 'on_arrival_consulting_list' history.id %}" class="btn btn-info">
+                    <a href="{% url 'nurses:on_arrival_consulting_list' history.id %}" class="btn btn-info">
                         <i class="fas fa-list"></i> К списку
                     </a>
-                    <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-default">
+                    <a href="{% url 'nurses:illness_history_detail' history.id %}" class="btn btn-default">
                         <i class="fas fa-arrow-left"></i> Назад
                     </a>
                 </div>

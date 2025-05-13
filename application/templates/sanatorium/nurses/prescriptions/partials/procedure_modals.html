@@ -110,7 +110,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="updateSessionForm{{ session.id }}" class="session-update-form" method="post" action="{% url 'update_session_status' session.id %}" data-procedure-id="{{ procedure.id }}" data-session-id="{{ session.id }}">
+            <form id="updateSessionForm{{ session.id }}" class="session-update-form" method="post" action="{% url 'nurses:update_session_status' session.id %}" data-procedure-id="{{ procedure.id }}" data-session-id="{{ session.id }}">
                 {% csrf_token %}
                 <!-- Hidden field for the next URL -->
                 <input type="hidden" name="next_url" id="next_url{{ session.id }}" value="{{ request.path }}">

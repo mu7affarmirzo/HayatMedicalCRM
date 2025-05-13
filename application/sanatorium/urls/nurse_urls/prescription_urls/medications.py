@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path
 
-from application.sanatorium.views.doctors_viewset.prescriptions import medications as views
+from application.sanatorium.views.nurses_viewset.prescriptions import medications as views
 
 urlpatterns = [
     # PrescribedMedication URLs

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.doctors_viewset.appointment_views.init_app import initial_appointment_detail, initial_appointment_update
+from application.sanatorium.views.nurses_viewset.appointment_views.init_app import initial_appointment_detail, initial_appointment_update
 
 urlpatterns = [
     path('<int:history_id>/', initial_appointment_detail, name='initial_appointment_detail'),

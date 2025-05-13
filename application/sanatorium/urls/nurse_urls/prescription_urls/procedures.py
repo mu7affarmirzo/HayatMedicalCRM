@@ -1,5 +1,5 @@
 from django.urls import path
-from application.sanatorium.views.doctors_viewset.prescriptions import procedures
+from application.sanatorium.views.nurses_viewset.prescriptions import procedures
 
 
 urlpatterns = [

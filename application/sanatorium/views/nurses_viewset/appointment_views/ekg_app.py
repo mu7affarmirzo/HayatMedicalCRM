@@ -10,7 +10,7 @@ from application.sanatorium.forms.ekg_app_form import EkgAppointmentForm
 class EkgAppointmentCreateView(LoginRequiredMixin, CreateView):
     model = EkgAppointmentModel
     form_class = EkgAppointmentForm
-    template_name = 'sanatorium/doctors/appointments/ekg_app/form.html'
+    template_name = 'sanatorium/nurses/appointments/ekg_app/form.html'
 
     def get_success_url(self):
         return reverse_lazy('ekg_appointment_detail',
@@ -32,7 +32,7 @@ class EkgAppointmentCreateView(LoginRequiredMixin, CreateView):
 
 class EkgAppointmentListView(LoginRequiredMixin, ListView):
     model = EkgAppointmentModel
-    template_name = 'sanatorium/doctors/appointments/ekg_app/list.html'
+    template_name = 'sanatorium/nurses/appointments/ekg_app/list.html'
     context_object_name = 'appointments'
 
     def get_queryset(self):
@@ -48,7 +48,7 @@ class EkgAppointmentListView(LoginRequiredMixin, ListView):
 
 class EkgAppointmentDetailView(LoginRequiredMixin, DetailView):
     model = EkgAppointmentModel
-    template_name = 'sanatorium/doctors/appointments/ekg_app/detail.html'
+    template_name = 'sanatorium/nurses/appointments/ekg_app/detail.html'
     context_object_name = 'appointment'
 
     def get_context_data(self, **kwargs):
@@ -61,7 +61,7 @@ class EkgAppointmentDetailView(LoginRequiredMixin, DetailView):
 class EkgAppointmentUpdateView(LoginRequiredMixin, UpdateView):
     model = EkgAppointmentModel
     form_class = EkgAppointmentForm
-    template_name = 'sanatorium/doctors/appointments/ekg_app/form.html'
+    template_name = 'sanatorium/nurses/appointments/ekg_app/form.html'
 
     def get_success_url(self):
         return reverse_lazy('ekg_appointment_detail',

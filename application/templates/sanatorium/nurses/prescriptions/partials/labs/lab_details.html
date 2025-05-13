@@ -110,7 +110,7 @@
                       {% if result.comments %}<p><strong>Комментарии:</strong> {{ result.comments }}</p>{% endif %}
                       {% if result.attached_file %}
                         <p><strong>Прикрепленный файл:</strong>
-                          <a href="{% url 'download_result_file' result.id %}" target="_blank">
+                          <a href="{% url 'nurses:download_result_file' result.id %}" target="_blank">
                             {{ result.attached_file.name|default:"Скачать файл" }}
                             <i class="fas fa-download ml-1"></i>
                           </a>

@@ -18,7 +18,7 @@ from core.models import PrescribedMedication, MedicationAdministration, IllnessH
 # PrescribedMedication Views
 class PrescribedMedicationListView(LoginRequiredMixin, ListView):
     model = PrescribedMedication
-    template_name = 'sanatorium/doctors/prescriptions/medications/list.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/list.html'
     context_object_name = 'medications'
     paginate_by = 10
 
@@ -53,7 +53,7 @@ class PrescribedMedicationListView(LoginRequiredMixin, ListView):
 
 class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
     model = PrescribedMedication
-    template_name = 'sanatorium/doctors/prescriptions/medications/detail.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/detail.html'
     context_object_name = 'medication'
 
     def get_context_data(self, **kwargs):
@@ -66,7 +66,7 @@ class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
 class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
-    template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -123,7 +123,7 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
 class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
-    template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
     context_object_name = 'medication'
 
     def form_valid(self, form):
@@ -137,7 +137,7 @@ class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, Up
 
 class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = PrescribedMedication
-    template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/confirm_delete.html'
     context_object_name = 'medication'
 
     def get_success_url(self):
@@ -150,7 +150,7 @@ class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, De
 # MedicationAdministration Views
 class MedicationAdministrationListView(LoginRequiredMixin, ListView):
     model = MedicationAdministration
-    template_name = 'sanatorium/doctors/prescriptions/medications/list.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/list.html'
     context_object_name = 'administrations'
     paginate_by = 10
 
@@ -180,14 +180,14 @@ class MedicationAdministrationListView(LoginRequiredMixin, ListView):
 
 class MedicationAdministrationDetailView(LoginRequiredMixin, DetailView):
     model = MedicationAdministration
-    template_name = 'sanatorium/doctors/prescriptions/medications/detail.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/detail.html'
     context_object_name = 'administration'
 
 
 class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = MedicationAdministration
     form_class = MedicationAdministrationForm
-    template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -234,7 +234,7 @@ class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin
 class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = MedicationAdministration
     form_class = MedicationAdministrationForm
-    template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
     context_object_name = 'administration'
 
     def form_valid(self, form):
@@ -248,7 +248,7 @@ class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin
 
 class MedicationAdministrationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = MedicationAdministration
-    template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
+    template_name = 'sanatorium/nurses/prescriptions/medications/confirm_delete.html'
     context_object_name = 'administration'
 
     def get_success_url(self):
@@ -420,7 +420,7 @@ def api_medication_details(request):
 
         try:
             # Формируем HTML для отображения в модальном окне
-            html = render_to_string('sanatorium/doctors/prescriptions/medications/medication_details.html', context)
+            html = render_to_string('sanatorium/nurses/prescriptions/medications/medication_details.html', context)
         except:
             html = None
 

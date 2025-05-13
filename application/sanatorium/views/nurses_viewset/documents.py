@@ -28,7 +28,7 @@ def documents_view(request, pk):
         'active_page': {'documents_page': 'active'}
     }
 
-    return render(request, 'sanatorium/doctors/documents/documents_page.html', context)
+    return render(request, 'sanatorium/nurses/documents/documents_page.html', context)
 
 
 @login_required

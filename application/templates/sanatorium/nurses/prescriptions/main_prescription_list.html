@@ -18,7 +18,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История
+                        <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' history.id %}">История
                             болезни #{{ history.series_number }}</a></li>
                         <li class="breadcrumb-item active">Основной лист назначений</li>
                     </ol>

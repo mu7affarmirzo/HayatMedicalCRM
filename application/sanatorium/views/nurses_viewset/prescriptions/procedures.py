@@ -30,7 +30,7 @@ def procedure_detail(request, procedure_id):
         'active_page': {'proc_main_list_page': 'active'}
     }
 
-    return render(request, 'sanatorium/doctors/prescriptions/procedure_detail.html', context)
+    return render(request, 'sanatorium/nurses/prescriptions/procedure_detail.html', context)
 
 
 @login_required
@@ -63,7 +63,7 @@ def procedure_create(request, history_id):
 
     }
 
-    return render(request, 'sanatorium/doctors/prescriptions/procedure_form.html', context)
+    return render(request, 'sanatorium/nurses/prescriptions/procedure_form.html', context)
 
 
 @login_required
@@ -100,7 +100,7 @@ def procedure_edit(request, procedure_id):
         'action': 'Редактировать'
     }
 
-    return render(request, 'sanatorium/doctors/prescriptions/procedure_form.html', context)
+    return render(request, 'sanatorium/nurses/prescriptions/procedure_form.html', context)
 
 
 @login_required
@@ -122,7 +122,7 @@ def procedure_delete(request, procedure_id):
 
     }
 
-    return render(request, 'sanatorium/doctors/prescriptions/procedure_confirm_delete.html', context)
+    return render(request, 'sanatorium/nurses/prescriptions/procedure_confirm_delete.html', context)
 
 
 # @login_required
@@ -230,7 +230,7 @@ def get_services_by_type(request):
 def load_services(request):
     service_type_id = request.GET.get('service_type_id')
     services = Service.objects.filter(type__id=service_type_id)
-    return render(request, 'sanatorium/doctors/prescriptions/services_dropdown_list_options.html', {'services': services})
+    return render(request, 'sanatorium/nurses/prescriptions/services_dropdown_list_options.html', {'services': services})
 
 
 # Helper functions

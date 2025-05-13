@@ -1,6 +1,6 @@
 from django.urls import path
 
-from application.sanatorium.views.doctors_viewset import assigned_patients
+from application.sanatorium.views.nurses_viewset import assigned_patients
 
 urlpatterns = [
 

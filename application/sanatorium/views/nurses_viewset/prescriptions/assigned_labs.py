@@ -41,12 +41,12 @@ def assign_lab_create(request, history_id):
         'action': 'Назначить'
     }
 
-    return render(request, 'sanatorium/doctors/prescriptions/labs/assigned_labs_form.html', context)
+    return render(request, 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html', context)
 
 
 class AssignedLabsListView(LoginRequiredMixin, ListView):
     model = AssignedLabs
-    template_name = 'sanatorium/doctors/appointments/on_duty_app/list.html'
+    template_name = 'sanatorium/nurses/appointments/on_duty_app/list.html'
     context_object_name = 'assigned_labs'
     paginate_by = 10
 
@@ -60,7 +60,7 @@ class AssignedLabsListView(LoginRequiredMixin, ListView):
 
 class AssignedLabsDetailView(LoginRequiredMixin, DetailView):
     model = AssignedLabs
-    template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_detail.html'
+    template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_detail.html'
     context_object_name = 'assigned_lab'
 
     def get_context_data(self, **kwargs):
@@ -74,7 +74,7 @@ class AssignedLabsDetailView(LoginRequiredMixin, DetailView):
 class AssignedLabsCreateView(LoginRequiredMixin, CreateView):
     model = AssignedLabs
     form_class = AssignedLabsForm
-    template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_form.html'
+    template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html'
 
     def get_success_url(self):
         return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
@@ -100,7 +100,7 @@ class AssignedLabsCreateView(LoginRequiredMixin, CreateView):
 class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
     model = AssignedLabs
     form_class = AssignedLabsForm
-    template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_form.html'
+    template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html'
     context_object_name = 'assigned_lab'
 
     def get_success_url(self):
@@ -120,7 +120,7 @@ class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
 class AssignedLabsDeleteView(LoginRequiredMixin, DeleteView):
     model = AssignedLabs
     context_object_name = 'assigned_lab'
-    template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_confirm_delete.html'
+    template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_confirm_delete.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -310,6 +310,6 @@ def view_lab_results(request, assigned_lab_id):
         'assigned_lab': assigned_lab,
         'lab_results': lab_results,
     }
-    return render(request, 'sanatorium/doctors/prescriptions/labs/view_lab_results.html', context)
+    return render(request, 'sanatorium/nurses/prescriptions/labs/view_lab_results.html', context)
 
 

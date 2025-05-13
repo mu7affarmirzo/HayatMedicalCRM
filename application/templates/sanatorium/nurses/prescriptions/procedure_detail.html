@@ -59,9 +59,9 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История
+                        <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' history.id %}">История
                             болезни #{{ history.series_number }}</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'main_prescription_list' history.id %}">Лист
+                        <li class="breadcrumb-item"><a href="{% url 'nurses:main_prescription_list' history.id %}">Лист
                             назначений</a></li>
                         <li class="breadcrumb-item active">Детали процедуры</li>
                     </ol>
@@ -143,17 +143,17 @@
                     <div class="row mt-3">
                         <div class="col-12">
                             <div class="btn-group">
-                                <a href="{% url 'procedure_edit' procedure.id %}" class="btn btn-warning">
+                                <a href="{% url 'nurses:procedure_edit' procedure.id %}" class="btn btn-warning">
                                     <i class="fas fa-edit mr-1"></i> Редактировать
                                 </a>
                                 <button type="button" class="btn btn-primary" data-toggle="modal"
                                         data-target="#sessionModal{{ procedure.id }}">
                                     <i class="fas fa-calendar-check mr-1"></i> Управление сеансами
                                 </button>
-                                <a href="{% url 'procedure_delete' procedure.id %}" class="btn btn-danger">
+                                <a href="{% url 'nurses:procedure_delete' procedure.id %}" class="btn btn-danger">
                                     <i class="fas fa-trash mr-1"></i> Удалить
                                 </a>
-                                <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">
+                                <a href="{% url 'nurses:main_prescription_list' history.id %}" class="btn btn-default">
                                     <i class="fas fa-arrow-left mr-1"></i> Назад к списку
                                 </a>
                             </div>
@@ -231,7 +231,7 @@
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
-                                        {#                                <form id="updateSessionForm{{ session.id }}" method="post" action="{% url 'update_session_status' session.id %}">#}
+                                        {#                                <form id="updateSessionForm{{ session.id }}" method="post" action="{% url 'nurses:update_session_status' session.id %}">#}
                                         {#                                    {% csrf_token %}#}
                                         {#                                    <div class="modal-body">#}
                                         {#                                        <div class="form-group">#}
@@ -254,7 +254,7 @@
                                         {#                                </form>#}
 
                                         <form id="updateSessionForm{{ session.id }}" method="post"
-                                              action="{% url 'update_session_status' session.id %}">
+                                              action="{% url 'nurses:update_session_status' session.id %}">
                                             {% csrf_token %}
                                             <!-- Hidden field to store current URL -->
                                             <input type="hidden"

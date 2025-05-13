@@ -11,7 +11,7 @@ from application.sanatorium.forms.cardiologist_app_form import ConsultingWithCar
 
 class CardiologistConsultingListView(LoginRequiredMixin, ListView):
     model = ConsultingWithCardiologistModel
-    template_name = 'sanatorium/doctors/appointments/cardiologist/list.html'
+    template_name = 'sanatorium/nurses/appointments/cardiologist/list.html'
     context_object_name = 'consultings'
 
     def get_queryset(self):
@@ -28,7 +28,7 @@ class CardiologistConsultingListView(LoginRequiredMixin, ListView):
 
 class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
     model = ConsultingWithCardiologistModel
-    template_name = 'sanatorium/doctors/appointments/cardiologist/detail.html'
+    template_name = 'sanatorium/nurses/appointments/cardiologist/detail.html'
     context_object_name = 'consulting'
 
     def get_context_data(self, **kwargs):
@@ -43,7 +43,7 @@ class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
 class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
     model = ConsultingWithCardiologistModel
     form_class = ConsultingWithCardiologistForm
-    template_name = 'sanatorium/doctors/appointments/cardiologist/form.html'
+    template_name = 'sanatorium/nurses/appointments/cardiologist/form.html'
 
     def get_success_url(self):
         return reverse_lazy('cardiologist_consulting_detail',
@@ -66,7 +66,7 @@ class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
 class CardiologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
     model = ConsultingWithCardiologistModel
     form_class = ConsultingWithCardiologistForm
-    template_name = 'sanatorium/doctors/appointments/cardiologist/form.html'
+    template_name = 'sanatorium/nurses/appointments/cardiologist/form.html'
 
     def get_success_url(self):
         return reverse_lazy('cardiologist_consulting_detail',

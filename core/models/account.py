@@ -78,7 +78,7 @@ class Account(AbstractBaseUser):
             return RolesModel.RECEPTIONIST
         elif self.has_role(RolesModel.DOCTOR):
             return RolesModel.DOCTOR
-        return None
+        return self.roles.first()
 
     # For checking permissions. to keep it simple all admin have ALL permissons
     def has_perm(self, perm, obj=None):

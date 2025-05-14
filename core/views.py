@@ -11,7 +11,8 @@ from core.forms import LoginForm  # We'll create this next
 
 # Move this to settings.py for better organization
 USER_ROLE_REDIRECTS = {
-    'doctor': 'doctors_main_screen'
+    'doctor': 'doctors_main_screen',
+    'nurse': 'nurses:nurses_main_screen',
 }
 
 # Default if no role match is found
@@ -44,7 +45,6 @@ def login_view(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             user = authenticate(request, email=email, password=password)
-            print(user.get_main_role, '----------------')
             if user is not None and user.is_active:
                 login(request, user)
                 next_url = request.GET.get('next')
@@ -70,8 +70,6 @@ def redirect_by_role(user):
     """Redirect user based on their primary role"""
     main_role = user.get_main_role()
 
-    print(main_role, '===============', user.roles.all())
-
     if main_role == RolesModel.ADMIN:
         return redirect('admin_dashboard')
     elif main_role == RolesModel.MANAGER:
@@ -82,8 +80,9 @@ def redirect_by_role(user):
         return redirect('logus_dashboard')
     elif main_role == RolesModel.DOCTOR:
         return redirect('doctors_main_screen')
-    # Default fallback
-    return redirect('default_dashboard')
+
+    redirect_path = USER_ROLE_REDIRECTS.get(main_role.name, 'default_dashboard')
+    return redirect(redirect_path)
 
 
 @login_required

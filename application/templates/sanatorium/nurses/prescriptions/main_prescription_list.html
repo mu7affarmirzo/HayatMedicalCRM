@@ -1,10 +1,10 @@
-{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% extends 'sanatorium/nurses/snippets/base.html' %}
 {% load static %}
 
 {% block title %}Основной лист назначений | Hayat Medical Center{% endblock %}
 
 {% block extra_css %}
-    {% include 'sanatorium/doctors/prescriptions/partials/prescription_styles.html' %}
+    {% include 'sanatorium/nurses/prescriptions/partials/prescription_styles.html' %}
 {% endblock %}
 
 {% block content %}
@@ -32,7 +32,7 @@
     <section class="content">
         <div class="container-fluid">
             <!-- Info boxes -->
-            {% include 'sanatorium/doctors/prescriptions/partials/info_boxes.html' %}
+            {% include 'sanatorium/nurses/prescriptions/partials/info_boxes.html' %}
 
             <!-- Tab navigation -->
             <div class="card">
@@ -51,22 +51,22 @@
                     <div class="tab-content">
                         <!-- Consultations Tab -->
                         <div class="tab-pane active" id="consultations">
-                            {% include 'sanatorium/doctors/prescriptions/partials/consultations.html' %}
+                            {% include 'sanatorium/nurses/prescriptions/partials/consultations.html' %}
                         </div>
 
                         <!-- Labs Tab -->
                         <div class="tab-pane" id="labs">
-                            {% include 'sanatorium/doctors/prescriptions/partials/labs/lab_research.html' %}
+                            {% include 'sanatorium/nurses/prescriptions/partials/labs/lab_research.html' %}
                         </div>
 
                         <!-- Procedures Tab -->
                         <div class="tab-pane" id="procedures">
-                            {% include 'sanatorium/doctors/prescriptions/partials/procedures.html' %}
+                            {% include 'sanatorium/nurses/prescriptions/partials/procedures.html' %}
                         </div>
 
                         <!-- Medications Tab -->
                         <div class="tab-pane" id="medications">
-                            {% include 'sanatorium/doctors/prescriptions/partials/medications.html' %}
+                            {% include 'sanatorium/nurses/prescriptions/partials/medications.html' %}
                         </div>
                     </div>
                 </div>
@@ -75,14 +75,14 @@
     </section>
 
     <!-- Modal Dialogs -->
-    {% include 'sanatorium/doctors/prescriptions/partials/labs/lab_modals.html' %}
-    {% include 'sanatorium/doctors/prescriptions/partials/consultation_modal.html' %}
-    {% include 'sanatorium/doctors/prescriptions/partials/procedure_modals.html' %}
-    {% include 'sanatorium/doctors/prescriptions/partials/medication_modals.html' %}
+    {% include 'sanatorium/nurses/prescriptions/partials/labs/lab_modals.html' %}
+    {% include 'sanatorium/nurses/prescriptions/partials/consultation_modal.html' %}
+    {% include 'sanatorium/nurses/prescriptions/partials/procedure_modals.html' %}
+    {% include 'sanatorium/nurses/prescriptions/partials/medication_modals.html' %}
 {% endblock %}
 
 {% block extra_js %}
-    {% include 'sanatorium/doctors/prescriptions/partials/prescription_scripts.html' %}
+    {% include 'sanatorium/nurses/prescriptions/partials/prescription_scripts.html' %}
     {% comment %} Add this to prescription_scripts.html {% endcomment %}
 
 {% endblock %}

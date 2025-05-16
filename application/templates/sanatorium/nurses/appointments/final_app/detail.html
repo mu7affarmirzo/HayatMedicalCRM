@@ -1,4 +1,4 @@
-{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% extends 'sanatorium/nurses/snippets/base.html' %}
 {% load static %}
 
 {% block title %}Заключительный приём #{{ appointment.id }} | {{ appointment.illness_history.patient.full_name }}{% endblock %}
@@ -64,7 +64,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:doctors_main_screen' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'nurses:nurses_main_screen' %}">Главная</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
                     <li class="breadcrumb-item active">Заключительный приём</li>
                 </ol>

@@ -1,4 +1,4 @@
-{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% extends 'sanatorium/nurses/snippets/base.html' %}
 {% load static %}
 
 {% block title %}Повторные приёмы врача{% endblock %}
@@ -13,7 +13,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:doctors_main_screen' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'nurses:nurses_main_screen' %}">Главная</a></li>
                     <li class="breadcrumb-item active">Повторные приёмы</li>
                 </ol>
             </div>

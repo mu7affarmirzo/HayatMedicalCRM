@@ -1,13 +1,5 @@
 {% load static %}
 
-<div class="row mb-3">
-    <div class="col-md-12">
-        <a href="{% url 'nurses:procedure_create' history.id %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Добавить лечебную процедуру
-        </a>
-    </div>
-</div>
-
 {% if procedures %}
     <div class="table-responsive">
         <table class="table table-bordered table-hover">

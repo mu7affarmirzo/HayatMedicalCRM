@@ -1,4 +1,4 @@
-{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% extends 'sanatorium/nurses/snippets/base.html' %}
 {% load static %}
 
 {% block title %}Документы - История болезни #{{ history.id }}{% endblock %}
@@ -71,28 +71,28 @@
                 <div class="tab-content">
                     <!-- All Documents Tab -->
                     <div class="tab-pane active" id="all-documents">
-                        {% include "sanatorium/doctors/documents/components/document_filters.html" %}
-                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=all_documents %}
+                        {% include "sanatorium/nurses/documents/components/document_filters.html" %}
+                        {% include "sanatorium/nurses/documents/components/document_list.html" with documents=all_documents %}
                     </div>
                     
                     <!-- Medical Results Tab -->
                     <div class="tab-pane" id="medical-results">
-                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=medical_results %}
+                        {% include "sanatorium/nurses/documents/components/document_list.html" with documents=medical_results %}
                     </div>
                     
                     <!-- Consents Tab -->
                     <div class="tab-pane" id="consents">
-                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=consents %}
+                        {% include "sanatorium/nurses/documents/components/document_list.html" with documents=consents %}
                     </div>
                     
                     <!-- Reports Tab -->
                     <div class="tab-pane" id="reports">
-                        {% include "sanatorium/doctors/documents/components/document_list.html" with documents=reports %}
+                        {% include "sanatorium/nurses/documents/components/document_list.html" with documents=reports %}
                     </div>
                     
                     <!-- Upload New Document Tab -->
                     <div class="tab-pane" id="upload-new">
-                        {% include "sanatorium/doctors/documents/components/document_upload.html" %}
+                        {% include "sanatorium/nurses/documents/components/document_upload.html" %}
                     </div>
                 </div>
             </div>
@@ -101,10 +101,10 @@
 </section>
 
 <!-- Document Preview Modal -->
-{% include "sanatorium/doctors/documents/components/document_preview_modal.html" %}
+{% include "sanatorium/nurses/documents/components/document_preview_modal.html" %}
 
 <!-- Document Delete Confirmation Modal -->
-{% include "sanatorium/doctors/documents/components/document_delete_modal.html" %}
+{% include "sanatorium/nurses/documents/components/document_delete_modal.html" %}
 
 {% endblock %}
 

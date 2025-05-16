@@ -66,16 +66,10 @@
                         </ul>
 
                         <div class="row">
-                            <div class="col-6">
-                                <a href="#" class="btn btn-primary btn-block">
-                                    <i class="fas fa-edit"></i> Редактировать
-                                </a>
-                            </div>
+
                             <div class="col-6">
                                 {% if history.state != 'closed' %}
-                                <a href="#" class="btn btn-warning btn-block">
-                                    <i class="fas fa-check-circle"></i> Закрыть
-                                </a>
+
                                 {% else %}
                                 <button class="btn btn-secondary btn-block" disabled>
                                     <i class="fas fa-check-circle"></i> Закрыто

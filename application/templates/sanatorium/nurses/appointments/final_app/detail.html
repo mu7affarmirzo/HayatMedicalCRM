@@ -249,12 +249,7 @@
             </div>
 
             <div class="card-footer">
-                <a href="{% url 'nurses:final_appointment_update' appointment.id %}" class="btn btn-warning">
-                    <i class="fas fa-edit mr-1"></i> Редактировать
-                </a>
-{#                <a href="{% url 'nurses:repeated_appointment_delete' appointment.id %}" class="btn btn-danger">#}
-{#                    <i class="fas fa-trash mr-1"></i> Удалить#}
-{#                </a>#}
+
                 <a href="{% url 'nurses:illness_history_detail' appointment.illness_history.id %}" class="btn btn-default float-right">
                     <i class="fas fa-arrow-left mr-1"></i> Назад к истории болезни
                 </a>

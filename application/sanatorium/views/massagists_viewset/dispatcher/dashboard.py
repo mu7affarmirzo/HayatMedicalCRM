@@ -1,10 +1,13 @@
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q, Count
 from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
 
 from core.models import ProcedureServiceModel, IndividualProcedureSessionModel, Account, Service
 
@@ -116,14 +119,12 @@ def procedure_edit(request, procedure_id):
             procedure.therapist = None
 
         procedure.quantity = int(request.POST.get('quantity', procedure.quantity))
-        procedure.start_date = request.POST.get('start_date')
-        procedure.frequency = request.POST.get('frequency')
         procedure.comments = request.POST.get('comments')
 
         procedure.save()
 
         messages.success(request, f'Процедура #{procedure.id} успешно обновлена')
-        return redirect('procedure_detail', procedure_id=procedure.id)
+        return redirect('massagist:procedure_detail', procedure_id=procedure.id)
 
     context = {
         'procedure': procedure,
@@ -133,6 +134,84 @@ def procedure_edit(request, procedure_id):
     }
 
     return render(request, 'sanatorium/massagists/dispatcher/procedure_edit.html', context)
+
+
+@login_required
+@require_POST
+def update_session_status(request, session_id):
+    """AJAX view for updating a procedure session status"""
+    next_url = request.POST.get('next', '')
+
+    session = get_object_or_404(IndividualProcedureSessionModel, id=session_id)
+
+    status = request.POST.get('status')
+    notes = request.POST.get('notes', '')
+
+    if status not in [choice[0] for choice in IndividualProcedureSessionModel.STATUS_CHOICES]:
+        return JsonResponse({
+            'success': False,
+            'message': 'Некорректный статус'
+        }, status=400)
+
+    # Save old status to check if it changed
+    old_status = session.status
+
+    # Update session data
+    session.status = status
+    session.notes = notes
+
+    # Process therapist assignment
+    therapist_id = request.POST.get('therapist_id')
+    if therapist_id:
+        try:
+            therapist = Account.objects.get(id=therapist_id, is_therapist=True)
+            session.therapist = therapist
+        except Account.DoesNotExist:
+            # Silently ignore invalid therapist ID
+            pass
+
+    # Process scheduled time
+    scheduled_to_str = request.POST.get('scheduled_to')
+    if scheduled_to_str:
+        try:
+            # Parse the DD.MM.YYYY HH:MM format
+            scheduled_to = datetime.strptime(scheduled_to_str, '%d.%m.%Y %H:%M')
+            # Make timezone aware
+            if timezone.is_naive(scheduled_to):
+                scheduled_to = timezone.make_aware(scheduled_to)
+            session.scheduled_to = scheduled_to
+        except ValueError:
+            # If there's an error parsing, log it but continue
+            print(f"Error parsing scheduled_to date: {scheduled_to_str}")
+
+    # If marking as completed, set completed time
+    completed_at = None
+    if status == 'completed' and old_status != 'completed':
+        now = timezone.now()
+        session.completed_at = now
+        session.completed_by = request.user
+        completed_at = now.strftime('%d.%m.Y %H:%M')
+
+    # If changing from completed to another status, clear completed time
+    if old_status == 'completed' and status != 'completed':
+        session.completed_at = None
+        session.completed_by = None
+
+    session.save()
+
+    # Update parent procedure progress
+    procedure = session.assigned_procedure
+    update_procedure_progress(procedure)
+
+    if next_url:
+        return redirect(next_url)
+
+    url = reverse(
+        'massagists:procedure_detail',
+        kwargs={'procedure_id': procedure.pk}  # →  "prescription_urls/1"
+    )
+
+    return redirect(f"{url}")
 
 
 @login_required
@@ -385,3 +464,21 @@ def cancel_session(request):
 
     # If not POST, redirect to dashboard
     return redirect('dispatcher_dashboard')
+
+
+def update_procedure_progress(procedure):
+    """Update the procedure progress based on completed sessions"""
+    completed_count = procedure.individual_sessions.filter(status='completed').count()
+
+    # Update procedure state based on completed sessions
+    total_sessions = procedure.quantity
+
+    if completed_count == 0:
+        procedure.state = 'pending'
+    elif completed_count < total_sessions:
+        procedure.state = 'in_progress'
+    else:
+        procedure.state = 'completed'
+
+    procedure.proceeded_sessions = completed_count
+    procedure.save()

@@ -1,429 +1,735 @@
-{% extends 'snippets/base.html' %}
+{% extends 'sanatorium/snippets/massagist_dispatcher_base.html' %}
 {% load static %}
 {% block title %}Календарь процедур - Hayat Medical Center{% endblock %}
 {% block extra_css %}
-<!-- FullCalendar -->
-<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fullcalendar/main.min.css' %}">
-<style>
-    .fc-event {
-        cursor: pointer;
-    }
-    
-    .fc-event-title {
-        font-weight: bold;
-    }
-    
-    .fc-event-pending {
-        background-color: #ffc107;
-        border-color: #e0a800;
-    }
-    
-    .fc-event-completed {
-        background-color: #28a745;
-        border-color: #1e7e34;
-    }
-    
-    .fc-event-canceled {
-        background-color: #dc3545;
-        border-color: #bd2130;
-        text-decoration: line-through;
-    }
-    
-    .procedure-details {
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .filter-sidebar {
-        height: 100%;
-    }
-    
-    .event-legend {
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 15px;
-    }
-    
-    .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-    
-    .legend-color {
-        width: 15px;
-        height: 15px;
-        border-radius: 3px;
-        margin-right: 8px;
-    }
-</style>
+    <!-- FullCalendar -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fullcalendar/main.min.css' %}">
+    <style>
+        .fc-event {
+            cursor: pointer;
+        }
+
+        .fc-event-title {
+            font-weight: bold;
+        }
+
+        .fc-event-pending {
+            background-color: #ffc107;
+            border-color: #e0a800;
+        }
+
+        .fc-event-completed {
+            background-color: #28a745;
+            border-color: #1e7e34;
+        }
+
+        .fc-event-canceled {
+            background-color: #dc3545;
+            border-color: #bd2130;
+            text-decoration: line-through;
+        }
+
+        .procedure-details {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .filter-sidebar {
+            height: 100%;
+        }
+
+        .event-legend {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+    </style>
+    <style>
+        .status-pending {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .status-in_progress {
+            background-color: #17a2b8;
+            color: #fff;
+        }
+
+        .status-completed {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .status-canceled {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .session-card {
+            transition: all 0.3s ease;
+        }
+
+        .session-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .session-completed {
+            border-left: 4px solid #28a745;
+        }
+
+        .session-pending {
+            border-left: 4px solid #ffc107;
+        }
+
+        .session-canceled {
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+
 {% endblock %}
 {% block content %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Календарь процедур</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'massagist:dispatcher_dashboard' %}">Диспетчер процедур</a></li>
-                    <li class="breadcrumb-item active">Календарь</li>
-                </ol>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Календарь процедур</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'massagist:dispatcher_dashboard' %}">Диспетчер
+                            процедур</a></li>
+                        <li class="breadcrumb-item active">Календарь</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<!-- /.content-header -->
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Filter Sidebar -->
-            <div class="col-md-3">
-                <div class="sticky-top filter-sidebar">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Фильтры</h3>
-                        </div>
-                        <div class="card-body">
-                            <form id="filter-form">
-                                <div class="form-group">
-                                    <label>Статус сеанса:</label>
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="status-pending" checked>
-                                        <label class="custom-control-label" for="status-pending">Ожидает</label>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Filter Sidebar -->
+                <div class="col-md-3">
+                    <div class="sticky-top filter-sidebar">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Фильтры</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="filter-form">
+                                    <div class="form-group">
+                                        <label>Статус сеанса:</label>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="status-pending"
+                                                   checked>
+                                            <label class="custom-control-label" for="status-pending">Ожидает</label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="status-completed"
+                                                   checked>
+                                            <label class="custom-control-label" for="status-completed">Проведен</label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="status-canceled"
+                                                   checked>
+                                            <label class="custom-control-label" for="status-canceled">Отменен</label>
+                                        </div>
                                     </div>
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="status-completed" checked>
-                                        <label class="custom-control-label" for="status-completed">Проведен</label>
+                                    <div class="form-group">
+                                        <label>Терапевт:</label>
+                                        <select class="form-control" id="therapist-filter">
+                                            <option value="all">Все терапевты</option>
+                                            {% for therapist in therapists %}
+                                                <option value="{{ therapist.id }}">{{ therapist.full_name }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="status-canceled" checked>
-                                        <label class="custom-control-label" for="status-canceled">Отменен</label>
+
+                                    <div class="form-group">
+                                        <button type="button" id="apply-filters" class="btn btn-primary btn-block">
+                                            <i class="fas fa-filter mr-1"></i> Применить фильтры
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Legend -->
+                                <div class="event-legend bg-light">
+                                    <h5>Обозначения:</h5>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #ffc107;"></div>
+                                        <span>Ожидает</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #28a745;"></div>
+                                        <span>Проведен</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #dc3545;"></div>
+                                        <span>Отменен</span>
                                     </div>
                                 </div>
-                            <div class="form-group">
-                                <label>Терапевт:</label>
-                                <select class="form-control" id="therapist-filter">
-                                    <option value="all">Все терапевты</option>
-                                    {% for therapist in therapists %}
-                                    <option value="{{ therapist.id }}">{{ therapist.full_name }}</option>
-                                    {% endfor %}
-                                </select>
                             </div>
-                            
-                            <div class="form-group">
-                                <button type="button" id="apply-filters" class="btn btn-primary btn-block">
-                                    <i class="fas fa-filter mr-1"></i> Применить фильтры
-                                </button>
+                        </div>
+
+                        <!-- Statistics Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Статистика на текущую неделю</h3>
                             </div>
-                        </form>
-                        
-                        <!-- Legend -->
-                        <div class="event-legend bg-light">
-                            <h5>Обозначения:</h5>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #ffc107;"></div>
-                                <span>Ожидает</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #28a745;"></div>
-                                <span>Проведен</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #dc3545;"></div>
-                                <span>Отменен</span>
+                            <div class="card-body p-0">
+                                <table class="table table-striped">
+                                    <tr>
+                                        <td>Ожидает сеансов:</td>
+                                        <td><span class="badge badge-warning">{{ pending_sessions_week }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Проведено сеансов:</td>
+                                        <td><span class="badge badge-success">{{ completed_sessions_week }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Отменено сеансов:</td>
+                                        <td><span class="badge badge-danger">{{ cancelled_sessions_week }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Загруженность:</td>
+                                        <td>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-primary"
+                                                     style="width: {{ occupancy_percentage }}%"></div>
+                                            </div>
+                                            <small>{{ occupancy_percentage }}%</small>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Statistics Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Статистика на текущую неделю</h3>
+
+                <!-- Calendar -->
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="calendar"></div>
+                        </div>
                     </div>
-                    <div class="card-body p-0">
-                        <table class="table table-striped">
-                            <tr>
-                                <td>Ожидает сеансов:</td>
-                                <td><span class="badge badge-warning">{{ pending_sessions_week }}</span></td>
-                            </tr>
-                            <tr>
-                                <td>Проведено сеансов:</td>
-                                <td><span class="badge badge-success">{{ completed_sessions_week }}</span></td>
-                            </tr>
-                            <tr>
-                                <td>Отменено сеансов:</td>
-                                <td><span class="badge badge-danger">{{ cancelled_sessions_week }}</span></td>
-                            </tr>
-                            <tr>
-                                <td>Загруженность:</td>
-                                <td>
-                                    <div class="progress progress-sm">
-                                        <div class="progress-bar bg-primary" style="width: {{ occupancy_percentage }}%"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-alt mr-2"></i>Сеансы
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for session in sessions %}
+                            <div class="col-md-4">
+                                <div class="card session-card session-{{ session.status }}">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Сеанс #{{ session.session_number }}</h3>
+                                        <div class="card-tools">
+                                            <span class="badge status-{{ session.status }}">{{ session.get_status_display }}</span>
+                                        </div>
                                     </div>
-                                    <small>{{ occupancy_percentage }}%</small>
-                                </td>
+                                    <div class="card-body">
+                                        <dl class="row mb-0">
+                                            <dt class="col-sm-5">Статус:</dt>
+                                            <dd class="col-sm-7">{{ session.get_status_display }}</dd>
+
+                                            {% if session.therapist %}
+                                                <dt class="col-sm-5">Терапевт:</dt>
+                                                <dd class="col-sm-7">{{ session.therapist.full_name }}</dd>
+                                            {% endif %}
+
+                                            <dt class="col-sm-5">Запланирован:</dt>
+                                            <dd class="col-sm-7">{{ session.scheduled_to|date:"d.m.Y H:i" }}</dd>
+
+                                            {% if session.completed_at %}
+                                                <dt class="col-sm-5">Проведен:</dt>
+                                                <dd class="col-sm-7">{{ session.completed_at|date:"d.m.Y H:i" }}</dd>
+                                            {% endif %}
+
+                                            {% if session.completed_by %}
+                                                <dt class="col-sm-5">Выполнил:</dt>
+                                                <dd class="col-sm-7">{{ session.completed_by.full_name }}</dd>
+                                            {% endif %}
+                                        </dl>
+
+                                        {% if session.notes %}
+                                            <div class="mt-2">
+                                                <strong>Примечания:</strong>
+                                                <p class="mb-0">{{ session.notes }}</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        <button class="btn btn-sm btn-primary update-session-btn"
+                                                data-session-id="{{ session.id }}"
+                                                data-toggle="modal"
+                                                data-target="#editSessionModal{{ session.id }}">
+                                            <i class="fas fa-edit mr-1"></i> Изменить статус
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Edit Session Modal -->
+                            <div class="modal fade" id="editSessionModal{{ session.id }}" tabindex="-1" role="dialog"
+                                 aria-labelledby="editSessionModalLabel{{ session.id }}" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editSessionModalLabel{{ session.id }}">Изменить
+                                                статус сеанса #{{ session.session_number }}</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+
+                                        <form id="updateSessionForm{{ session.id }}" method="post"
+      action="{% url 'massagist:update_session_status' session.id %}">
+    {% csrf_token %}
+    <!-- Hidden field to store current URL -->
+    <input type="hidden"
+           name="next"
+           value="{{ request.get_full_path }}#procedures">
+    <div class="modal-body">
+        <!-- Therapist selection field -->
+        <div class="form-group">
+            <label for="therapist{{ session.id }}">Терапевт:</label>
+            <select class="form-control" id="therapist{{ session.id }}" name="therapist_id">
+                <option value="">-- Выберите терапевта --</option>
+                {% for therapist in therapists %}
+                    <option value="{{ therapist.id }}"
+                            {% if session.therapist and session.therapist.id == therapist.id %}selected{% endif %}>
+                        {{ therapist.full_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    <!-- Scheduled time field -->
+    <div class="form-group">
+        <label for="scheduledTo{{ session.id }}">Запланированное время:</label>
+        <div class="input-group date" id="scheduledToDatetimePicker{{ session.id }}" data-target-input="nearest">
+            <input type="text" class="form-control datetimepicker-input"
+                   id="scheduledTo{{ session.id }}"
+                   name="scheduled_to"
+                   data-target="#scheduledToDatetimePicker{{ session.id }}"
+                   value="{% if session.scheduled_to %}{{ session.scheduled_to|date:'d.m.Y H:i' }}{% endif %}">
+            <div class="input-group-append" data-target="#scheduledToDatetimePicker{{ session.id }}" data-toggle="datetimepicker">
+                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status selection -->
+    <div class="form-group">
+        <label for="status{{ session.id }}">Статус:</label>
+        <select class="form-control" id="status{{ session.id }}"
+                name="status">
+            <option value="pending"
+                    {% if session.status == 'pending' %}selected{% endif %}>
+                Ожидает
+            </option>
+            <option value="completed"
+                    {% if session.status == 'completed' %}selected{% endif %}>
+                Выполнен
+            </option>
+            <option value="canceled"
+                    {% if session.status == 'canceled' %}selected{% endif %}>
+                Отменен
+            </option>
+        </select>
+    </div>
+
+    <!-- Notes field -->
+    <div class="form-group">
+        <label for="notes{{ session.id }}">Примечания:</label>
+        <textarea class="form-control" id="notes{{ session.id }}"
+                  name="notes" rows="3">{{ session.notes }}</textarea>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+        Закрыть
+    </button>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</div>
+</form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    Нет сеансов для данной процедуры.
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Session Details Modal -->
+    <div class="modal fade" id="session-details-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Детали сеанса</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="procedure-details">
+                        <h6>Информация о процедуре:</h6>
+                        <p><strong>Услуга:</strong> <span id="detail-service"></span></p>
+                        <p><strong>Пациент:</strong> <span id="detail-patient"></span></p>
+                        <p><strong>История болезни:</strong> <span id="detail-illness-history"></span></p>
+                    </div>
+                    <h6>Информация о сеансе:</h6>
+                    <p><strong>Номер сеанса:</strong> <span id="detail-session-number"></span></p>
+                    <p><strong>Статус:</strong> <span id="detail-status"></span></p>
+                    <p><strong>Терапевт:</strong> <span id="detail-therapist"></span></p>
+                    <p><strong>Запланировано:</strong> <span id="detail-scheduled"></span></p>
+                    <p><strong>Проведено:</strong> <span id="detail-completed"></span></p>
+
+                    <div class="form-group">
+                        <label>Примечания:</label>
+                        <div class="p-2 bg-light rounded" id="detail-notes"></div>
+                    </div>
+
+                    <div id="session-actions" class="mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <a id="view-procedure-link" href="#" class="btn btn-info">
+                        <i class="fas fa-eye mr-1"></i> Просмотр процедуры
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Complete Session Modal -->
+    <div class="modal fade" id="complete-calendar-session-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Отметить сеанс как проведенный</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post" action="{% url 'massagist:complete_session' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="session_id" id="complete-calendar-session-id">
+                        <div class="form-group">
+                            <label>Дата и время проведения:</label>
+                            <div class="input-group date" id="calendar-completed-at" data-target-input="nearest">
+                                <input type="text" class="form-control datetimepicker-input" name="completed_at"
+                                       data-target="#calendar-completed-at" required>
+                                <div class="input-group-append" data-target="#calendar-completed-at"
+                                     data-toggle="datetimepicker">
+                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Примечания:</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-success">Отметить как проведенный</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Cancel Session Modal -->
+    <div class="modal fade" id="cancel-calendar-session-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Отменить сеанс</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post" action="{% url 'massagist:cancel_session' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="session_id" id="cancel-calendar-session-id">
+                        <p>Вы уверены, что хотите отменить этот сеанс?</p>
+
+                        <div class="form-group">
+                            <label>Причина отмены:</label>
+                            <textarea class="form-control" name="cancel_reason" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                        <button type="submit" class="btn btn-danger">Отменить сеанс</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sessionModal{{ procedure.id }}" tabindex="-1" role="dialog"
+         aria-labelledby="sessionModalLabel{{ procedure.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sessionModalLabel{{ procedure.id }}">Управление сеансами
+                        - {{ procedure.medical_service.name }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Статус</th>
+                                <th>Терапевт</th>
+                                <th>Дата выполнения</th>
+                                <th>Действия</th>
                             </tr>
+                            </thead>
+                            <tbody>
+                            {% for session in sessions %}
+                                <tr class="{% if session.status == 'completed' %}table-success{% elif session.status == 'canceled' %}table-danger{% endif %}">
+                                    <td>{{ session.session_number }}</td>
+                                    <td>
+                                    <span class="badge status-{{ session.status }}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                    </td>
+                                    <td>{{ session.therapist.full_name|default:"-" }}</td>
+                                    <td>{{ session.completed_at|date:"d.m.Y H:i"|default:"-" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary update-session-btn"
+                                                data-session-id="{{ session.id }}"
+                                                data-toggle="modal"
+                                                data-target="#editSessionModal{{ session.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Calendar -->
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-body">
-                    <div id="calendar"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
-</section>
-<!-- Session Details Modal -->
-<div class="modal fade" id="session-details-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Детали сеанса</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="procedure-details">
-                    <h6>Информация о процедуре:</h6>
-                    <p><strong>Услуга:</strong> <span id="detail-service"></span></p>
-                    <p><strong>Пациент:</strong> <span id="detail-patient"></span></p>
-                    <p><strong>История болезни:</strong> <span id="detail-illness-history"></span></p>
-                </div>
-            <h6>Информация о сеансе:</h6>
-            <p><strong>Номер сеанса:</strong> <span id="detail-session-number"></span></p>
-            <p><strong>Статус:</strong> <span id="detail-status"></span></p>
-            <p><strong>Терапевт:</strong> <span id="detail-therapist"></span></p>
-            <p><strong>Запланировано:</strong> <span id="detail-scheduled"></span></p>
-            <p><strong>Проведено:</strong> <span id="detail-completed"></span></p>
-            
-            <div class="form-group">
-                <label>Примечания:</label>
-                <div class="p-2 bg-light rounded" id="detail-notes"></div>
-            </div>
-            
-            <div id="session-actions" class="mt-3"></div>
-        </div>
-        <div class="modal-footer">
-            <a id="view-procedure-link" href="#" class="btn btn-info">
-                <i class="fas fa-eye mr-1"></i> Просмотр процедуры
-            </a>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-        </div>
-    </div>
-</div>
-</div>
-<!-- Complete Session Modal -->
-<div class="modal fade" id="complete-calendar-session-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Отметить сеанс как проведенный</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="post" action="{% url 'massagist:complete_session' %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <input type="hidden" name="session_id" id="complete-calendar-session-id">
-                <div class="form-group">
-                    <label>Дата и время проведения:</label>
-                    <div class="input-group date" id="calendar-completed-at" data-target-input="nearest">
-                        <input type="text" class="form-control datetimepicker-input" name="completed_at" data-target="#calendar-completed-at" required>
-                        <div class="input-group-append" data-target="#calendar-completed-at" data-toggle="datetimepicker">
-                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Примечания:</label>
-                    <textarea class="form-control" name="notes" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
-                <button type="submit" class="btn btn-success">Отметить как проведенный</button>
-            </div>
-        </form>
-    </div>
-</div>
-</div>
-<!-- Cancel Session Modal -->
-<div class="modal fade" id="cancel-calendar-session-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Отменить сеанс</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="post" action="{% url 'massagist:cancel_session' %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <input type="hidden" name="session_id" id="cancel-calendar-session-id">
-                <p>Вы уверены, что хотите отменить этот сеанс?</p>
-                
-                <div class="form-group">
-                    <label>Причина отмены:</label>
-                    <textarea class="form-control" name="cancel_reason" rows="3" required></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                <button type="submit" class="btn btn-danger">Отменить сеанс</button>
-            </div>
-        </form>
-    </div>
-</div>
-</div>
+
 {% endblock %}
 {% block extra_js %}
-<!-- FullCalendar -->
-<script src="{% static 'adminlte3_assets/plugins/fullcalendar/main.min.js' %}"></script>
-<script src="{% static 'adminlte3_assets/plugins/fullcalendar/locales/ru.js' %}"></script>
-<script>
-$(function () {
-    // Initialize date pickers
-    $('#calendar-completed-at').datetimepicker({
-        format: 'DD.MM.YYYY HH:mm',
-        icons: {
-            time: 'far fa-clock',
-            date: 'far fa-calendar',
-            up: 'fas fa-arrow-up',
-            down: 'fas fa-arrow-down',
-            previous: 'fas fa-chevron-left',
-            next: 'fas fa-chevron-right',
-            today: 'fas fa-calendar-check',
-            clear: 'far fa-trash-alt',
-            close: 'far fa-times-circle'
-        }
+    <!-- FullCalendar -->
+    <script src="{% static 'adminlte3_assets/plugins/fullcalendar/main.min.js' %}"></script>
+    <script src="{% static 'adminlte3_assets/plugins/fullcalendar/locales/ru.js' %}"></script>
+    <script>
+        // Add this to your JavaScript section
+$(function() {
+    // Initialize all datetimepickers
+    $('.date').each(function() {
+        $(this).datetimepicker({
+            format: 'DD.MM.YYYY HH:mm',
+            icons: {
+                time: 'far fa-clock',
+                date: 'far fa-calendar',
+                up: 'fas fa-arrow-up',
+                down: 'fas fa-arrow-down',
+                previous: 'fas fa-chevron-left',
+                next: 'fas fa-chevron-right',
+                today: 'fas fa-calendar-check',
+                clear: 'far fa-trash-alt',
+                close: 'far fa-times-circle'
+            }
+        });
     });
-    
-    // Initialize calendar
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        initialView: 'timeGridWeek',
-        locale: 'ru',
-        slotMinTime: '08:00:00',
-        slotMaxTime: '20:00:00',
-        allDaySlot: false,
-        height: 'auto',
-        navLinks: true,
-        selectable: true,
-        selectMirror: true,
-        dayMaxEvents: true,
-        eventClick: function(info) {
-            showSessionDetails(info.event);
-        },
-        events: function(fetchInfo, successCallback, failureCallback) {
-            // Get filter values
-            var statusFilters = [];
-            if ($('#status-pending').is(':checked')) statusFilters.push('pending');
-            if ($('#status-completed').is(':checked')) statusFilters.push('completed');
-            if ($('#status-canceled').is(':checked')) statusFilters.push('canceled');
-            
-            var therapistFilter = $('#therapist-filter').val();
-            
-            // Make AJAX request to load events
-            $.ajax({
-                url: '{% url "massagist:calendar_events" %}',
-                data: {
-                    start: fetchInfo.startStr,
-                    end: fetchInfo.endStr,
-                    status: statusFilters.join(','),
-                    therapist: therapistFilter === 'all' ? '' : therapistFilter
-                },
-                success: function(result) {
-                    var events = [];
-                    
-                    // Transform data into FullCalendar events
-                    $.each(result.events, function(i, item) {
-                        var eventClass = 'fc-event-pending';
-                        
-                        if (item.status === 'completed') {
-                            eventClass = 'fc-event-completed';
-                        } else if (item.status === 'canceled') {
-                            eventClass = 'fc-event-canceled';
-                        }
-                        
-                        events.push({
-                            id: item.id,
-                            title: item.title,
-                            start: item.start,
-                            end: item.end,
-                            className: eventClass,
-                            extendedProps: {
-                                sessionData: item
-                            }
-                        });
-                    });
-                    
-                    successCallback(events);
-                },
-                error: function() {
-                    failureCallback();
+
+    // If you're dynamically opening modals, you might need to reinitialize on modal show
+    $('.modal').on('shown.bs.modal', function() {
+        $(this).find('.date').each(function() {
+            // Reinstantiate datetimepicker if needed
+            if (!$(this).data('datetimepicker')) {
+                $(this).datetimepicker({
+                    format: 'DD.MM.YYYY HH:mm',
+                    icons: {
+                        time: 'far fa-clock',
+                        date: 'far fa-calendar',
+                        up: 'fas fa-arrow-up',
+                        down: 'fas fa-arrow-down',
+                        previous: 'fas fa-chevron-left',
+                        next: 'fas fa-chevron-right',
+                        today: 'fas fa-calendar-check',
+                        clear: 'far fa-trash-alt',
+                        close: 'far fa-times-circle'
+                    }
+                });
+            }
+        });
+    });
+});
+
+        $(function () {
+            // Initialize date pickers
+            $('#calendar-completed-at').datetimepicker({
+                format: 'DD.MM.YYYY HH:mm',
+                icons: {
+                    time: 'far fa-clock',
+                    date: 'far fa-calendar',
+                    up: 'fas fa-arrow-up',
+                    down: 'fas fa-arrow-down',
+                    previous: 'fas fa-chevron-left',
+                    next: 'fas fa-chevron-right',
+                    today: 'fas fa-calendar-check',
+                    clear: 'far fa-trash-alt',
+                    close: 'far fa-times-circle'
                 }
             });
-        }
-    });
-    
-    calendar.render();
-    
-    // Function to show session details
-    function showSessionDetails(event) {
-        var sessionData = event.extendedProps.sessionData;
-        
-        // Set modal content
-        $('#detail-service').text(sessionData.service_name);
-        $('#detail-patient').text(sessionData.patient_name);
-        $('#detail-illness-history').text(sessionData.illness_history);
-        $('#detail-session-number').text(sessionData.session_number);
-        
-        // Set status with badge
-        var statusHtml = '';
-        if (sessionData.status === 'pending') {
-            statusHtml = '<span class="badge badge-warning">Ожидает</span>';
-        } else if (sessionData.status === 'completed') {
-            statusHtml = '<span class="badge badge-success">Проведен</span>';
-        } else if (sessionData.status === 'canceled') {
-            statusHtml = '<span class="badge badge-danger">Отменен</span>';
-        }
-        $('#detail-status').html(statusHtml);
-        
-        $('#detail-therapist').text(sessionData.therapist_name || 'Не назначен');
-        $('#detail-scheduled').text(sessionData.scheduled || '-');
-        $('#detail-completed').text(sessionData.completed || '-');
-        $('#detail-notes').text(sessionData.notes || 'Нет примечаний');
-        
-        // Set procedure link
-        $('#view-procedure-link').attr('href', '/application/logus/dispatcher/procedure/' + sessionData.procedure_id + '/');
-        
-        // Set action buttons based on status
-        var actionsHtml = '';
-        if (sessionData.status === 'pending') {
-            actionsHtml = `
+
+            // Initialize calendar
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                initialView: 'timeGridWeek',
+                locale: 'ru',
+                slotMinTime: '08:00:00',
+                slotMaxTime: '20:00:00',
+                allDaySlot: false,
+                height: 'auto',
+                navLinks: true,
+                selectable: true,
+                selectMirror: true,
+                dayMaxEvents: true,
+                eventClick: function (info) {
+                    showSessionDetails(info.event);
+                },
+                events: function (fetchInfo, successCallback, failureCallback) {
+                    // Get filter values
+                    var statusFilters = [];
+                    if ($('#status-pending').is(':checked')) statusFilters.push('pending');
+                    if ($('#status-completed').is(':checked')) statusFilters.push('completed');
+                    if ($('#status-canceled').is(':checked')) statusFilters.push('canceled');
+
+                    var therapistFilter = $('#therapist-filter').val();
+
+                    // Make AJAX request to load events
+                    $.ajax({
+                        url: '{% url "massagist:calendar_events" %}',
+                        data: {
+                            start: fetchInfo.startStr,
+                            end: fetchInfo.endStr,
+                            status: statusFilters.join(','),
+                            therapist: therapistFilter === 'all' ? '' : therapistFilter
+                        },
+                        success: function (result) {
+                            var events = [];
+
+                            // Transform data into FullCalendar events
+                            $.each(result.events, function (i, item) {
+                                var eventClass = 'fc-event-pending';
+
+                                if (item.status === 'completed') {
+                                    eventClass = 'fc-event-completed';
+                                } else if (item.status === 'canceled') {
+                                    eventClass = 'fc-event-canceled';
+                                }
+
+                                events.push({
+                                    id: item.id,
+                                    title: item.title,
+                                    start: item.start,
+                                    end: item.end,
+                                    className: eventClass,
+                                    extendedProps: {
+                                        sessionData: item
+                                    }
+                                });
+                            });
+
+                            successCallback(events);
+                        },
+                        error: function () {
+                            failureCallback();
+                        }
+                    });
+                }
+            });
+
+            calendar.render();
+
+            // Function to show session details
+            function showSessionDetails(event) {
+                var sessionData = event.extendedProps.sessionData;
+
+                // Set modal content
+                $('#detail-service').text(sessionData.service_name);
+                $('#detail-patient').text(sessionData.patient_name);
+                $('#detail-illness-history').text(sessionData.illness_history);
+                $('#detail-session-number').text(sessionData.session_number);
+
+                // Set status with badge
+                var statusHtml = '';
+                if (sessionData.status === 'pending') {
+                    statusHtml = '<span class="badge badge-warning">Ожидает</span>';
+                } else if (sessionData.status === 'completed') {
+                    statusHtml = '<span class="badge badge-success">Проведен</span>';
+                } else if (sessionData.status === 'canceled') {
+                    statusHtml = '<span class="badge badge-danger">Отменен</span>';
+                }
+                $('#detail-status').html(statusHtml);
+
+                $('#detail-therapist').text(sessionData.therapist_name || 'Не назначен');
+                $('#detail-scheduled').text(sessionData.scheduled || '-');
+                $('#detail-completed').text(sessionData.completed || '-');
+                $('#detail-notes').text(sessionData.notes || 'Нет примечаний');
+
+                // Set procedure link
+                $('#view-procedure-link').attr('href', '/application/sanatorium/massagist/dispatcher/dashboard/procedure/' + sessionData.procedure_id + '/');
+
+                // Set action buttons based on status
+                var actionsHtml = '';
+                if (sessionData.status === 'pending') {
+                    actionsHtml = `
                 <button type="button" class="btn btn-success" onclick="completeSession(${sessionData.id})">
                     <i class="fas fa-check mr-1"></i> Отметить как проведенный
                 </button>
@@ -431,36 +737,36 @@ $(function () {
                     <i class="fas fa-times mr-1"></i> Отменить
                 </button>
             `;
-        }
-        $('#session-actions').html(actionsHtml);
-        
-        // Show modal
-        $('#session-details-modal').modal('show');
-    }
-    
-    // Complete session from calendar
-    window.completeSession = function(sessionId) {
-        $('#session-details-modal').modal('hide');
-        $('#complete-calendar-session-id').val(sessionId);
-        
-        // Set default completed date as now
-        var now = moment().format('DD.MM.YYYY HH:mm');
-        $('#calendar-completed-at input').val(now);
-        
-        $('#complete-calendar-session-modal').modal('show');
-    };
-    
-    // Cancel session from calendar
-    window.cancelSession = function(sessionId) {
-        $('#session-details-modal').modal('hide');
-        $('#cancel-calendar-session-id').val(sessionId);
-        $('#cancel-calendar-session-modal').modal('show');
-    };
-    
-    // Apply filters
-    $('#apply-filters').click(function() {
-        calendar.refetchEvents();
-    });
-});
-</script>
+                }
+                $('#session-actions').html(actionsHtml);
+
+                // Show modal
+                $('#session-details-modal').modal('show');
+            }
+
+            // Complete session from calendar
+            window.completeSession = function (sessionId) {
+                $('#session-details-modal').modal('hide');
+                $('#complete-calendar-session-id').val(sessionId);
+
+                // Set default completed date as now
+                var now = moment().format('DD.MM.YYYY HH:mm');
+                $('#calendar-completed-at input').val(now);
+
+                $('#complete-calendar-session-modal').modal('show');
+            };
+
+            // Cancel session from calendar
+            window.cancelSession = function (sessionId) {
+                $('#session-details-modal').modal('hide');
+                $('#cancel-calendar-session-id').val(sessionId);
+                $('#cancel-calendar-session-modal').modal('show');
+            };
+
+            // Apply filters
+            $('#apply-filters').click(function () {
+                calendar.refetchEvents();
+            });
+        });
+    </script>
 {% endblock %}

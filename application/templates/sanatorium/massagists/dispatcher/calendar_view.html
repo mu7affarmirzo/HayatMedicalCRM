@@ -1,4 +1,4 @@
-{% extends 'snippets/base.html' %}
+{% extends 'sanatorium/snippets/massagist_dispatcher_base.html' %}
 {% load static %}
 {% block title %}Календарь процедур - Hayat Medical Center{% endblock %}
 {% block extra_css %}
@@ -348,7 +348,7 @@ $(function () {
             
             // Make AJAX request to load events
             $.ajax({
-                url: '{% url "calendar_events" %}',
+                url: '{% url "massagist:calendar_events" %}',
                 data: {
                     start: fetchInfo.startStr,
                     end: fetchInfo.endStr,

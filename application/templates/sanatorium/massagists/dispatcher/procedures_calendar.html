@@ -1,0 +1,802 @@
+{% extends 'sanatorium/snippets/massagist_dispatcher_base.html' %}
+{% load static %}
+
+{% block title %}Календарь процедур - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- FullCalendar -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fullcalendar/main.min.css' %}">
+
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+    
+    .fc-event-title {
+        font-weight: bold;
+    }
+    
+    /* Event status colors */
+    .event-recommended {
+        background-color: #17a2b8;
+        border-color: #138496;
+    }
+    
+    .event-assigned {
+        background-color: #ffc107;
+        border-color: #e0a800;
+    }
+    
+    .event-cancelled {
+        background-color: #dc3545;
+        border-color: #bd2130;
+        text-decoration: line-through;
+    }
+    
+    .event-stopped {
+        background-color: #6c757d;
+        border-color: #5a6268;
+    }
+    
+    .event-dispatched {
+        background-color: #28a745;
+        border-color: #1e7e34;
+    }
+    
+    /* Session status colors */
+    .session-pending {
+        background-color: #ffc107;
+        border-color: #e0a800;
+    }
+    
+    .session-completed {
+        background-color: #28a745;
+        border-color: #1e7e34;
+    }
+    
+    .session-canceled {
+        background-color: #dc3545;
+        border-color: #bd2130;
+        text-decoration: line-through;
+    }
+    
+    .filter-sidebar {
+        height: 100%;
+    }
+    
+    .event-legend {
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .legend-color {
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+        margin-right: 8px;
+    }
+    
+    .card-calendar {
+        height: calc(100vh - 200px);
+        min-height: 600px;
+    }
+    
+    .calendar-container {
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Календарь процедур</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'massagist:dispatcher_dashboard' %}">Диспетчер процедур</a></li>
+                    <li class="breadcrumb-item active">Календарь</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Filter Sidebar -->
+            <div class="col-md-3">
+                <div class="sticky-top filter-sidebar">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Фильтры</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="filter-form">
+                                <div class="form-group">
+                                    <label>Отображение:</label>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="show-procedures" checked>
+                                        <label class="custom-control-label" for="show-procedures">Процедуры</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="show-sessions" checked>
+                                        <label class="custom-control-label" for="show-sessions">Индивидуальные сеансы</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Статус процедуры:</label>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="status-recommended" checked>
+                                        <label class="custom-control-label" for="status-recommended">Рекомендовано</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="status-assigned" checked>
+                                        <label class="custom-control-label" for="status-assigned">Назначено</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="status-cancelled" checked>
+                                        <label class="custom-control-label" for="status-cancelled">Отменено</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="status-stopped" checked>
+                                        <label class="custom-control-label" for="status-stopped">Остановлено</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="status-dispatched" checked>
+                                        <label class="custom-control-label" for="status-dispatched">Отправлено</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Статус сеанса:</label>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="session-pending" checked>
+                                        <label class="custom-control-label" for="session-pending">Ожидает</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="session-completed" checked>
+                                        <label class="custom-control-label" for="session-completed">Проведен</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="session-canceled" checked>
+                                        <label class="custom-control-label" for="session-canceled">Отменен</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Терапевт:</label>
+                                    <select class="form-control" id="therapist-filter">
+                                        <option value="all">Все терапевты</option>
+                                        {% for therapist in therapists %}
+                                        <option value="{{ therapist.id }}">{{ therapist.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <button type="button" id="apply-filters" class="btn btn-primary btn-block">
+                                        <i class="fas fa-filter mr-1"></i> Применить фильтры
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <!-- Legend -->
+                            <div class="event-legend bg-light">
+                                <h5>Обозначения процедур:</h5>
+                                <div class="legend-item">
+                                    <div class="legend-color event-recommended"></div>
+                                    <span>Рекомендовано</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color event-assigned"></div>
+                                    <span>Назначено</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color event-cancelled"></div>
+                                    <span>Отменено</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color event-stopped"></div>
+                                    <span>Остановлено</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color event-dispatched"></div>
+                                    <span>Отправлено</span>
+                                </div>
+                                
+                                <h5 class="mt-3">Обозначения сеансов:</h5>
+                                <div class="legend-item">
+                                    <div class="legend-color session-pending"></div>
+                                    <span>Ожидает</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color session-completed"></div>
+                                    <span>Проведен</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color session-canceled"></div>
+                                    <span>Отменен</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Calendar -->
+            <div class="col-md-9">
+                <div class="card card-calendar">
+                    <div class="card-body">
+                        <div id="calendar" class="calendar-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Procedure Details Modal -->
+<div class="modal fade" id="procedure-details-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали процедуры</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Услуга:</label>
+                            <p id="modal-service-name" class="font-weight-bold"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Пациент:</label>
+                            <p id="modal-patient-name" class="font-weight-bold"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Статус:</label>
+                            <p id="modal-status"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Терапевт:</label>
+                            <p id="modal-therapist"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Дата начала:</label>
+                            <p id="modal-start-date"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Частота:</label>
+                            <p id="modal-frequency"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Всего сеансов:</label>
+                            <p id="modal-quantity"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Проведено:</label>
+                            <p id="modal-proceeded"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress mb-3">
+                    <div id="modal-progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Комментарии:</label>
+                    <div id="modal-comments" class="p-2 bg-light rounded"></div>
+                </div>
+                
+                <h5 class="mt-3">Индивидуальные сеансы</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Статус</th>
+                                <th>Терапевт</th>
+                                <th>Запланировано</th>
+                                <th>Проведено</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-sessions-table">
+                            <!-- Sessions will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="modal-view-link" href="#" class="btn btn-info">
+                    <i class="fas fa-eye mr-1"></i> Просмотр
+                </a>
+                <a id="modal-edit-link" href="#" class="btn btn-warning">
+                    <i class="fas fa-edit mr-1"></i> Редактировать
+                </a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Session Details Modal -->
+<div class="modal fade" id="session-details-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали сеанса</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Услуга:</label>
+                            <p id="session-modal-service" class="font-weight-bold"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Пациент:</label>
+                            <p id="session-modal-patient" class="font-weight-bold"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Номер сеанса:</label>
+                            <p id="session-modal-number"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Статус:</label>
+                            <p id="session-modal-status"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Терапевт:</label>
+                            <p id="session-modal-therapist"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Запланировано:</label>
+                            <p id="session-modal-scheduled"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Проведено:</label>
+                    <p id="session-modal-completed"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Примечания:</label>
+                    <div id="session-modal-notes" class="p-2 bg-light rounded"></div>
+                </div>
+                
+                <div id="session-modal-actions" class="mt-3">
+                    <!-- Action buttons will be added dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="session-modal-procedure-link" href="#" class="btn btn-info">
+                    <i class="fas fa-eye mr-1"></i> Просмотр процедуры
+                </a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Session Modal -->
+<div class="modal fade" id="complete-calendar-session-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Отметить сеанс как проведенный</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="updateSessionForm" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="session_id" id="complete-calendar-session-id">
+                    <input type="hidden" name="status" value="completed">
+                    
+                    <!-- Therapist selection field -->
+                    <div class="form-group">
+                        <label>Терапевт:</label>
+                        <select class="form-control" name="therapist_id" id="complete-therapist-id">
+                            <option value="">-- Выберите терапевта --</option>
+                            {% for therapist in therapists %}
+                                <option value="{{ therapist.id }}">{{ therapist.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Дата и время проведения:</label>
+                        <div class="input-group date" id="calendar-completed-at" data-target-input="nearest">
+                            <input type="text" class="form-control datetimepicker-input" name="completed_at"
+                                   data-target="#calendar-completed-at" required>
+                            <div class="input-group-append" data-target="#calendar-completed-at"
+                                 data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Примечания:</label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Отметить как проведенный</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Session Modal -->
+<div class="modal fade" id="cancel-calendar-session-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Отменить сеанс</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="cancelSessionForm" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="session_id" id="cancel-calendar-session-id">
+                    <input type="hidden" name="status" value="canceled">
+                    
+                    <p>Вы уверены, что хотите отменить этот сеанс?</p>
+                    
+                    <div class="form-group">
+                        <label>Причина отмены:</label>
+                        <textarea class="form-control" name="notes" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-danger">Отменить сеанс</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar -->
+<script src="{% static 'adminlte3_assets/plugins/fullcalendar/main.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/fullcalendar/locales/ru.js' %}"></script>
+
+<script>
+$(function () {
+    // Initialize date pickers
+    $('#calendar-completed-at').datetimepicker({
+        format: 'DD.MM.YYYY HH:mm',
+        icons: {
+            time: 'far fa-clock',
+            date: 'far fa-calendar',
+            up: 'fas fa-arrow-up',
+            down: 'fas fa-arrow-down',
+            previous: 'fas fa-chevron-left',
+            next: 'fas fa-chevron-right',
+            today: 'fas fa-calendar-check',
+            clear: 'far fa-trash-alt',
+            close: 'far fa-times-circle'
+        }
+    });
+    
+    // Initialize calendar
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        initialView: 'timeGridWeek',
+        locale: 'ru',
+        slotMinTime: '08:00:00',
+        slotMaxTime: '20:00:00',
+        allDaySlot: false,
+        height: '100%',
+        navLinks: true,
+        selectable: true,
+        selectMirror: true,
+        dayMaxEvents: true,
+        eventClick: function(info) {
+            var eventType = info.event.extendedProps.type;
+            if (eventType === 'procedure') {
+                showProcedureDetails(info.event);
+            } else if (eventType === 'session') {
+                showSessionDetails(info.event);
+            }
+        },
+        events: function(fetchInfo, successCallback, failureCallback) {
+            // Get filter values
+            var procedureFilters = [];
+            if ($('#status-recommended').is(':checked')) procedureFilters.push('recommended');
+            if ($('#status-assigned').is(':checked')) procedureFilters.push('assigned');
+            if ($('#status-cancelled').is(':checked')) procedureFilters.push('cancelled');
+            if ($('#status-stopped').is(':checked')) procedureFilters.push('stopped');
+            if ($('#status-dispatched').is(':checked')) procedureFilters.push('dispatched');
+            
+            var sessionFilters = [];
+            if ($('#session-pending').is(':checked')) sessionFilters.push('pending');
+            if ($('#session-completed').is(':checked')) sessionFilters.push('completed');
+            if ($('#session-canceled').is(':checked')) sessionFilters.push('canceled');
+            
+            var therapistFilter = $('#therapist-filter').val();
+            var showProcedures = $('#show-procedures').is(':checked');
+            var showSessions = $('#show-sessions').is(':checked');
+            
+            // Make AJAX request to load events
+            $.ajax({
+                url: '{% url "massagist:procedures_calendar_events" %}',
+                data: {
+                    start: fetchInfo.startStr,
+                    end: fetchInfo.endStr,
+                    procedure_states: procedureFilters.join(','),
+                    session_statuses: sessionFilters.join(','),
+                    therapist: therapistFilter === 'all' ? '' : therapistFilter,
+                    show_procedures: showProcedures ? '1' : '0',
+                    show_sessions: showSessions ? '1' : '0'
+                },
+                success: function(result) {
+                    var events = [];
+                    
+                    // Transform procedure data into FullCalendar events
+                    if (result.procedures) {
+                        $.each(result.procedures, function(i, item) {
+                            var eventClass = 'event-' + item.state;
+                            
+                            events.push({
+                                id: 'proc_' + item.id,
+                                title: item.title,
+                                start: item.start,
+                                end: item.end,
+                                allDay: true,
+                                className: eventClass,
+                                extendedProps: {
+                                    type: 'procedure',
+                                    procedureData: item
+                                }
+                            });
+                        });
+                    }
+                    
+                    // Transform session data into FullCalendar events
+                    if (result.sessions) {
+                        $.each(result.sessions, function(i, item) {
+                            var eventClass = 'session-' + item.status;
+                            
+                            events.push({
+                                id: 'sess_' + item.id,
+                                title: item.title,
+                                start: item.start,
+                                end: item.end,
+                                className: eventClass,
+                                extendedProps: {
+                                    type: 'session',
+                                    sessionData: item
+                                }
+                            });
+                        });
+                    }
+                    
+                    successCallback(events);
+                },
+                error: function() {
+                    failureCallback();
+                }
+            });
+        }
+    });
+    
+    calendar.render();
+    
+    // Function to show procedure details
+    function showProcedureDetails(event) {
+        var procedureData = event.extendedProps.procedureData;
+        
+        // Set modal content
+        $('#modal-service-name').text(procedureData.service_name);
+        $('#modal-patient-name').text(procedureData.patient_name);
+        
+        // Set status with badge
+        var statusHtml = '';
+        statusHtml = '<span class="badge badge-' + procedureData.state + '">' + procedureData.state_display + '</span>';
+        $('#modal-status').html(statusHtml);
+        
+        $('#modal-therapist').text(procedureData.therapist_name || 'Не назначен');
+        $('#modal-start-date').text(procedureData.start_date);
+        $('#modal-frequency').text(procedureData.frequency);
+        $('#modal-quantity').text(procedureData.quantity);
+        $('#modal-proceeded').text(procedureData.proceeded_sessions);
+        
+        // Set progress bar
+        var progressPercent = procedureData.progress_percentile;
+        $('#modal-progress-bar').css('width', progressPercent + '%').attr('aria-valuenow', progressPercent).text(progressPercent + '%');
+        
+        // Set comments
+        $('#modal-comments').text(procedureData.comments || 'Нет комментариев');
+        
+        // Set procedure links
+        $('#modal-view-link').attr('href', '/sanatorium/massagists/dispatcher/procedure/' + procedureData.id + '/');
+        $('#modal-edit-link').attr('href', '/sanatorium/massagists/dispatcher/procedure/' + procedureData.id + '/edit/');
+        
+        // Populate sessions table
+        var sessionsHtml = '';
+        if (procedureData.sessions && procedureData.sessions.length > 0) {
+            $.each(procedureData.sessions, function(i, session) {
+                var statusBadge = '';
+                if (session.status === 'pending') {
+                    statusBadge = '<span class="badge badge-warning">Ожидает</span>';
+                } else if (session.status === 'completed') {
+                    statusBadge = '<span class="badge badge-success">Проведен</span>';
+                } else if (session.status === 'canceled') {
+                    statusBadge = '<span class="badge badge-danger">Отменен</span>';
+                }
+                
+                sessionsHtml += '<tr>';
+                sessionsHtml += '<td>#' + session.session_number + '</td>';
+                sessionsHtml += '<td>' + statusBadge + '</td>';
+                sessionsHtml += '<td>' + (session.therapist_name || 'Не назначен') + '</td>';
+                sessionsHtml += '<td>' + (session.scheduled_to || '-') + '</td>';
+                sessionsHtml += '<td>' + (session.completed_at || '-') + '</td>';
+                sessionsHtml += '</tr>';
+            });
+        } else {
+            sessionsHtml = '<tr><td colspan="5" class="text-center">Нет запланированных сеансов</td></tr>';
+        }
+        $('#modal-sessions-table').html(sessionsHtml);
+        
+        // Show modal
+        $('#procedure-details-modal').modal('show');
+    }
+    
+    // Function to show session details
+    function showSessionDetails(event) {
+        var sessionData = event.extendedProps.sessionData;
+        
+        // Set modal content
+        $('#session-modal-service').text(sessionData.service_name);
+        $('#session-modal-patient').text(sessionData.patient_name);
+        $('#session-modal-number').text('#' + sessionData.session_number);
+        
+        // Set status with badge
+        var statusHtml = '';
+        if (sessionData.status === 'pending') {
+            statusHtml = '<span class="badge badge-warning">Ожидает</span>';
+        } else if (sessionData.status === 'completed') {
+            statusHtml = '<span class="badge badge-success">Проведен</span>';
+        } else if (sessionData.status === 'canceled') {
+            statusHtml = '<span class="badge badge-danger">Отменен</span>';
+        }
+        $('#session-modal-status').html(statusHtml);
+        
+        $('#session-modal-therapist').text(sessionData.therapist_name || 'Не назначен');
+        $('#session-modal-scheduled').text(sessionData.scheduled_to || '-');
+        $('#session-modal-completed').text(sessionData.completed_at || '-');
+        $('#session-modal-notes').text(sessionData.notes || 'Нет примечаний');
+        
+        // Set procedure link
+        $('#session-modal-procedure-link').attr('href', '/sanatorium/massagists/dispatcher/procedure/' + sessionData.procedure_id + '/');
+        
+        // Set action buttons based on status
+        var actionsHtml = '';
+        if (sessionData.status === 'pending') {
+            actionsHtml = `
+                <button type="button" class="btn btn-success" onclick="completeSession(${sessionData.id})">
+                    <i class="fas fa-check mr-1"></i> Отметить как проведенный
+                </button>
+                <button type="button" class="btn btn-danger ml-2" onclick="cancelSession(${sessionData.id})">
+                    <i class="fas fa-times mr-1"></i> Отменить
+                </button>
+            `;
+        }
+        $('#session-modal-actions').html(actionsHtml);
+        
+        // Update form action URLs
+        $('#updateSessionForm').attr('action', '/sanatorium/massagists/dispatcher/update-session-status/' + sessionData.id + '/');
+        $('#cancelSessionForm').attr('action', '/sanatorium/massagists/dispatcher/update-session-status/' + sessionData.id + '/');
+        
+        // Show modal
+        $('#session-details-modal').modal('show');
+    }
+    
+    // Complete session from calendar
+    window.completeSession = function(sessionId) {
+        $('#session-details-modal').modal('hide');
+        $('#complete-calendar-session-id').val(sessionId);
+        
+        // Set default completed date as now
+        var now = moment().format('DD.MM.YYYY HH:mm');
+        $('#calendar-completed-at input').val(now);
+        
+        // Update form action URL
+        $('#updateSessionForm').attr('action', '/sanatorium/massagists/dispatcher/update-session-status/' + sessionId + '/');
+        
+        $('#complete-calendar-session-modal').modal('show');
+    };
+    
+    // Cancel session from calendar
+    window.cancelSession = function(sessionId) {
+        $('#session-details-modal').modal('hide');
+        $('#cancel-calendar-session-id').val(sessionId);
+        
+        // Update form action URL
+        $('#cancelSessionForm').attr('action', '/sanatorium/massagists/dispatcher/update-session-status/' + sessionId + '/');
+        
+        $('#cancel-calendar-session-modal').modal('show');
+    };
+    
+    // Apply filters
+    $('#apply-filters').click(function() {
+        calendar.refetchEvents();
+    });
+});
+</script>
+{% endblock %}

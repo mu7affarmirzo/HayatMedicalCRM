@@ -1,4 +1,4 @@
-{% extends 'snippets/base.html' %}
+{% extends 'sanatorium/snippets/massagist_dispatcher_base.html' %}
 {% load static %}
 {% block title %}Редактирование процедуры #{{ procedure.id }}{% endblock %}
 {% block content %}
@@ -92,14 +92,14 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Количество сеансов:</label>
-                                    <input type="number" class="form-control" name="quantity" value="{{ procedure.quantity }}" min="1">
+                                    <input type="number" class="form-control" name="quantity" value="{{ procedure.quantity }}" min="1" disabled>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Дата начала:</label>
                                     <div class="input-group date" id="start-date" data-target-input="nearest">
-                                        <input type="text" class="form-control datetimepicker-input" name="start_date" data-target="#start-date" value="{{ procedure.start_date|date:'d.m.Y' }}">
+                                        <input type="text" class="form-control datetimepicker-input" name="start_date" data-target="#start-date" value="{{ procedure.start_date|date:'d.m.Y' }}" disabled>
                                         <div class="input-group-append" data-target="#start-date" data-toggle="datetimepicker">
                                             <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                         </div>
@@ -111,7 +111,7 @@
                                     <label>Частота:</label>
                                     <select class="form-control" name="frequency">
                                         {% for freq_value, freq_display in frequency_choices %}
-                                        <option value="{{ freq_value }}" {% if procedure.frequency == freq_value %}selected{% endif %}>{{ freq_display }}</option>
+                                        <option value="{{ freq_value }}" {% if procedure.frequency == freq_value %}selected{% endif %} disabled>{{ freq_display }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

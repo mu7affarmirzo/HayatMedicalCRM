@@ -93,7 +93,7 @@ def get_session_details(request, session_id):
         'can_cancel': session.status == 'pending',
     }
 
-    html = render_to_string('sanatorium/massagists/partials/session_detail.html', context)
+    html = render_to_string('sanatorium/massagists/therapist/partials/session_detail.html', context)
 
     return JsonResponse({
         'status': 'success',
@@ -132,7 +132,7 @@ def get_procedure_details(request, procedure_id):
         'canceled_sessions': sessions.filter(status='canceled').count(),
     }
 
-    html = render_to_string('sanatorium/massagists/partials/procedure_detail.html', context)
+    html = render_to_string('sanatorium/massagists/therapist/partials/procedure_detail.html', context)
 
     return JsonResponse({
         'status': 'success',

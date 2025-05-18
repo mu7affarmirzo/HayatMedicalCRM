@@ -1,6 +1,6 @@
 # urls.py
 from django.urls import path
-from application.sanatorium.views.massagists_viewset import dashboard, sessions
+from application.sanatorium.views.massagists_viewset.therapist import sessions, dashboard
 
 urlpatterns = [
     path('', dashboard.massagist_dashboard, name='massagist_dashboard'),

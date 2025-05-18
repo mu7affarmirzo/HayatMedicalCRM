@@ -66,4 +66,4 @@ def massagist_dashboard(request):
         'stats': stats,
     }
 
-    return render(request, 'sanatorium/massagists/massagists_dashboard.html', context)
+    return render(request, 'sanatorium/massagists/therapist/massagists_dashboard.html', context)

@@ -1,0 +1,165 @@
+<!-- templates/dashboard/partials/procedure_detail.html -->
+<div class="procedure-detail-container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title font-weight-bold">Информация о процедуре</h6>
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th scope="row" class="text-muted">Наименование:</th>
+                                    <td>{{ service_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Пациент:</th>
+                                    <td>{{ patient_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Статус:</th>
+                                    <td>
+                                        <span class="badge {% if procedure.state == 'assigned' %}badge-success{% elif procedure.state == 'cancelled' %}badge-danger{% elif procedure.state == 'stopped' %}badge-warning{% else %}badge-info{% endif %} px-2 py-1">
+                                            {{ procedure.get_state_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Дата начала:</th>
+                                    <td>{{ procedure.start_date|date:"d.m.Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Частота:</th>
+                                    <td>{{ procedure.get_frequency_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Всего сеансов:</th>
+                                    <td>{{ procedure.quantity }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Проведено сеансов:</th>
+                                    <td>{{ completed_sessions }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Ожидает сеансов:</th>
+                                    <td>{{ pending_sessions }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Отменено сеансов:</th>
+                                    <td>{{ canceled_sessions }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title font-weight-bold">Комментарии</h6>
+                    {% if procedure.comments %}
+                    <p>{{ procedure.comments|linebreaks }}</p>
+                    {% else %}
+                    <p class="text-muted">Нет комментариев для этой процедуры</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <!-- Progress section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title font-weight-bold">Прогресс процедуры</h6>
+                    <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
+                        <span>Прогресс</span>
+                        <span>{{ procedure.proceeded_sessions }} из {{ procedure.quantity }}</span>
+                    </div>
+                    <div class="progress procedure-progress mb-3">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: {{ procedure.progres_percentile }}%"
+                             aria-valuenow="{{ procedure.progres_percentile }}"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <!-- Statistics in colored boxes -->
+                    <div class="row mt-4">
+                        <div class="col-4">
+                            <div class="bg-success text-white rounded p-3 text-center">
+                                <h3 class="m-0">{{ completed_sessions }}</h3>
+                                <small>Завершено</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-warning text-white rounded p-3 text-center">
+                                <h3 class="m-0">{{ pending_sessions }}</h3>
+                                <small>Ожидает</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-danger text-white rounded p-3 text-center">
+                                <h3 class="m-0">{{ canceled_sessions }}</h3>
+                                <small>Отменено</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessions list -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent">
+                    <h6 class="card-title font-weight-bold m-0">Список сеансов</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for session in sessions %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center view-session" data-session-id="{{ session.id }}">
+                            <span>
+                                <i class="fas {% if session.status == 'completed' %}fa-check-circle text-success{% elif session.status == 'canceled' %}fa-times-circle text-danger{% else %}fa-clock text-warning{% endif %} mr-2"></i>
+                                Сеанс #{{ session.session_number }}
+                            </span>
+                            <span class="badge {% if session.status == 'pending' %}status-pending{% elif session.status == 'completed' %}status-completed{% else %}status-canceled{% endif %} px-2 py-1">
+                                {{ session.get_status_display }}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set up click handlers for the session list
+    $('.view-session').on('click', function(e) {
+        e.preventDefault();
+        var sessionId = $(this).data('session-id');
+        $('#procedureDetailModal').modal('hide');
+
+        // Load and show the session detail modal
+        setTimeout(function() {
+            loadSessionDetails(sessionId);
+            $('#sessionDetailModal').modal('show');
+        }, 500);
+    });
+
+    function loadSessionDetails(sessionId) {
+        $.ajax({
+            url: '/api/sessions/' + sessionId + '/',
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#sessionDetailContent').html(response.html);
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при загрузке данных о сеансе.');
+            }
+        });
+    }
+</script>

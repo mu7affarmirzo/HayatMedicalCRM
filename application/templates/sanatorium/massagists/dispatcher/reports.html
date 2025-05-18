@@ -1,0 +1,453 @@
+{% extends 'snippets/base.html' %}
+{% load static %}
+{% block title %}Отчеты по процедурам - Hayat Medical Center{% endblock %}
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 300px;
+    }
+    
+    .table-stats th, .table-stats td {
+        text-align: center;
+    }
+    
+    .table-stats th:first-child, .table-stats td:first-child {
+        text-align: left;
+    }
+    
+    .progress-wrapper {
+        display: flex;
+        align-items: center;
+    }
+    
+    .progress-bar-wrapper {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+    
+    .date-range-selector {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .report-card {
+        transition: all 0.3s ease;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .table-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Отчеты по процедурам</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'massagist:dispatcher_dashboard' %}">Диспетчер процедур</a></li>
+                    <li class="breadcrumb-item active">Отчеты</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Date range selector -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="date-range-selector">
+                    <form method="get" class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Период отчета:</label>
+                                <select class="form-control" name="period" id="report-period">
+                                    <option value="week" {% if period == 'week' %}selected{% endif %}>Неделя</option>
+                                    <option value="month" {% if period == 'month' %}selected{% endif %}>Месяц</option>
+                                    <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>Квартал</option>
+                                    <option value="year" {% if period == 'year' %}selected{% endif %}>Год</option>
+                                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Указать период</option>
+                                </select>
+                            </div>
+                        </div>
+                    <div class="col-md-7" id="custom-date-range" {% if period != 'custom' %}style="display: none;"{% endif %}>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Начало периода:</label>
+                                    <div class="input-group date" id="start-date" data-target-input="nearest">
+                                        <input type="text" class="form-control datetimepicker-input" name="start_date" data-target="#start-date" value="{{ start_date|date:'d.m.Y' }}">
+                                        <div class="input-group-append" data-target="#start-date" data-toggle="datetimepicker">
+                                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Конец периода:</label>
+                                    <div class="input-group date" id="end-date" data-target-input="nearest">
+                                        <input type="text" class="form-control datetimepicker-input" name="end_date" data-target="#end-date" value="{{ end_date|date:'d.m.Y' }}">
+                                        <div class="input-group-append" data-target="#end-date" data-toggle="datetimepicker">
+                                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-1 d-flex align-items-end justify-content-end">
+                        <button type="submit" class="btn btn-primary">Применить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report period info -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="callout callout-info">
+                <h5><i class="fas fa-info-circle mr-1"></i> Период отчета:</h5>
+                <p>{{ report_period_text }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Overview -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="report-card card">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-procedures fa-3x"></i>
+                    </div>
+                    <div class="stat-value">{{ total_procedures }}</div>
+                    <div class="stat-label">Всего процедур</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="report-card card">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                    <div class="stat-value">{{ completed_sessions }}</div>
+                    <div class="stat-label">Проведено сеансов</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="report-card card">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-3x"></i>
+                    </div>
+                    <div class="stat-value">{{ pending_sessions }}</div>
+                    <div class="stat-label">Ожидают сеансы</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="report-card card">
+                <div class="card-body text-center">
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-ban fa-3x"></i>
+                    </div>
+                    <div class="stat-value">{{ canceled_sessions }}</div>
+                    <div class="stat-label">Отменено сеансов</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Статистика процедур по типам</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="serviceTypesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Динамика проведения сеансов</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="sessionsTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Therapist Stats -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Статистика по терапевтам</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive table-scroll">
+                        <table class="table table-bordered table-stats">
+                            <thead>
+                                <tr>
+                                    <th>Терапевт</th>
+                                    <th>Проведено сеансов</th>
+                                    <th>Отменено сеансов</th>
+                                    <th>Эффективность</th>
+                                    <th>Загруженность</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for therapist in therapist_stats %}
+                                <tr>
+                                    <td>{{ therapist.name }}</td>
+                                    <td>{{ therapist.completed }}</td>
+                                    <td>{{ therapist.canceled }}</td>
+                                    <td>
+                                        <div class="progress-wrapper">
+                                            <div class="progress-bar-wrapper">
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ therapist.efficiency }}%" aria-valuenow="{{ therapist.efficiency }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <span>{{ therapist.efficiency }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress-wrapper">
+                                            <div class="progress-bar-wrapper">
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ therapist.workload }}%" aria-valuenow="{{ therapist.workload }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <span>{{ therapist.workload }}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Нет данных для отображения</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Services -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Популярные услуги</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Услуга</th>
+                                    <th class="text-center">Всего назначено</th>
+                                    <th class="text-center">Всего сеансов</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for service in top_services %}
+                                <tr>
+                                    <td>{{ service.name }}</td>
+                                    <td class="text-center">{{ service.procedure_count }}</td>
+                                    <td class="text-center">{{ service.session_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Нет данных для отображения</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Статистика по состоянию процедур</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="procedureStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<!-- ChartJS -->
+<script src="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.js' %}"></script>
+<script>
+$(function () {
+    // Initialize date pickers
+    $('#start-date, #end-date').datetimepicker({
+        format: 'DD.MM.YYYY',
+        icons: {
+            time: 'far fa-clock',
+            date: 'far fa-calendar',
+            up: 'fas fa-arrow-up',
+            down: 'fas fa-arrow-down',
+            previous: 'fas fa-chevron-left',
+            next: 'fas fa-chevron-right',
+            today: 'fas fa-calendar-check',
+            clear: 'far fa-trash-alt',
+            close: 'far fa-times-circle'
+        }
+    });
+    
+    // Show/hide custom date range based on period selection
+    $('#report-period').change(function() {
+        if ($(this).val() === 'custom') {
+            $('#custom-date-range').show();
+        } else {
+            $('#custom-date-range').hide();
+        }
+    });
+    
+    // Service Types Chart
+    var serviceTypesCtx = document.getElementById('serviceTypesChart').getContext('2d');
+    var serviceTypesChart = new Chart(serviceTypesCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ service_types_labels|safe }},
+            datasets: [{
+                data: {{ service_types_data|safe }},
+                backgroundColor: [
+                    '#f56954', '#00a65a', '#f39c12', '#00c0ef', '#3c8dbc', '#d2d6de',
+                    '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#006b76'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: {
+                position: 'right'
+            }
+        }
+    });
+    
+    // Sessions Timeline Chart
+    var timelineCtx = document.getElementById('sessionsTimelineChart').getContext('2d');
+    var timelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: {{ timeline_labels|safe }},
+            datasets: [{
+                label: 'Проведено сеансов',
+                data: {{ completed_timeline_data|safe }},
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 2,
+                fill: true
+            }, {
+                label: 'Отменено сеансов',
+                data: {{ canceled_timeline_data|safe }},
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                xAxes: [{
+                    gridLines: {
+                        display: false
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+    
+    // Procedure Status Chart
+    var statusCtx = document.getElementById('procedureStatusChart').getContext('2d');
+    var statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|safe }},
+            datasets: [{
+                data: {{ status_data|safe }},
+                backgroundColor: [
+                    '#17a2b8', '#ffc107', '#dc3545', '#6c757d', '#28a745'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: {
+                position: 'right'
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'snippets/base.html' %}
+{% load static %}
+{% block title %}Редактирование процедуры #{{ procedure.id }}{% endblock %}
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Редактирование процедуры #{{ procedure.id }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'massagist:dispatcher_dashboard' %}">Диспетчер процедур</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'massagist:procedure_detail' procedure.id %}">Процедура #{{ procedure.id }}</a></li>
+                    <li class="breadcrumb-item active">Редактирование</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="row">
+            <div class="col-md-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Редактирование информации о процедуре</h3>
+                </div>
+                <!-- /.card-header -->
+                
+                <!-- form start -->
+                <form method="post" action="{% url 'massagist:procedure_edit' procedure.id %}">
+                    {% csrf_token %}
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>История болезни:</label>
+                                    <input type="text" class="form-control" value="{{ procedure.illness_history.series_number }} ({{ procedure.illness_history.patient.full_name }})" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Медицинская услуга:</label>
+                                    <input type="text" class="form-control" value="{{ procedure.medical_service.name }}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Статус:</label>
+                                    <select class="form-control" name="state">
+                                        {% for state_value, state_display in state_choices %}
+                                        <option value="{{ state_value }}" {% if procedure.state == state_value %}selected{% endif %}>{{ state_display }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Терапевт:</label>
+                                    <select class="form-control" name="therapist">
+                                        <option value="">-- Выберите терапевта --</option>
+                                        {% for therapist in therapists %}
+                                        <option value="{{ therapist.id }}" {% if procedure.therapist and procedure.therapist.id == therapist.id %}selected{% endif %}>{{ therapist.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Количество сеансов:</label>
+                                    <input type="number" class="form-control" name="quantity" value="{{ procedure.quantity }}" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Дата начала:</label>
+                                    <div class="input-group date" id="start-date" data-target-input="nearest">
+                                        <input type="text" class="form-control datetimepicker-input" name="start_date" data-target="#start-date" value="{{ procedure.start_date|date:'d.m.Y' }}">
+                                        <div class="input-group-append" data-target="#start-date" data-toggle="datetimepicker">
+                                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Частота:</label>
+                                    <select class="form-control" name="frequency">
+                                        {% for freq_value, freq_display in frequency_choices %}
+                                        <option value="{{ freq_value }}" {% if procedure.frequency == freq_value %}selected{% endif %}>{{ freq_display }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Комментарии:</label>
+                                    <textarea class="form-control" name="comments" rows="3">{{ procedure.comments|default:"" }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box bg-light">
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Прогресс выполнения</span>
+                                        <div class="progress mt-2">
+                                            <div class="progress-bar bg-primary" style="width: {{ procedure.progres_percentile }}%"></div>
+                                        </div>
+                                        <span class="info-box-number mt-1">
+                                            {{ procedure.proceeded_sessions }} из {{ procedure.quantity }} сеансов ({{ procedure.progres_percentile }}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="callout callout-info">
+                                    <h5>Информация</h5>
+                                    <p>Изменение количества сеансов не влияет на уже созданные индивидуальные сеансы. Если вы уменьшите количество сеансов, некоторые будущие сеансы могут стать лишними.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                    
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        <a href="{% url 'massagist:procedure_detail' procedure.id %}" class="btn btn-default">Отмена</a>
+                    </div>
+                </form>
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+$(function() {
+    // Initialize date picker
+    $('#start-date').datetimepicker({
+        format: 'DD.MM.YYYY',
+        icons: {
+            time: 'far fa-clock',
+            date: 'far fa-calendar',
+            up: 'fas fa-arrow-up',
+            down: 'fas fa-arrow-down',
+            previous: 'fas fa-chevron-left',
+            next: 'fas fa-chevron-right',
+            today: 'fas fa-calendar-check',
+            clear: 'far fa-trash-alt',
+            close: 'far fa-times-circle'
+        }
+    });
+});
+</script>
+{% endblock %}

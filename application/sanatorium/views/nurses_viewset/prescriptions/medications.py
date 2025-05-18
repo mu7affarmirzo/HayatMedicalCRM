@@ -1,17 +1,19 @@
 # views.py
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 
-from application.sanatorium.forms.medications_form import PrescribedMedicationForm, MedicationAdministrationForm
+from application.sanatorium.forms.medications_form import PrescribedMedicationForm, MedicationSessionForm
 
-from core.models import PrescribedMedication, MedicationAdministration, IllnessHistory, MedicationsInStockModel, \
+from core.models import PrescribedMedication, MedicationSession, IllnessHistory, MedicationsInStockModel, \
     MedicationModel
 
 
@@ -59,7 +61,9 @@ class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Add administrations to context
-        context['administrations'] = self.object.administrations.all().order_by('-administered_at')
+        context['sessions'] = self.object.sessions.all().order_by('-created_at')
+        context['illness_history'] = self.object.illness_history
+        context['history'] = self.object.illness_history
         return context
 
 
@@ -131,6 +135,11 @@ class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, Up
         form.instance.last_modified_by = self.request.user
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('illness_history_id'))
+        return context
+
     def get_success_url(self):
         return reverse_lazy('prescribed_medication_detail', kwargs={'pk': self.object.id})
 
@@ -147,9 +156,9 @@ class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, De
         return reverse_lazy('prescribed_medication_list')
 
 
-# MedicationAdministration Views
-class MedicationAdministrationListView(LoginRequiredMixin, ListView):
-    model = MedicationAdministration
+# MedicationSession Views
+class MedicationSessionListView(LoginRequiredMixin, ListView):
+    model = MedicationSession
     template_name = 'sanatorium/nurses/prescriptions/medications/list.html'
     context_object_name = 'administrations'
     paginate_by = 10
@@ -178,15 +187,15 @@ class MedicationAdministrationListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MedicationAdministrationDetailView(LoginRequiredMixin, DetailView):
-    model = MedicationAdministration
+class MedicationSessionDetailView(LoginRequiredMixin, DetailView):
+    model = MedicationSession
     template_name = 'sanatorium/nurses/prescriptions/medications/detail.html'
     context_object_name = 'administration'
 
 
-class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = MedicationAdministration
-    form_class = MedicationAdministrationForm
+class MedicationSessionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = MedicationSession
+    form_class = MedicationSessionForm
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
 
     def get_form(self, form_class=None):
@@ -231,9 +240,9 @@ class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin
         return context
 
 
-class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    model = MedicationAdministration
-    form_class = MedicationAdministrationForm
+class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = MedicationSession
+    form_class = MedicationSessionForm
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
     context_object_name = 'administration'
 
@@ -246,8 +255,8 @@ class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin
         return reverse_lazy('medication_administration_detail', kwargs={'pk': self.object.id})
 
 
-class MedicationAdministrationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    model = MedicationAdministration
+class MedicationSessionDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = MedicationSession
     template_name = 'sanatorium/nurses/prescriptions/medications/confirm_delete.html'
     context_object_name = 'administration'
 
@@ -390,6 +399,66 @@ def api_medications_search(request):
     })
 
 
+
+@login_required
+@require_POST
+def update_session_status(request, session_id):
+    """Update the status of a medication session"""
+    session = get_object_or_404(MedicationSession, id=session_id)
+
+    # Only pending sessions can be updated
+    if session.status != 'pending':
+        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+    # Get form data
+    new_status = request.POST.get('status')
+    notes = request.POST.get('notes', '')
+
+    # Validate status
+    valid_statuses = ['administered', 'missed', 'refused', 'canceled']
+    if new_status not in valid_statuses:
+        return HttpResponseBadRequest("Недопустимый статус")
+
+    # Update session
+    session.status = new_status
+    session.notes = notes
+
+    # Additional actions based on status
+    if new_status == 'administered':
+        # Get administered_at from form or use current time
+        administered_at_str = request.POST.get('administered_at')
+        if administered_at_str:
+            try:
+                # Parse datetime string, convert to timezone aware
+                administered_at = timezone.datetime.fromisoformat(administered_at_str.replace('Z', '+00:00'))
+                if timezone.is_naive(administered_at):
+                    administered_at = timezone.make_aware(administered_at)
+                session.administered_at = administered_at
+            except (ValueError, TypeError):
+                # If parsing fails, use current time
+                session.administered_at = timezone.now()
+        else:
+            # If not provided, use current time
+            session.administered_at = timezone.now()
+
+        # Set administered_by to current user
+        session.administered_by = request.user
+
+    elif new_status == 'missed':
+        session.administered_at = timezone.now()
+        session.administered_by = request.user
+
+    elif new_status == 'refused':
+        session.administered_at = timezone.now()
+        session.administered_by = request.user
+
+    # Save changes
+    session.save()
+
+    # Redirect back to the medication detail page
+    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+
 @login_required
 def api_medication_details(request):
     """
@@ -434,3 +503,58 @@ def api_medication_details(request):
         })
     except MedicationsInStockModel.DoesNotExist:
         return JsonResponse({'error': 'Медикамент не найден'}, status=404)
+
+
+@login_required
+@require_POST
+def administer_medication(request, session_id):
+    """Directly mark a medication session as administered"""
+    session = get_object_or_404(MedicationSession, id=session_id)
+
+    # Only pending sessions can be administered
+    if session.status != 'pending':
+        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+    # Update session
+    session.status = 'administered'
+    session.administered_at = timezone.now()
+    session.administered_by = request.user
+    session.notes = request.POST.get('notes', '')
+    session.save()
+
+    # Redirect back to the medication detail page
+    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+
+@login_required
+@require_POST
+def mark_missed(request, session_id):
+    """Mark a medication session as missed"""
+    session = get_object_or_404(MedicationSession, id=session_id)
+    if session.status != 'pending':
+        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+    session.status = 'missed'
+    session.administered_at = timezone.now()
+    session.administered_by = request.user
+    session.notes = request.POST.get('notes', '')
+    session.save()
+
+    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+
+@login_required
+@require_POST
+def mark_refused(request, session_id):
+    """Mark a medication session as refused by patient"""
+    session = get_object_or_404(MedicationSession, id=session_id)
+    if session.status != 'pending':
+        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+
+    session.status = 'refused'
+    session.administered_at = timezone.now()
+    session.administered_by = request.user
+    session.notes = request.POST.get('notes', '')
+    session.save()
+
+    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))

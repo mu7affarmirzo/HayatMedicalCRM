@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django import forms
 from django.utils import timezone
 
-from core.models import PrescribedMedication, MedicationAdministration, MedicationsInStockModel, Account
+from core.models import PrescribedMedication, MedicationSession, MedicationsInStockModel, Account
 
 
 class PrescribedMedicationForm(forms.ModelForm):
@@ -120,65 +120,56 @@ class PrescribedMedicationForm(forms.ModelForm):
         return cleaned_data
 
 
-class MedicationAdministrationForm(forms.ModelForm):
+class MedicationSessionForm(forms.ModelForm):
     # Fields outside Meta for custom behavior
-    administered_by = forms.ModelChoiceField(
+    created_by = forms.ModelChoiceField(
         queryset=Account.objects.filter(is_staff=True),  # Assuming staff can administer medications
-        required=True,
+        required=False,  # Can be null in our model
         label="Administered By",
         widget=forms.Select(attrs={'class': 'form-control select2', 'id': 'administrator-select'})
     )
 
+    status = forms.ChoiceField(
+        choices=MedicationSession.STATUS_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'status-select'})
+    )
+
     class Meta:
-        model = MedicationAdministration
+        model = MedicationSession
         fields = [
-            'administered_at',
-            'dosage_given',
+            'status',
             'notes',
-            'patient_response',
-            'side_effects'
         ]
         widgets = {
-            'administered_at': forms.DateTimeInput(
-                attrs={'class': 'form-control datetimepicker', 'type': 'datetime-local'}
-            ),
-            'dosage_given': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'patient_response': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'side_effects': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
 
-        # Set initial values
-        if not self.instance.pk:  # Only for new instances
-            self.fields['administered_at'].initial = timezone.now()
-
-            # If the user is logged in and is staff, set them as the default administrator
-            request = getattr(kwargs.get('request', None), '_request', None)
-            if request and request.user.is_authenticated and request.user.is_staff:
-                self.fields['administered_by'].initial = request.user.id
-
         # Add placeholders
-        self.fields['dosage_given'].widget.attrs['placeholder'] = 'Actual dosage administered'
-        self.fields['notes'].widget.attrs['placeholder'] = 'Administration notes...'
-        self.fields['patient_response'].widget.attrs['placeholder'] = 'How did the patient respond?'
-        self.fields['side_effects'].widget.attrs['placeholder'] = 'Any observed side effects?'
+        self.fields['notes'].widget.attrs['placeholder'] = 'Administration notes, side effects, or patient response...'
+
+        # Show/hide fields based on status
+        instance_status = self.instance.status if self.instance.pk else 'pending'
+        current_status = self.data.get('status', instance_status)
 
     def clean(self):
         cleaned_data = super().clean()
-        administered_at = cleaned_data.get('administered_at')
-
-        # Validate administration time is not in the future
-        if administered_at and administered_at > timezone.now():
-            self.add_error('administered_at', 'Administration time cannot be in the future')
-
-        # If this is linked to a prescribed medication, verify dosage is appropriate
-        prescribed_med = getattr(self.instance, 'prescribed_medication', None)
-        if prescribed_med and 'dosage_given' in cleaned_data:
-            # This would require custom validation logic based on your requirements
-            # For example, comparing the given dosage with the prescribed dosage
-            pass
+        status = cleaned_data.get('status')
 
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Additional logic based on status
+        if instance.status == 'administered' and not instance.created_at:
+            instance.created_at = timezone.now()
+
+        if commit:
+            instance.save()
+
+        return instance
+

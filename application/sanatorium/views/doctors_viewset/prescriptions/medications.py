@@ -9,9 +9,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404
 
-from application.sanatorium.forms.medications_form import PrescribedMedicationForm, MedicationAdministrationForm
+from application.sanatorium.forms.medications_form import PrescribedMedicationForm, MedicationSessionForm
 
-from core.models import PrescribedMedication, MedicationAdministration, IllnessHistory, MedicationsInStockModel, \
+from core.models import PrescribedMedication, MedicationSession, IllnessHistory, MedicationsInStockModel, \
     MedicationModel
 
 
@@ -147,9 +147,9 @@ class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, De
         return reverse_lazy('prescribed_medication_list')
 
 
-# MedicationAdministration Views
-class MedicationAdministrationListView(LoginRequiredMixin, ListView):
-    model = MedicationAdministration
+# MedicationSession Views
+class MedicationSessionListView(LoginRequiredMixin, ListView):
+    model = MedicationSession
     template_name = 'sanatorium/doctors/prescriptions/medications/list.html'
     context_object_name = 'administrations'
     paginate_by = 10
@@ -178,15 +178,15 @@ class MedicationAdministrationListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MedicationAdministrationDetailView(LoginRequiredMixin, DetailView):
-    model = MedicationAdministration
+class MedicationSessionDetailView(LoginRequiredMixin, DetailView):
+    model = MedicationSession
     template_name = 'sanatorium/doctors/prescriptions/medications/detail.html'
     context_object_name = 'administration'
 
 
-class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = MedicationAdministration
-    form_class = MedicationAdministrationForm
+class MedicationSessionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = MedicationSession
+    form_class = MedicationSessionForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
 
     def get_form(self, form_class=None):
@@ -231,9 +231,9 @@ class MedicationAdministrationCreateView(LoginRequiredMixin, SuccessMessageMixin
         return context
 
 
-class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    model = MedicationAdministration
-    form_class = MedicationAdministrationForm
+class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = MedicationSession
+    form_class = MedicationSessionForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
     context_object_name = 'administration'
 
@@ -246,8 +246,8 @@ class MedicationAdministrationUpdateView(LoginRequiredMixin, SuccessMessageMixin
         return reverse_lazy('medication_administration_detail', kwargs={'pk': self.object.id})
 
 
-class MedicationAdministrationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    model = MedicationAdministration
+class MedicationSessionDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = MedicationSession
     template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
     context_object_name = 'administration'
 

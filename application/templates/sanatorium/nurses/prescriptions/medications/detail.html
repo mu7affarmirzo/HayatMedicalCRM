@@ -4,66 +4,67 @@
 {% block title %}Назначение: {{ medication.medication.name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h1 class="h3 mb-2 text-gray-800">Назначение: {{ medication.medication.name }}</h1>
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2 text-gray-800">Назначение: {{ medication.medication.name }}</h1>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'nurses:medications_update' medication.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <a href="{% url 'nurses:medication_administration_create' %}?prescribed_medication={{ medication.id }}"
+                   class="btn btn-success">
+                    <i class="fas fa-plus"></i> Добавить применение
+                </a>
+            </div>
         </div>
-        <div class="col-md-4 text-right">
-            <a href="{% url 'nurses:prescribed_medication_update' medication.id %}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Редактировать
-            </a>
-            <a href="{% url 'nurses:medication_administration_create' %}?prescribed_medication={{ medication.id }}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Добавить применение
-            </a>
-        </div>
-    </div>
 
-    <!-- Medication Details -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Информация о назначении</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <tr>
-                                <th>Пациент:</th>
-                                <td>{{ medication.illness_history.patient.full_name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Лекарство:</th>
-                                <td>{{ medication.medication.name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Дозировка:</th>
-                                <td>{{ medication.dosage }}</td>
-                            </tr>
-                            <tr>
-                                <th>Частота приема:</th>
-                                <td>{{ medication.get_frequency_display }}</td>
-                            </tr>
-                            <tr>
-                                <th>Способ применения:</th>
-                                <td>{{ medication.route|default:"-" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Дата начала:</th>
-                                <td>{{ medication.start_date }}</td>
-                            </tr>
-                            <tr>
-                                <th>Дата окончания:</th>
-                                <td>{{ medication.end_date|default:"Не указана" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Продолжительность (дней):</th>
-                                <td>{{ medication.duration_days|default:"Не указана" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Статус:</th>
-                                <td>
+        <!-- Medication Details -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Информация о назначении</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tr>
+                                    <th>Пациент:</th>
+                                    <td>{{ medication.illness_history.patient.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Лекарство:</th>
+                                    <td>{{ medication.medication.item.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Дозировка:</th>
+                                    <td>{{ medication.dosage }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Частота приема:</th>
+                                    <td>{{ medication.get_frequency_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Способ применения:</th>
+                                    <td>{{ medication.route|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Дата начала:</th>
+                                    <td>{{ medication.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Дата окончания:</th>
+                                    <td>{{ medication.end_date|default:"Не указана" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Продолжительность (дней):</th>
+                                    <td>{{ medication.duration_days|default:"Не указана" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Статус:</th>
+                                    <td>
                                     <span class="badge badge-
                                     {% if medication.status == 'recommended' %}info
                                     {% elif medication.status == 'prescribed' %}primary
@@ -73,130 +74,395 @@
                                     {% endif %}">
                                         {{ medication.get_status_display }}
                                     </span>
-                                </td>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>По необходимости:</th>
+                                    <td>{% if medication.is_prn %}Да{% else %}Нет{% endif %}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Инструкции и причины</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold">Инструкции:</h6>
+                            <p>{{ medication.instructions|default:"Не указаны"|linebreaks }}</p>
+                        </div>
+
+                        <div>
+                            <h6 class="font-weight-bold">Причина назначения:</h6>
+                            <p>{{ medication.reason|default:"Не указана"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Информация о назначении</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tr>
+                                <th>Назначено:</th>
+                                <td>{{ medication.prescribed_by.full_name }}</td>
                             </tr>
                             <tr>
-                                <th>По необходимости:</th>
-                                <td>{% if medication.is_prn %}Да{% else %}Нет{% endif %}</td>
+                                <th>Дата назначения:</th>
+                                <td>{{ medication.prescribed_at }}</td>
                             </tr>
+                            {% if medication.last_modified_by %}
+                                <tr>
+                                    <th>Последнее изменение:</th>
+                                    <td>{{ medication.last_modified_by.full_name }} ({{ medication.modified_at }})</td>
+                                </tr>
+                            {% endif %}
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Инструкции и причины</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <h6 class="font-weight-bold">Инструкции:</h6>
-                        <p>{{ medication.instructions|default:"Не указаны"|linebreaks }}</p>
-                    </div>
-
-                    <div>
-                        <h6 class="font-weight-bold">Причина назначения:</h6>
-                        <p>{{ medication.reason|default:"Не указана"|linebreaks }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Информация о назначении</h6>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <th>Назначено:</th>
-                            <td>{{ medication.prescribed_by.full_name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Дата назначения:</th>
-                            <td>{{ medication.prescribed_at }}</td>
-                        </tr>
-                        {% if medication.last_modified_by %}
-                        <tr>
-                            <th>Последнее изменение:</th>
-                            <td>{{ medication.last_modified_by.full_name }} ({{ medication.modified_at }})</td>
-                        </tr>
-                        {% endif %}
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Administration History -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">История применения</h6>
-            <a href="{% url 'nurses:medication_administration_create' %}?prescribed_medication={{ medication.id }}" class="btn btn-success btn-sm">
-                <i class="fas fa-plus"></i> Добавить применение
+<!-- Administration History -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">История применения</h6>
+        {% if medication.is_prn %}
+            <a href="{% url 'nurses:add_prn_session' medication.id %}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> Добавить применение PRN
             </a>
-        </div>
-        <div class="card-body">
-            {% if administrations %}
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Дата и время</th>
-                                <th>Применено</th>
-                                <th>Доза</th>
-                                <th>Реакция пациента</th>
-                                <th>Побочные эффекты</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for administration in administrations %}
-                                <tr>
-                                    <td>{{ administration.administered_at }}</td>
-                                    <td>{{ administration.administered_by.full_name }}</td>
-                                    <td>{{ administration.dosage_given }}</td>
-                                    <td>{{ administration.patient_response|truncatechars:30|default:"-" }}</td>
-                                    <td>{{ administration.side_effects|truncatechars:30|default:"-" }}</td>
-                                    <td>
-                                        <a href="{% url 'nurses:medication_administration_detail' administration.id %}" class="btn btn-info btn-sm">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{% url 'nurses:medication_administration_update' administration.id %}" class="btn btn-warning btn-sm">
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if sessions %}
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>Запланировано на</th>
+                        <th>Статус</th>
+                        <th>Выдано</th>
+                        <th>Медсестра</th>
+                        <th>Примечания</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for session in sessions %}
+                        <tr class="
+                            {% if session.status == 'administered' %}table-success
+                            {% elif session.status == 'missed' %}table-danger
+                            {% elif session.status == 'refused' %}table-warning
+                            {% elif session.status == 'canceled' %}table-secondary
+                            {% endif %}
+                        ">
+                            <td>{{ session.session_datetime|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                {% if session.status == 'pending' %}
+                                    <span class="badge badge-info">Ожидает выдачи</span>
+                                {% elif session.status == 'administered' %}
+                                    <span class="badge badge-success">Выдано</span>
+                                {% elif session.status == 'missed' %}
+                                    <span class="badge badge-danger">Пропущено</span>
+                                {% elif session.status == 'refused' %}
+                                    <span class="badge badge-warning">Отказано</span>
+                                {% elif session.status == 'canceled' %}
+                                    <span class="badge badge-secondary">Отменено</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if session.administered_at %}
+                                    {{ session.administered_at|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if session.administered_by %}
+                                    {{ session.administered_by.full_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ session.notes|truncatechars:30|default:"-" }}</td>
+                            <td>
+                                {% if session.status == 'pending' %}
+                                    <!-- Quick Administer Button -->
+                                    <button type="button" class="btn btn-success btn-sm"
+                                            data-toggle="modal" data-target="#updateSessionModal"
+                                            data-session-id="{{ session.id }}"
+                                            data-status="administered"
+                                            data-action="{% url 'nurses:update_session_status' session.id %}"
+                                            onclick="setupAdministerModal(this)">
+                                        <i class="fas fa-check"></i> Выдать
+                                    </button>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle"
+                                                data-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <!-- Missed Status Option -->
+                                            <button type="button" class="dropdown-item"
+                                                    data-toggle="modal" data-target="#updateSessionModal"
+                                                    data-session-id="{{ session.id }}"
+                                                    data-status="missed"
+                                                    data-action="{% url 'nurses:update_session_status' session.id %}"
+                                                    onclick="setupSessionModal(this, 'missed')">
+                                                <i class="fas fa-times text-danger"></i> Отметить как пропущено
+                                            </button>
+                                            <!-- Refused Status Option -->
+                                            <button type="button" class="dropdown-item"
+                                                    data-toggle="modal" data-target="#updateSessionModal"
+                                                    data-session-id="{{ session.id }}"
+                                                    data-status="refused"
+                                                    data-action="{% url 'nurses:update_session_status' session.id %}"
+                                                    onclick="setupSessionModal(this, 'refused')">
+                                                <i class="fas fa-ban text-warning"></i> Отметить как отказ
+                                            </button>
+                                            <!-- Cancel Status Option -->
+                                            <button type="button" class="dropdown-item"
+                                                    data-toggle="modal" data-target="#updateSessionModal"
+                                                    data-session-id="{{ session.id }}"
+                                                    data-status="canceled"
+                                                    data-action="{% url 'nurses:update_session_status' session.id %}"
+                                                    onclick="setupSessionModal(this, 'canceled')">
+                                                <i class="fas fa-trash text-secondary"></i> Отменить
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <a href="{% url 'nurses:medication_session_detail' session.id %}"
+                                       class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if session.status != 'canceled' %}
+                                        <a href="{% url 'nurses:medication_session_update' session.id %}"
+                                           class="btn btn-warning btn-sm">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'nurses:medication_administration_delete' administration.id %}" class="btn btn-danger btn-sm">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info">
-                    История применения отсутствует.
-                    <a href="{% url 'nurses:medication_administration_create' %}?prescribed_medication={{ medication.id }}" class="alert-link">Добавить первое применение</a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Запланированных приёмов лекарств нет.
+                {% if medication.is_prn %}
+                    <a href="{% url 'nurses:add_prn_session' medication.id %}" class="alert-link">Добавить
+                        запись о выдаче препарата PRN</a>
+                {% endif %}
+            </div>
+        {% endif %}
 
-    <!-- Action Buttons -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <a href="{% url 'nurses:prescribed_medication_list' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Назад к списку
-            </a>
-            <a href="{% url 'nurses:prescribed_medication_update' medication.id %}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Редактировать
-            </a>
-            <a href="{% url 'nurses:prescribed_medication_delete' medication.id %}" class="btn btn-danger">
-                <i class="fas fa-trash"></i> Удалить
-            </a>
+        {% if not medication.is_prn and medication.status == 'active' %}
+            <div class="mt-3">
+                <a href="{% url 'nurses:generate_more_sessions' medication.id %}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus"></i> Сгенерировать дополнительные сеансы
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Update Session Status Modal -->
+<div class="modal fade" id="updateSessionModal" tabindex="-1" role="dialog" aria-labelledby="updateSessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="sessionStatusForm" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateSessionModalLabel">Обновить статус</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="status" id="sessionStatus">
+
+                    <!-- Fields for administered status -->
+                    <div id="administeredFields" style="display: none;">
+                        <div class="form-group">
+                            <label for="administeredAt">Дата и время выдачи:</label>
+                            <input type="datetime-local" class="form-control" id="administeredAt" name="administered_at">
+                        </div>
+                    </div>
+
+                    <!-- Notes field for all statuses -->
+                    <div class="form-group">
+                        <label for="sessionNotes">Примечания:</label>
+                        <textarea class="form-control" id="sessionNotes" name="notes" rows="3"
+                                  placeholder="Введите любую важную информацию о приеме лекарства"></textarea>
+                    </div>
+
+                    <!-- Confirmation message based on status -->
+                    <div id="confirmMessage" class="alert alert-warning">
+                        Вы уверены, что хотите обновить статус сеанса?
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="confirmButton">Подтвердить</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<!-- Quick Administer Modal -->
+<div class="modal fade" id="quickAdministerModal" tabindex="-1" role="dialog" aria-labelledby="quickAdministerModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="administerForm" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="quickAdministerModalLabel">
+                        <i class="fas fa-check"></i> Выдать лекарство
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-info-circle"></i> Вы собираетесь отметить, что лекарство было выдано пациенту.
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quickNotes">Примечания:</label>
+                        <textarea class="form-control" id="quickNotes" name="notes" rows="2"
+                                  placeholder="Реакция пациента, наблюдения, и т.д."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Подтвердить выдачу
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <a href="{% url 'nurses:prescription_list' history.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+                <a href="{% url 'nurses:medications_update' medication.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <a href="{% url 'nurses:medications_delete' medication.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Удалить
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Add this script to the bottom of your template or in your JavaScript file -->
+    <script>
+    // Initialize datetime picker with current time
+    function setCurrentDateTime() {
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        var nowStr = now.toISOString().slice(0,16);
+        return nowStr;
+    }
+
+    // Setup the administer modal (quick version)
+    function setupAdministerModal(button) {
+        var sessionId = $(button).data('session-id');
+        var action = "{% url 'nurses:administer_medication' 0 %}".replace('0', sessionId);
+
+        // Set form action
+        $('#administerForm').attr('action', action);
+
+        // Clear notes
+        $('#quickNotes').val('');
+    }
+
+    // Setup the general session status modal
+    function setupSessionModal(button, status) {
+        var sessionId = $(button).data('session-id');
+        var action = $(button).data('action');
+
+        // Set form action and status
+        $('#sessionStatusForm').attr('action', action);
+        $('#sessionStatus').val(status);
+
+        // Clear previous notes
+        $('#sessionNotes').val('');
+
+        // Set current time for administered_at
+        $('#administeredAt').val(setCurrentDateTime());
+
+        // Update modal title and content based on status
+        if (status === 'administered') {
+            $('#updateSessionModalLabel').text('Отметить как выдано');
+            $('#administeredFields').show();
+            $('#confirmMessage').html('Вы собираетесь отметить, что лекарство было выдано пациенту. Пожалуйста, подтвердите.');
+            $('#confirmMessage').removeClass().addClass('alert alert-success');
+            $('#confirmButton').removeClass().addClass('btn btn-success');
+            $('#confirmButton').html('<i class="fas fa-check"></i> Подтвердить выдачу');
+        } else if (status === 'missed') {
+            $('#updateSessionModalLabel').text('Отметить как пропущено');
+            $('#administeredFields').hide();
+            $('#confirmMessage').html('Вы собираетесь отметить сеанс как пропущенный. Пожалуйста, укажите причину в примечаниях.');
+            $('#confirmMessage').removeClass().addClass('alert alert-danger');
+            $('#confirmButton').removeClass().addClass('btn btn-danger');
+            $('#confirmButton').html('Отметить как пропущено');
+            $('#sessionNotes').attr('placeholder', 'Укажите причину пропуска сеанса...');
+        } else if (status === 'refused') {
+            $('#updateSessionModalLabel').text('Отметить как отказ');
+            $('#administeredFields').hide();
+            $('#confirmMessage').html('Вы собираетесь отметить, что пациент отказался от приема лекарства. Пожалуйста, укажите причину в примечаниях.');
+            $('#confirmMessage').removeClass().addClass('alert alert-warning');
+            $('#confirmButton').removeClass().addClass('btn btn-warning');
+            $('#confirmButton').html('Отметить как отказ');
+            $('#sessionNotes').attr('placeholder', 'Укажите причину отказа пациента...');
+        } else if (status === 'canceled') {
+            $('#updateSessionModalLabel').text('Отменить сеанс');
+            $('#administeredFields').hide();
+            $('#confirmMessage').html('Вы собираетесь отменить этот сеанс приема лекарства. Это действие нельзя отменить.');
+            $('#confirmMessage').removeClass().addClass('alert alert-secondary');
+            $('#confirmButton').removeClass().addClass('btn btn-secondary');
+            $('#confirmButton').html('Отменить сеанс');
+            $('#sessionNotes').attr('placeholder', 'Укажите причину отмены сеанса...');
+        }
+    }
+
+    $(document).ready(function() {
+        // Set up listeners for the modal trigger buttons
+        $('.update-session').on('click', function() {
+            var status = $(this).data('status');
+            setupSessionModal(this, status);
+        });
+
+        // Ensure administered_at is set when modal is opened
+        $('#updateSessionModal').on('show.bs.modal', function() {
+            // Only set time if field is visible
+            if ($('#administeredFields').is(':visible')) {
+                $('#administeredAt').val(setCurrentDateTime());
+            }
+        });
+
+        // Initialize any tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
 {% endblock %}

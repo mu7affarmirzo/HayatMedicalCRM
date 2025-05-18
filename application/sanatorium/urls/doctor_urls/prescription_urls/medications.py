@@ -19,15 +19,15 @@ urlpatterns = [
     path('api/search/', views.api_medications_search, name='api_medications_search'),
     path('api/details/', views.api_medication_details, name='api_medication_details'),
 
-    # MedicationAdministration URLs
-    path('administrations/', views.MedicationAdministrationListView.as_view(),
+    # MedicationSession URLs
+    path('administrations/', views.MedicationSessionListView.as_view(),
          name='medication_administration_list'),
-    path('administrations/<int:pk>/', views.MedicationAdministrationDetailView.as_view(),
+    path('administrations/<int:pk>/', views.MedicationSessionDetailView.as_view(),
          name='medication_administration_detail'),
-    path('administrations/create/', views.MedicationAdministrationCreateView.as_view(),
+    path('administrations/create/', views.MedicationSessionCreateView.as_view(),
          name='medication_administration_create'),
-    path('administrations/<int:pk>/update/', views.MedicationAdministrationUpdateView.as_view(),
+    path('administrations/<int:pk>/update/', views.MedicationSessionUpdateView.as_view(),
          name='medication_administration_update'),
-    path('administrations/<int:pk>/delete/', views.MedicationAdministrationDeleteView.as_view(),
+    path('administrations/<int:pk>/delete/', views.MedicationSessionDeleteView.as_view(),
          name='medication_administration_delete'),
 ]

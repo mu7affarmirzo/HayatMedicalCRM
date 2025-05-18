@@ -78,7 +78,8 @@ class IndividualProcedureSessionModel(BaseAuditModel):
         Account, on_delete=models.SET_NULL, related_name='conducted_sessions',
         null=True, blank=True, verbose_name='Массажист'
     )
-
+    scheduled_to = models.DateTimeField(null=True, blank=True,
+                                        verbose_name='Дата ')
     completed_at = models.DateTimeField(null=True, blank=True,
                                         verbose_name='Дата проведения')
 

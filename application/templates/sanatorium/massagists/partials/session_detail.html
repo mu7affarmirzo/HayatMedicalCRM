@@ -1,0 +1,177 @@
+<!-- templates/dashboard/partials/session_detail.html -->
+<div class="session-detail-container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title font-weight-bold">Информация о сеансе</h6>
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th scope="row" class="text-muted">Номер сеанса:</th>
+                                    <td>{{ session.session_number }} из {{ session.assigned_procedure.quantity }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Статус:</th>
+                                    <td>
+                                        <span class="badge {% if session.status == 'pending' %}status-pending{% elif session.status == 'completed' %}status-completed{% else %}status-canceled{% endif %} px-2 py-1">
+                                            {{ session.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Процедура:</th>
+                                    <td>{{ procedure_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="text-muted">Пациент:</th>
+                                    <td>{{ patient_name }}</td>
+                                </tr>
+                                {% if session.completed_at %}
+                                <tr>
+                                    <th scope="row" class="text-muted">Дата проведения:</th>
+                                    <td>{{ session.completed_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if session.therapist %}
+                                <tr>
+                                    <th scope="row" class="text-muted">Медсестра:</th>
+                                    <td>{{ session.therapist.first_name }} {{ session.therapist.last_name }}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title font-weight-bold">Примечания</h6>
+                    {% if session.notes %}
+                    <p>{{ session.notes|linebreaks }}</p>
+                    {% else %}
+                    <p class="text-muted">Нет примечаний для этого сеанса</p>
+                    {% endif %}
+
+                    {% if can_complete or can_cancel %}
+                    <hr>
+                    <div class="form-group">
+                        <label for="sessionNotes">Добавить примечание:</label>
+                        <textarea class="form-control" id="sessionNotes" rows="3"></textarea>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if is_completed %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle mr-2"></i> Этот сеанс был успешно проведен {{ session.completed_at|date:"d.m.Y в H:i" }}
+    </div>
+    {% elif is_canceled %}
+    <div class="alert alert-danger">
+        <i class="fas fa-times-circle mr-2"></i> Этот сеанс был отменен
+    </div>
+    {% endif %}
+
+    <!-- Related procedure progress -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="card-title font-weight-bold">Прогресс процедуры</h6>
+            <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
+                <span>Прогресс</span>
+                <span>{{ session.assigned_procedure.proceeded_sessions }} из {{ session.assigned_procedure.quantity }}</span>
+            </div>
+            <div class="progress procedure-progress mb-3">
+                <div class="progress-bar bg-success" role="progressbar"
+                     style="width: {{ session.assigned_procedure.progres_percentile }}%"
+                     aria-valuenow="{{ session.assigned_procedure.progres_percentile }}"
+                     aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // For debugging AJAX URLs
+    console.log("Session ID:", {{ session.id }});
+    console.log("Complete URL:", URLS.completeSession + {{ session.id }} + '/');
+    console.log("Cancel URL:", URLS.cancelSession + {{ session.id }} + '/');
+
+    // Update the modal buttons visibility based on session status
+    $(document).ready(function() {
+        {% if can_complete %}
+            $('#completeSessionBtn').show();
+        {% else %}
+            $('#completeSessionBtn').hide();
+        {% endif %}
+
+        {% if can_cancel %}
+            $('#cancelSessionBtn').show();
+        {% else %}
+            $('#cancelSessionBtn').hide();
+        {% endif %}
+
+        // Set up action handlers for the session
+        $('#completeSessionBtn').on('click', function() {
+            var notes = $('#sessionNotes').val();
+            completeSession({{ session.id }}, notes);
+        });
+
+        $('#cancelSessionBtn').on('click', function() {
+            var notes = $('#sessionNotes').val();
+            cancelSession({{ session.id }}, notes);
+        });
+    });
+
+    function completeSession(sessionId, notes) {
+        $.ajax({
+            url: '/api/sessions/' + sessionId + '/complete/',
+            type: 'POST',
+            data: {
+                'notes': notes,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#sessionDetailModal').modal('hide');
+                    // Reload the page to reflect changes
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при выполнении операции.');
+            }
+        });
+    }
+
+    function cancelSession(sessionId, notes) {
+        $.ajax({
+            url: '/api/sessions/' + sessionId + '/cancel/',
+            type: 'POST',
+            data: {
+                'notes': notes,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#sessionDetailModal').modal('hide');
+                    // Reload the page to reflect changes
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при выполнении операции.');
+            }
+        });
+    }
+</script>

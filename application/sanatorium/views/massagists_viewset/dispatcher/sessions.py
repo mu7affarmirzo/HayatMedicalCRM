@@ -6,7 +6,75 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
-from core.models import IndividualProcedureSessionModel, ProcedureServiceModel
+from core.models import IndividualProcedureSessionModel, ProcedureServiceModel, Account
+
+from django.shortcuts import render, redirect
+from django.views import View
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+class DispatcherDashboardView(LoginRequiredMixin, View):
+    template_name = 'sanatorium/massagists/dispatcher/sessions_list.html'
+
+    def get(self, request):
+        # Get today's date
+        today = timezone.now().date()
+
+        # Get all sessions scheduled for today
+        today_sessions = IndividualProcedureSessionModel.objects.filter(
+            scheduled_to__date=today
+        ).select_related(
+            'assigned_procedure',
+            'assigned_procedure__illness_history',
+            'assigned_procedure__illness_history__patient',
+            'assigned_procedure__medical_service',
+            'therapist'
+        ).order_by(
+            # Order by patient name first
+            'assigned_procedure__illness_history__patient__l_name',
+            'assigned_procedure__illness_history__patient__f_name',
+            # Then by ID
+            'id',
+            # Then by medical service
+            'assigned_procedure__medical_service__name'
+        )
+
+        # Get all available therapists for the form dropdown
+        therapists = Account.objects.filter(is_therapist=True, is_active=True).order_by('l_name', 'f_name')
+
+        context = {
+            'today_sessions': today_sessions,
+            'therapists': therapists,
+            'today': today,
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        # Process form submission for assigning therapists
+        session_id = request.POST.get('session_id')
+        therapist_id = request.POST.get('therapist_id')
+
+        if session_id and therapist_id:
+            try:
+                session = IndividualProcedureSessionModel.objects.get(id=session_id)
+                therapist = Account.objects.get(id=therapist_id)
+
+                # Assign the therapist to the session
+                session.therapist = therapist
+                session.save(update_fields=['therapist', 'modified_at', 'modified_by'])
+
+                messages.success(request,
+                                 f"Терапист {therapist.full_name} успешно назначен на сеанс #{session.session_number}")
+            except IndividualProcedureSessionModel.DoesNotExist:
+                messages.error(request, "Сеанс не найден")
+            except Account.DoesNotExist:
+                messages.error(request, "Терапист не найден")
+        else:
+            messages.error(request, "Неверные данные формы")
+
+        return redirect('massagist:dispatcher_sessions_list')
 
 
 @login_required

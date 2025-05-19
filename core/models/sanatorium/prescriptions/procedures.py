@@ -1,8 +1,10 @@
 import datetime
+from datetime import timedelta
 
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from core.models import BaseAuditModel, IllnessHistory, Service, Account
 
@@ -20,7 +22,8 @@ class ProcedureServiceModel(BaseAuditModel):
         ("через день", "через день"),
     )
 
-    illness_history = models.ForeignKey(IllnessHistory, on_delete=models.CASCADE, null=True, blank=True, related_name='assigned_procedures')
+    illness_history = models.ForeignKey(IllnessHistory, on_delete=models.CASCADE, null=True, blank=True,
+                                        related_name='assigned_procedures')
     medical_service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True)
 
     therapist = models.ForeignKey(Account, blank=True, null=True, on_delete=models.SET_NULL, related_name='therapist')
@@ -38,7 +41,7 @@ class ProcedureServiceModel(BaseAuditModel):
 
     @property
     def progres_percentile(self):
-        return int(self.proceeded_sessions / self.quantity*100)
+        return int(self.proceeded_sessions / self.quantity * 100)
 
     @property
     def remaining_quantity(self):
@@ -62,6 +65,7 @@ class IndividualProcedureSessionModel(BaseAuditModel):
         ('pending', 'Ожидает'),
         ('completed', 'Проведен'),
         ('canceled', 'Отменен'),
+        ('conflicted', 'конфликтный'),
     )
 
     assigned_procedure = models.ForeignKey(
@@ -96,39 +100,123 @@ class IndividualProcedureSessionModel(BaseAuditModel):
         return f"{self.assigned_procedure.illness_history} - Сеанс #{self.session_number}"
 
 
+# Store original values before save to compare in post_save
+# Store original values before save to compare in post_save
+@receiver(pre_save, sender=ProcedureServiceModel)
+def store_original_values(sender, instance, **kwargs):
+    """Store original values before save to compare in post_save"""
+    if instance.pk:
+        try:
+            original = ProcedureServiceModel.objects.get(pk=instance.pk)
+            instance._original_quantity = original.quantity
+            instance._original_start_date = original.start_date
+            instance._original_frequency = original.frequency
+        except ProcedureServiceModel.DoesNotExist:
+            pass
+
+
 @receiver(post_save, sender=ProcedureServiceModel)
 def create_individual_sessions(sender, instance, created, **kwargs):
     """
-    Signal to create or update individual sessions when a booking is saved
+    Signal to create or update individual sessions when a procedure service is saved
     """
-
     # Get current number of individual sessions
     current_sessions = instance.individual_sessions.count()
 
-    # If this is a new booking, create all sessions
+    # Get the booking end date for conflict checking
+    booking_end_date = instance.illness_history.booking.end_date if instance.illness_history.booking else None
+
+    # If this is a new procedure service, create all sessions
     if created:
         for i in range(1, instance.quantity + 1):
+            # Calculate scheduled time based on frequency
+            scheduled_time = None
+            status = 'pending'
+
+            if instance.start_date:
+                if instance.frequency == "каждый день":
+                    scheduled_date = instance.start_date + timedelta(days=i - 1)
+                elif instance.frequency == "через день":
+                    scheduled_date = instance.start_date + timedelta(days=(i - 1) * 2)
+                else:
+                    scheduled_date = None
+
+                # Default time is 10:00 AM if only date is provided
+                if scheduled_date:
+                    scheduled_time = datetime.datetime.combine(
+                        scheduled_date,
+                        datetime.datetime.strptime("10:00", "%H:%M").time()
+                    )
+                    # Make timezone-aware if needed
+                    if timezone.is_naive(scheduled_time):
+                        scheduled_time = timezone.make_aware(scheduled_time)
+
+                # Check if scheduled date is beyond booking end date
+                if scheduled_time and booking_end_date:
+                    # Convert both to date objects for comparison
+                    scheduled_date = scheduled_time.date()
+                    end_date = booking_end_date
+                    if isinstance(booking_end_date, datetime.datetime):
+                        end_date = booking_end_date.date()
+
+                    if scheduled_date > end_date:
+                        status = 'conflicted'
+
             IndividualProcedureSessionModel.objects.create(
                 assigned_procedure=instance,
                 session_number=i,
                 therapist=instance.therapist,
-                status='pending'
+                status=status,
+                scheduled_to=scheduled_time
             )
+
         # Update proceeded_sessions to 0 (should already be 0, but just in case)
         instance.proceeded_sessions = 0
         instance.save(update_fields=['proceeded_sessions'])
         return
 
-    # Handle existing booking with changed quantity
+    # Handle existing procedure with changed quantity
     if hasattr(instance, '_original_quantity') and instance._original_quantity != instance.quantity:
         # If quantity increased, add new sessions
         if instance.quantity > instance._original_quantity:
             for i in range(instance._original_quantity + 1, instance.quantity + 1):
+                # Calculate scheduled time for new sessions
+                scheduled_time = None
+                status = 'pending'
+
+                if instance.start_date:
+                    if instance.frequency == "каждый день":
+                        scheduled_date = instance.start_date + timedelta(days=i - 1)
+                    elif instance.frequency == "через день":
+                        scheduled_date = instance.start_date + timedelta(days=(i - 1) * 2)
+                    else:
+                        scheduled_date = None
+
+                    if scheduled_date:
+                        scheduled_time = datetime.datetime.combine(
+                            scheduled_date,
+                            datetime.datetime.strptime("10:00", "%H:%M").time()
+                        )
+                        if timezone.is_naive(scheduled_time):
+                            scheduled_time = timezone.make_aware(scheduled_time)
+
+                    # Check if scheduled date is beyond booking end date
+                    if scheduled_time and booking_end_date:
+                        # Convert both to date objects for comparison
+                        scheduled_date = scheduled_time.date()
+                        end_date = booking_end_date
+                        if isinstance(booking_end_date, datetime.datetime):
+                            end_date = booking_end_date.date()
+
+                        if scheduled_date > end_date:
+                            status = 'conflicted'
+
                 IndividualProcedureSessionModel.objects.create(
-                    booking=instance,
+                    assigned_procedure=instance,
                     session_number=i,
                     therapist=instance.therapist,
-                    status='pending'
+                    status=status,
+                    scheduled_to=scheduled_time
                 )
 
         # If quantity decreased, remove excess sessions
@@ -146,8 +234,56 @@ def create_individual_sessions(sender, instance, created, **kwargs):
                         instance.save(update_fields=['quantity'])
                         break
 
+    # If start_date or frequency changed, update scheduled times
+    if (hasattr(instance, '_original_start_date') and instance._original_start_date != instance.start_date) or \
+            (hasattr(instance, '_original_frequency') and instance._original_frequency != instance.frequency):
+
+        for session in instance.individual_sessions.all():
+            # Only reschedule pending sessions
+            if session.status not in ['completed', 'canceled']:
+                scheduled_time = None
+                status = session.status
+
+                if instance.start_date:
+                    if instance.frequency == "каждый день":
+                        scheduled_date = instance.start_date + timedelta(days=session.session_number - 1)
+                    elif instance.frequency == "через день":
+                        scheduled_date = instance.start_date + timedelta(days=(session.session_number - 1) * 2)
+                    else:
+                        scheduled_date = None
+
+                    if scheduled_date:
+                        # Preserve the time if it exists, otherwise default to 10:00
+                        if session.scheduled_to:
+                            old_time = session.scheduled_to.time()
+                        else:
+                            old_time = datetime.datetime.strptime("10:00", "%H:%M").time()
+
+                        scheduled_time = datetime.datetime.combine(scheduled_date, old_time)
+                        if timezone.is_naive(scheduled_time):
+                            scheduled_time = timezone.make_aware(scheduled_time)
+
+                    # Check if scheduled date is beyond booking end date
+                    if scheduled_time and booking_end_date:
+                        # Convert both to date objects for comparison
+                        scheduled_date = scheduled_time.date()
+                        end_date = booking_end_date
+                        if isinstance(booking_end_date, datetime.datetime):
+                            end_date = booking_end_date.date()
+
+                        if scheduled_date > end_date:
+                            status = 'conflicted'
+                        elif status == 'conflicted':
+                            # If it was conflicted before but now it's not, change to pending
+                            if scheduled_date <= end_date:
+                                status = 'pending'
+
+                session.scheduled_to = scheduled_time
+                session.status = status
+                session.save(update_fields=['scheduled_to', 'status'])
+
     # Sync proceeded_sessions count with completed individual sessions
-    completed_count = instance.proceeded_sessions
+    completed_count = instance.individual_sessions.filter(status='completed').count()
     if instance.proceeded_sessions != completed_count:
         instance.proceeded_sessions = completed_count
         instance.save(update_fields=['proceeded_sessions'])
@@ -155,19 +291,24 @@ def create_individual_sessions(sender, instance, created, **kwargs):
 
 # Signal for updating proceeded_sessions when an individual session is saved
 @receiver(post_save, sender=IndividualProcedureSessionModel)
-def update_booking_proceeded_sessions(sender, instance, **kwargs):
+def update_booking_proceeded_sessions(sender, instance, created=False, **kwargs):
     """
-    Update the proceeded_sessions count in the booking model
+    Update the proceeded_sessions count in the procedure model
     when an individual session is saved
     """
-    # Get the booking
-    booking = instance.assigned_procedure
+    # If status changed to completed, set completed_at time
+    if instance.status == 'completed' and not instance.completed_at:
+        instance.completed_at = timezone.now()
+        instance.save(update_fields=['completed_at'])
+
+    # Get the procedure
+    procedure = instance.assigned_procedure
 
     # Calculate the new count of completed sessions
-    completed_count = booking.individual_sessions.filter(status='completed').count()
+    completed_count = procedure.individual_sessions.filter(status='completed').count()
 
-    # Update the booking's proceeded_sessions field if it's different
-    if booking.proceeded_sessions != completed_count:
-        booking.proceeded_sessions = completed_count
+    # Update the procedure's proceeded_sessions field if it's different
+    if procedure.proceeded_sessions != completed_count:
+        procedure.proceeded_sessions = completed_count
         # Use update_fields to avoid triggering other signals
-        booking.save(update_fields=['proceeded_sessions'])
+        procedure.save(update_fields=['proceeded_sessions'])

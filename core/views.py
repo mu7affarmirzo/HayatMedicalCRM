@@ -82,6 +82,8 @@ def redirect_by_role(user):
         return redirect('doctors_main_screen')
     elif main_role.name == "massagist":
         return redirect('massagist:massagist_dashboard')
+    elif main_role.name == "massagist_dispatcher":
+        return redirect('massagist:dispatcher_dashboard')
 
     redirect_path = USER_ROLE_REDIRECTS.get(main_role.name, 'default_dashboard')
     return redirect(redirect_path)

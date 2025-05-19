@@ -1,0 +1,260 @@
+{% extends 'sanatorium/snippets/massagist_dispatcher_base.html' %}
+{% load static %}
+
+{% block title %}Диспетчер - Сеансы на сегодня{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Сеансы на {{ today|date:"d.m.Y" }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item active">Диспетчер</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Filter Controls -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Статус:</label>
+                            <select id="status-filter" class="form-control">
+                                <option value="">Все</option>
+                                <option value="pending">Ожидает</option>
+                                <option value="completed">Проведен</option>
+                                <option value="canceled">Отменен</option>
+                                <option value="conflicted">Конфликтный</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Терапист:</label>
+                            <select id="therapist-filter" class="form-control">
+                                <option value="">Все</option>
+                                <option value="unassigned">Не назначен</option>
+                                {% for therapist in therapists %}
+                                    <option value="{{ therapist.id }}">{{ therapist.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button id="apply-filters" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Применить фильтры
+                        </button>
+                        <button id="reset-filters" class="btn btn-default ml-2">
+                            <i class="fas fa-sync"></i> Сбросить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Сеансы на сегодня</h3>
+                <div class="card-tools">
+                    <span class="badge bg-primary">Всего: {{ today_sessions|length }}</span>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                {% if today_sessions %}
+                <table class="table table-hover text-nowrap" id="sessions-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Пациент</th>
+                            <th>Услуга</th>
+                            <th>Номер сеанса</th>
+                            <th>Время</th>
+                            <th>Статус</th>
+                            <th>Терапист</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in today_sessions %}
+                        <tr data-status="{{ session.status }}" data-therapist="{{ session.therapist.id|default:'unassigned' }}"
+                            class="{% if session.status == 'pending' %}bg-warning{% elif session.status == 'completed' %}bg-success{% elif session.status == 'canceled' %}bg-danger{% elif session.status == 'conflicted' %}bg-danger{% endif %}">
+                            <td>{{ session.id }}</td>
+                            <td>{{ session.assigned_procedure.illness_history.patient.full_name }}</td>
+                            <td>{{ session.assigned_procedure.medical_service.name }}</td>
+                            <td>{{ session.session_number }}</td>
+                            <td>{{ session.scheduled_to|time:"H:i" }}</td>
+                            <td>
+                                <span class="badge {% if session.status == 'pending' %}bg-warning{% elif session.status == 'completed' %}bg-success{% elif session.status == 'canceled' %}bg-danger{% elif session.status == 'conflicted' %}bg-danger{% endif %}">
+                                    {{ session.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if session.therapist %}
+                                    {{ session.therapist.full_name }}
+                                {% else %}
+                                    <span class="badge bg-warning">Не назначен</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-primary btn-sm assign-therapist-btn" data-toggle="modal" data-target="#assignTherapistModal"
+                                        data-session-id="{{ session.id }}"
+                                        data-session-number="{{ session.session_number }}"
+                                        data-patient="{{ session.assigned_procedure.illness_history.patient.full_name }}"
+                                        data-service="{{ session.assigned_procedure.service.name }}"
+                                        data-time="{{ session.scheduled_to|time:'H:i' }}"
+                                        data-current-therapist="{{ session.therapist.id|default:'' }}">
+                                    <i class="fas fa-user-md"></i> Назначить
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info m-3">
+                    <i class="fas fa-info-circle mr-2"></i> На сегодня нет запланированных сеансов.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Assign Therapist Modal -->
+<div class="modal fade" id="assignTherapistModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="{% url 'massagist:dispatcher_sessions_list' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Назначить терапевта</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="session_id" id="session_id">
+
+                    <div class="session-details mb-4">
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Сеанс #</strong></div>
+                            <div class="col-md-8"><span id="session_number"></span></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Пациент:</strong></div>
+                            <div class="col-md-8"><span id="patient_name"></span></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Услуга:</strong></div>
+                            <div class="col-md-8"><span id="service_name"></span></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Время:</strong></div>
+                            <div class="col-md-8"><span id="session_time"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="therapist_id">Выберите терапевта:</label>
+                        <select name="therapist_id" id="therapist_id" class="form-control select2" style="width: 100%;" required>
+                            <option value="">-- Выберите терапевта --</option>
+                            {% for therapist in therapists %}
+                            <option value="{{ therapist.id }}">{{ therapist.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Назначить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Handle assign therapist button click
+        $('.assign-therapist-btn').on('click', function() {
+            var sessionId = $(this).data('session-id');
+            var sessionNumber = $(this).data('session-number');
+            var patientName = $(this).data('patient');
+            var serviceName = $(this).data('service');
+            var sessionTime = $(this).data('time');
+            var currentTherapist = $(this).data('current-therapist');
+
+            $('#session_id').val(sessionId);
+            $('#session_number').text(sessionNumber);
+            $('#patient_name').text(patientName);
+            $('#service_name').text(serviceName);
+            $('#session_time').text(sessionTime);
+
+            // Preselect the current therapist if assigned
+            if (currentTherapist) {
+                $('#therapist_id').val(currentTherapist).trigger('change');
+            } else {
+                $('#therapist_id').val('').trigger('change');
+            }
+        });
+
+        // Filter functionality
+        $('#apply-filters').on('click', function() {
+            var statusFilter = $('#status-filter').val();
+            var therapistFilter = $('#therapist-filter').val();
+
+            $('#sessions-table tbody tr').each(function() {
+                var statusMatch = !statusFilter || $(this).data('status') === statusFilter;
+                var therapistMatch = !therapistFilter || $(this).data('therapist') === therapistFilter;
+
+                if (statusMatch && therapistMatch) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+
+        // Reset filters
+        $('#reset-filters').on('click', function() {
+            $('#status-filter').val('');
+            $('#therapist-filter').val('');
+            $('#sessions-table tbody tr').show();
+        });
+    });
+</script>
+{% endblock %}

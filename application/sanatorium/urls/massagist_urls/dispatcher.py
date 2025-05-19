@@ -1,9 +1,12 @@
 from django.urls import path
-from application.sanatorium.views.massagists_viewset.dispatcher import dashboard, calendar, reports
+
+from application.sanatorium.views.massagists_viewset.dispatcher import dashboard, calendar, reports, sessions
 
 urlpatterns = [
     # Main dashboard view
     path('', dashboard.dispatcher_dashboard, name='dispatcher_dashboard'),
+
+    path('sessions/list', sessions.DispatcherDashboardView.as_view(), name='dispatcher_sessions_list'),
 
     # Procedure detail and edit
     path('procedure/<int:procedure_id>/', dashboard.procedure_detail, name='procedure_detail'),

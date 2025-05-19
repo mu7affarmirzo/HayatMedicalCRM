@@ -1,7 +1,9 @@
 # Additional views for AJAX actions
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
@@ -16,13 +18,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 class DispatcherDashboardView(LoginRequiredMixin, View):
     template_name = 'sanatorium/massagists/dispatcher/sessions_list.html'
+    items_per_page = 15  # Number of items per page
 
     def get(self, request):
         # Get today's date
         today = timezone.now().date()
 
         # Get all sessions scheduled for today
-        today_sessions = IndividualProcedureSessionModel.objects.filter(
+        sessions_queryset = IndividualProcedureSessionModel.objects.filter(
             scheduled_to__date=today
         ).select_related(
             'assigned_procedure',
@@ -40,6 +43,17 @@ class DispatcherDashboardView(LoginRequiredMixin, View):
             'assigned_procedure__medical_service__name'
         )
 
+        # Set up pagination
+        page = request.GET.get('page', 1)
+        paginator = Paginator(sessions_queryset, self.items_per_page)
+
+        try:
+            today_sessions = paginator.page(page)
+        except PageNotAnInteger:
+            today_sessions = paginator.page(1)
+        except EmptyPage:
+            today_sessions = paginator.page(paginator.num_pages)
+
         # Get all available therapists for the form dropdown
         therapists = Account.objects.filter(is_therapist=True, is_active=True).order_by('l_name', 'f_name')
 
@@ -47,6 +61,7 @@ class DispatcherDashboardView(LoginRequiredMixin, View):
             'today_sessions': today_sessions,
             'therapists': therapists,
             'today': today,
+            'total_sessions': sessions_queryset.count(),
         }
 
         return render(request, self.template_name, context)
@@ -55,18 +70,47 @@ class DispatcherDashboardView(LoginRequiredMixin, View):
         # Process form submission for assigning therapists
         session_id = request.POST.get('session_id')
         therapist_id = request.POST.get('therapist_id')
+        status = request.POST.get('status')
+        scheduled_time = request.POST.get('scheduled_time')
 
-        if session_id and therapist_id:
+        if session_id:
             try:
                 session = IndividualProcedureSessionModel.objects.get(id=session_id)
-                therapist = Account.objects.get(id=therapist_id)
 
-                # Assign the therapist to the session
-                session.therapist = therapist
-                session.save(update_fields=['therapist', 'modified_at', 'modified_by'])
+                # Update fields based on what was provided
+                if therapist_id:
+                    therapist = Account.objects.get(id=therapist_id)
+                    session.therapist = therapist
 
-                messages.success(request,
-                                 f"Терапист {therapist.full_name} успешно назначен на сеанс #{session.session_number}")
+                # Update status if provided
+                if status:
+                    session.status = status
+
+                # Update scheduled time if provided
+                if scheduled_time:
+                    # Parse the date and time from the form
+                    date_str = request.POST.get('scheduled_date')
+                    if date_str:
+                        try:
+                            # Combine date and time
+                            date_obj = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+                            time_obj = timezone.datetime.strptime(scheduled_time, '%H:%M').time()
+
+                            # Create a datetime object with the current timezone
+                            datetime_obj = timezone.datetime.combine(date_obj, time_obj)
+                            datetime_obj = timezone.make_aware(datetime_obj) if timezone.is_naive(
+                                datetime_obj) else datetime_obj
+
+                            session.scheduled_to = datetime_obj
+                        except ValueError:
+                            messages.error(request, "Неверный формат даты или времени")
+                            return redirect('dispatcher_dashboard')
+
+                # Save all changes
+                session.modified_by = request.user
+                session.save()
+
+                messages.success(request, f"Сеанс #{session.session_number} успешно обновлен")
             except IndividualProcedureSessionModel.DoesNotExist:
                 messages.error(request, "Сеанс не найден")
             except Account.DoesNotExist:
@@ -74,7 +118,9 @@ class DispatcherDashboardView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Неверные данные формы")
 
-        return redirect('massagist:dispatcher_sessions_list')
+        # Keep the page number when redirecting
+        page = request.POST.get('current_page', 1)
+        return redirect(f"{reverse('massagist:dispatcher_sessions_list')}?page={page}")
 
 
 @login_required

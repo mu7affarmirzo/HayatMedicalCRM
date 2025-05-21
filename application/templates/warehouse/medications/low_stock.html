@@ -1,0 +1,270 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Заканчивающиеся лекарства - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stock-critical {
+        background-color: #f8d7da;
+    }
+    .stock-low {
+        background-color: #fff3cd;
+    }
+    .summary-box {
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: white;
+    }
+    .critical-box {
+        background-color: #dc3545;
+    }
+    .warning-box {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .summary-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+    .summary-count {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .filters-card {
+        margin-bottom: 1.5rem;
+    }
+    .quantity-badge {
+        font-weight: bold;
+    }
+    .progress {
+        height: 20px;
+    }
+    .stock-bar {
+        font-size: 12px;
+        line-height: 20px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Заканчивающиеся лекарства</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Заканчивающиеся лекарства</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filters Card -->
+        <div class="card filters-card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'warehouse:low_stock' %}" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Порог (упаковок):</label>
+                                <select class="form-control" name="threshold">
+                                    <option value="5" {% if threshold == 5 %}selected{% endif %}>< 5 упаковок</option>
+                                    <option value="10" {% if threshold == 10 or not threshold %}selected{% endif %}>< 10 упаковок</option>
+                                    <option value="20" {% if threshold == 20 %}selected{% endif %}>< 20 упаковок</option>
+                                    <option value="50" {% if threshold == 50 %}selected{% endif %}>< 50 упаковок</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Склад:</label>
+                                <select class="form-control select2bs4" name="warehouse" style="width: 100%;">
+                                    <option value="">Все склады</option>
+                                    {% for warehouse in warehouses %}
+                                        <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"i" %}selected{% endif %}>{{ warehouse.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Применить фильтры
+                            </button>
+                            <a href="{% url 'warehouse:low_stock' %}" class="btn btn-default">
+                                <i class="fas fa-sync"></i> Сбросить
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Boxes -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="summary-box critical-box">
+                    <div class="summary-title">Критический запас (< 5 упаковок)</div>
+                    <div class="summary-count">{{ critical_stock.count }}</div>
+                    <div>лекарств требуют немедленного пополнения</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="summary-box warning-box">
+                    <div class="summary-title">Низкий запас (< {{ threshold }} упаковок)</div>
+                    <div class="summary-count">{{ low_stock.count }}</div>
+                    <div>лекарств требуют внимания</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Лекарства с запасом меньше {{ threshold }} упаковок</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Лекарство</th>
+                            <th>Компания</th>
+                            <th>Склад</th>
+                            <th>Серия</th>
+                            <th>Запас</th>
+                            <th>Уровень запаса</th>
+                            <th>Срок годности</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Critical items (< 5 packs) -->
+                        {% for item in critical_stock %}
+                        <tr class="stock-critical">
+                            <td>{{ item.item.name }}</td>
+                            <td>{{ item.item.company.name }}</td>
+                            <td>{{ item.warehouse.name }}</td>
+                            <td>{{ item.income_seria|default:"Не указано" }}</td>
+                            <td>
+                                <span class="badge badge-danger quantity-badge">{{ item.quantity }} уп. + {{ item.unit_quantity }} ед.</span>
+                            </td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger stock-bar" style="width: {{ item.quantity|divisibleby:threshold }}%">
+                                        {{ item.quantity }} / {{ threshold }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ item.expire_date|date:"d.m.Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'warehouse:medication_detail' item.item.id %}" class="btn btn-sm btn-info" title="Детали лекарства">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-success" title="Заказать" onclick="alert('Функция заказа будет доступна в будущих версиях');">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        <!-- Low stock items (>= 5 and < threshold) -->
+                        {% for item in low_stock %}
+                        <tr class="stock-low">
+                            <td>{{ item.item.name }}</td>
+                            <td>{{ item.item.company.name }}</td>
+                            <td>{{ item.warehouse.name }}</td>
+                            <td>{{ item.income_seria|default:"Не указано" }}</td>
+                            <td>
+                                <span class="badge badge-warning quantity-badge">{{ item.quantity }} уп. + {{ item.unit_quantity }} ед.</span>
+                            </td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning stock-bar" style="width: {{ item.quantity|divisibleby:threshold }}%">
+                                        {{ item.quantity }} / {{ threshold }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ item.expire_date|date:"d.m.Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'warehouse:medication_detail' item.item.id %}" class="btn btn-sm btn-info" title="Детали лекарства">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-success" title="Заказать" onclick="alert('Функция заказа будет доступна в будущих версиях');">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        {% if not stock_items %}
+                        <tr>
+                            <td colspan="8" class="text-center">Нет лекарств с низким запасом для выбранных критериев</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <a href="{% url 'warehouse:warehouse_dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Вернуться на главную
+                </a>
+                <button class="btn btn-info" onclick="window.print();">
+                    <i class="fas fa-print"></i> Печать отчета
+                </button>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Экспорт в Excel
+                </a>
+                <a href="#" class="btn btn-primary" onclick="alert('Функция массового заказа будет доступна в будущих версиях');">
+                    <i class="fas fa-shopping-cart"></i> Заказать все критические
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

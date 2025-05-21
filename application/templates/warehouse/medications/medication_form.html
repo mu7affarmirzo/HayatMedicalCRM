@@ -1,0 +1,271 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{% if is_update %}Редактирование{% else %}Добавление{% endif %} лекарства - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .section-title {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+    .form-help-text {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+    .required-field label:after {
+        content: " *";
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if is_update %}Редактирование{% else %}Добавление{% endif %} лекарства</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:medication_list' %}">Каталог лекарств</a></li>
+                    <li class="breadcrumb-item active">{% if is_update %}Редактирование{% else %}Добавление{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" id="medication-form">
+            {% csrf_token %}
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% if is_update %}Редактирование лекарства{% else %}Новое лекарство{% endif %}</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">Основная информация</h4>
+                        <div class="row">
+                            <div class="col-md-6 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {{ form.name.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>
+                                    {{ form.company }}
+                                    {% if form.company.errors %}
+                                        <div class="text-danger">
+                                            {{ form.company.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}</label>
+                                    {{ form.unit }}
+                                    {% if form.unit.errors %}
+                                        <div class="text-danger">
+                                            {{ form.unit.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.in_pack.id_for_label }}">{{ form.in_pack.label }}</label>
+                                    {{ form.in_pack }}
+                                    {% if form.in_pack.errors %}
+                                        <div class="text-danger">
+                                            {{ form.in_pack.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Количество единиц в одной упаковке</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.dosage_form.id_for_label }}">{{ form.dosage_form.label }}</label>
+                                    {{ form.dosage_form }}
+                                    {% if form.dosage_form.errors %}
+                                        <div class="text-danger">
+                                            {{ form.dosage_form.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Например: таблетки, сироп, капсулы и т.д.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">
+                                            {{ form.description.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Batch Information Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">Информация о партии</h4>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.batch_number.id_for_label }}">{{ form.batch_number.label }}</label>
+                                    {{ form.batch_number }}
+                                    {% if form.batch_number.errors %}
+                                        <div class="text-danger">
+                                            {{ form.batch_number.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.manufacture_date.id_for_label }}">{{ form.manufacture_date.label }}</label>
+                                    {{ form.manufacture_date }}
+                                    {% if form.manufacture_date.errors %}
+                                        <div class="text-danger">
+                                            {{ form.manufacture_date.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.expiry_date.id_for_label }}">{{ form.expiry_date.label }}</label>
+                                    {{ form.expiry_date }}
+                                    {% if form.expiry_date.errors %}
+                                        <div class="text-danger">
+                                            {{ form.expiry_date.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Medical Information Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">Медицинская информация</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.active_ingredients.id_for_label }}">{{ form.active_ingredients.label }}</label>
+                                    {{ form.active_ingredients }}
+                                    {% if form.active_ingredients.errors %}
+                                        <div class="text-danger">
+                                            {{ form.active_ingredients.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.contraindications.id_for_label }}">{{ form.contraindications.label }}</label>
+                                    {{ form.contraindications }}
+                                    {% if form.contraindications.errors %}
+                                        <div class="text-danger">
+                                            {{ form.contraindications.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">Статус</h4>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group clearfix">
+                                    <div class="icheck-primary d-inline">
+                                        {{ form.is_active }}
+                                        <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                                    </div>
+                                    {% if form.is_active.errors %}
+                                        <div class="text-danger">
+                                            {{ form.is_active.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Активные лекарства доступны для использования в системе</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% if is_update %}{% url 'warehouse:medication_detail' medication.id %}{% else %}{% url 'warehouse:medication_list' %}{% endif %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Отмена
+                            </a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {% if is_update %}Сохранить изменения{% else %}Создать лекарство{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

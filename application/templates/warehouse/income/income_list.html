@@ -1,0 +1,285 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Список поступлений - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+<style>
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+    .badge-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .badge-accepted {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-rejected {
+        background-color: #dc3545;
+        color: white;
+    }
+    .filters-card {
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Поступления</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Поступления</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filters Card -->
+        <div class="card filters-card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'warehouse:income_list' %}" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Статус:</label>
+                                <select class="form-control select2bs4" name="state" style="width: 100%;">
+                                    <option value="">Все статусы</option>
+                                    {% for state in states %}
+                                        <option value="{{ state }}" {% if request.GET.state == state %}selected{% endif %}>{{ state }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Склад-получатель:</label>
+                                <select class="form-control select2bs4" name="warehouse" style="width: 100%;">
+                                    <option value="">Все склады</option>
+                                    {% for warehouse in warehouses %}
+                                        <option value="{{ warehouse.id }}" {% if request.GET.warehouse == warehouse.id|stringformat:"i" %}selected{% endif %}>{{ warehouse.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Компания-поставщик:</label>
+                                <select class="form-control select2bs4" name="company" style="width: 100%;">
+                                    <option value="">Все компании</option>
+                                    {% for company in companies %}
+                                        <option value="{{ company.id }}" {% if request.GET.company == company.id|stringformat:"i" %}selected{% endif %}>{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Период:</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" class="form-control float-right" id="date-range" name="date_range">
+                                    <input type="hidden" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                                    <input type="hidden" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Применить фильтры
+                            </button>
+                            <a href="{% url 'warehouse:income_list' %}" class="btn btn-default">
+                                <i class="fas fa-sync"></i> Сбросить
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Income List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Список поступлений</h3>
+                <div class="card-tools">
+                    <a href="{% url 'warehouse:income_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Новое поступление
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="income-table" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Серийный номер</th>
+                            <th>Дата</th>
+                            <th>Компания-поставщик</th>
+                            <th>Склад-получатель</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for income in incomes %}
+                        <tr>
+                            <td>{{ income.serial }}</td>
+                            <td>{{ income.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ income.delivery_company.name|default:"-" }}</td>
+                            <td>{{ income.receiver.name }}</td>
+                            <td>{{ income.overall_sum }} ₸</td>
+                            <td>
+                                {% if income.state == 'в ожидании' %}
+                                    <span class="badge badge-pending">{{ income.state }}</span>
+                                {% elif income.state == 'принято' %}
+                                    <span class="badge badge-accepted">{{ income.state }}</span>
+                                {% else %}
+                                    <span class="badge badge-rejected">{{ income.state }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'warehouse:income_detail' income.id %}" class="btn btn-sm btn-info" title="Детали">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if income.state == 'в ожидании' %}
+                                    <a href="{% url 'warehouse:income_update' income.id %}" class="btn btn-sm btn-warning" title="Редактировать">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'warehouse:income_accept' income.id %}" class="btn btn-sm btn-success" title="Принять" onclick="return confirm('Вы уверены, что хотите принять это поступление?');">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{% url 'warehouse:income_reject' income.id %}" class="btn btn-sm btn-danger" title="Отклонить" onclick="return confirm('Вы уверены, что хотите отклонить это поступление?');">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">Записей не найдено</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+                <ul class="pagination pagination-sm m-0 float-right">
+                    {% if incomes.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo; первая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ incomes.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">назад</a></li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled"><a class="page-link" href="#">Страница {{ incomes.number }} из {{ incomes.paginator.num_pages }}</a></li>
+                    
+                    {% if incomes.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ incomes.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">вперед</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ incomes.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">последняя &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables & Plugins -->
+<script src="{% static 'adminlte3_assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+
+<script>
+    $(function () {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+        
+        // Initialize DateRangePicker
+        $('#date-range').daterangepicker({
+            locale: {
+                format: 'DD.MM.YYYY',
+                separator: ' - ',
+                applyLabel: 'Применить',
+                cancelLabel: 'Отмена',
+                fromLabel: 'С',
+                toLabel: 'По',
+                customRangeLabel: 'Произвольный диапазон',
+                weekLabel: 'Н',
+                daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+                monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+                ],
+            },
+            startDate: moment().subtract(29, 'days'),
+            endDate: moment(),
+            ranges: {
+                'Сегодня': [moment(), moment()],
+                'Вчера': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Последние 7 дней': [moment().subtract(6, 'days'), moment()],
+                'Последние 30 дней': [moment().subtract(29, 'days'), moment()],
+                'Этот месяц': [moment().startOf('month'), moment().endOf('month')],
+                'Прошлый месяц': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        }, function(start, end) {
+            $('#date_from').val(start.format('YYYY-MM-DD'));
+            $('#date_to').val(end.format('YYYY-MM-DD'));
+        });
+        
+        // Setup initial dates if they exist in URL params
+        if ($('#date_from').val() && $('#date_to').val()) {
+            var start = moment($('#date_from').val());
+            var end = moment($('#date_to').val());
+            $('#date-range').data('daterangepicker').setStartDate(start);
+            $('#date-range').data('daterangepicker').setEndDate(end);
+        }
+        
+        // Optional: Initialize DataTable for better mobile responsiveness
+        $('#income-table').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "responsive": true,
+        });
+    });
+</script>
+{% endblock %}

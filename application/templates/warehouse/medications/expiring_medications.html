@@ -1,0 +1,254 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ medication.name }} - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-box-custom {
+        min-height: 80px;
+    }
+    .info-box-content {
+        padding: 0 10px;
+    }
+    .info-box-number {
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+    .badge-stock {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+    .stock-table th, .stock-table td {
+        vertical-align: middle;
+    }
+    .detail-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .expired {
+        background-color: #f8d7da;
+    }
+    .expiring-soon {
+        background-color: #fff3cd;
+    }
+    .warehouse-card {
+        border-left: 4px solid #007bff;
+    }
+    .stock-status-badge {
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ medication.name }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:medication_list' %}">Каталог лекарств</a></li>
+                    <li class="breadcrumb-item active">{{ medication.name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Action buttons -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="btn-group">
+                    <a href="{% url 'warehouse:medication_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Вернуться к списку
+                    </a>
+                    <a href="{% url 'warehouse:medication_update' medication.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <button class="btn btn-info" onclick="window.print();">
+                        <i class="fas fa-print"></i> Печать
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Summary Row -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="info-box bg-info">
+                    <span class="info-box-icon"><i class="fas fa-boxes"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Общее количество</span>
+                        <span class="info-box-number">{{ total_packs }} упаковок + {{ total_units }} единиц</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-success">
+                    <span class="info-box-icon"><i class="fas fa-warehouse"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Количество складов</span>
+                        <span class="info-box-number">{{ warehouse_stock|length }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-warning">
+                    <span class="info-box-icon"><i class="fas fa-box"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">В одной упаковке</span>
+                        <span class="info-box-number">{{ medication.in_pack }} {{ medication.get_unit_display }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-{% if medication.is_active %}success{% else %}danger{% endif %}">
+                    <span class="info-box-icon"><i class="fas fa-{% if medication.is_active %}check{% else %}times{% endif %}"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Статус</span>
+                        <span class="info-box-number">{% if medication.is_active %}Активный{% else %}Неактивный{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medication Details Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Основная информация</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4 detail-label">Наименование:</dt>
+                            <dd class="col-sm-8">{{ medication.name }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Компания-производитель:</dt>
+                            <dd class="col-sm-8">{{ medication.company.name }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Единица измерения:</dt>
+                            <dd class="col-sm-8">{{ medication.get_unit_display }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">В упаковке:</dt>
+                            <dd class="col-sm-8">{{ medication.in_pack }} {{ medication.get_unit_display }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Номер партии:</dt>
+                            <dd class="col-sm-8">{{ medication.batch_number|default:"Не указано" }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Форма выпуска:</dt>
+                            <dd class="col-sm-8">{{ medication.dosage_form|default:"Не указано" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Дополнительная информация</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4 detail-label">Дата производства:</dt>
+                            <dd class="col-sm-8">{{ medication.manufacture_date|date:"d.m.Y"|default:"Не указано" }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Срок годности:</dt>
+                            <dd class="col-sm-8">{{ medication.expiry_date|date:"d.m.Y"|default:"Не указано" }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Описание:</dt>
+                            <dd class="col-sm-8">{{ medication.description|default:"Не указано" }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Активные ингредиенты:</dt>
+                            <dd class="col-sm-8">{{ medication.active_ingredients|default:"Не указано" }}</dd>
+                            
+                            <dt class="col-sm-4 detail-label">Противопоказания:</dt>
+                            <dd class="col-sm-8">{{ medication.contraindications|default:"Не указано" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock By Warehouse -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Запасы по складам</h3>
+            </div>
+            <div class="card-body">
+                {% if warehouse_stock %}
+                    <div class="row">
+                        {% for stock in warehouse_stock %}
+                            <div class="col-md-6">
+                                <div class="card card-outline card-primary warehouse-card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">{{ stock.warehouse.name }}</h3>
+                                        <div class="card-tools">
+                                            <span class="badge badge-info">{{ stock.total_packs }} упаковок + {{ stock.total_units }} единиц</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table table-striped stock-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Серия</th>
+                                                    <th>Количество</th>
+                                                    <th>Срок годности</th>
+                                                    <th>Статус</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in stock.items %}
+                                                    {% with days_until_expire=item.days_until_expire today=today %}
+                                                    <tr class="{% if item.expire_date < today %}expired{% elif days_until_expire <= 30 %}expiring-soon{% endif %}">
+                                                        <td>{{ item.income_seria|default:"Не указано" }}</td>
+                                                        <td>{{ item.quantity }} уп. + {{ item.unit_quantity }} ед.</td>
+                                                        <td>{{ item.expire_date|date:"d.m.Y" }}</td>
+                                                        <td>
+                                                            {% if item.expire_date < today %}
+                                                                <span class="badge badge-danger">Просрочено</span>
+                                                            {% elif days_until_expire <= 30 %}
+                                                                <span class="badge badge-warning">Истекает через {{ days_until_expire }} дн.</span>
+                                                            {% else %}
+                                                                <span class="badge badge-success">Годен</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Нет данных о запасах для этого лекарства.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

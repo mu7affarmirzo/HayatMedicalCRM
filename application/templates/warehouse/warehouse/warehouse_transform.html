@@ -1,0 +1,453 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Перемещение лекарств - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .section-title {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+    .form-help-text {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+    .required-field label:after {
+        content: " *";
+        color: red;
+    }
+    .transfer-arrow-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+    .transfer-arrow {
+        color: #007bff;
+        font-size: 2rem;
+        animation: pulse 1.5s infinite;
+    }
+    .info-box {
+        min-height: 100px;
+    }
+    .stock-summary {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f2f2f2;
+        border-radius: 5px;
+        display: none;
+    }
+    .stock-item {
+        margin-bottom: 5px;
+    }
+    .stock-value {
+        font-weight: bold;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Перемещение лекарств между складами</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_list' %}">Склады</a></li>
+                    <li class="breadcrumb-item active">Перемещение</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Back button -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <a href="{% url 'warehouse:warehouse_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад к списку складов
+                </a>
+            </div>
+        </div>
+
+        <!-- Transfer Form Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Форма перемещения</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" id="transfer-form">
+                    {% csrf_token %}
+                    
+                    <!-- Warehouses Selection -->
+                    <div class="form-section">
+                        <h4 class="section-title">Выбор складов</h4>
+                        <div class="row">
+                            <div class="col-md-5 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.source_warehouse.id_for_label }}">{{ form.source_warehouse.label }}</label>
+                                    {{ form.source_warehouse }}
+                                    {% if form.source_warehouse.errors %}
+                                        <div class="text-danger">
+                                            {{ form.source_warehouse.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Склад, с которого будут перемещены лекарства</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="transfer-arrow-container">
+                                    <i class="fas fa-arrow-right transfer-arrow"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-5 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.destination_warehouse.id_for_label }}">{{ form.destination_warehouse.label }}</label>
+                                    {{ form.destination_warehouse }}
+                                    {% if form.destination_warehouse.errors %}
+                                        <div class="text-danger">
+                                            {{ form.destination_warehouse.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Склад, на который будут перемещены лекарства</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Medication Selection -->
+                    <div class="form-section">
+                        <h4 class="section-title">Выбор лекарства</h4>
+                        <div class="row">
+                            <div class="col-md-12 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.medication.id_for_label }}">{{ form.medication.label }}</label>
+                                    {{ form.medication }}
+                                    {% if form.medication.errors %}
+                                        <div class="text-danger">
+                                            {{ form.medication.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Batch and Quantity -->
+                    <div class="form-section">
+                        <h4 class="section-title">Выбор партии и количества</h4>
+                        <div class="row">
+                            <div class="col-md-12 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.batch.id_for_label }}">{{ form.batch.label }}</label>
+                                    {{ form.batch }}
+                                    {% if form.batch.errors %}
+                                        <div class="text-danger">
+                                            {{ form.batch.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Выберите партию лекарства для перемещения</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Stock summary -->
+                        <div class="stock-summary" id="stock-summary">
+                            <h5>Информация о запасе</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="stock-item">
+                                        <span>Лекарство:</span>
+                                        <span class="stock-value" id="medication-name">-</span>
+                                    </div>
+                                    <div class="stock-item">
+                                        <span>Партия:</span>
+                                        <span class="stock-value" id="batch-name">-</span>
+                                    </div>
+                                    <div class="stock-item">
+                                        <span>Срок годности:</span>
+                                        <span class="stock-value" id="expire-date">-</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="stock-item">
+                                        <span>Доступно упаковок:</span>
+                                        <span class="stock-value" id="available-packs">-</span>
+                                    </div>
+                                    <div class="stock-item">
+                                        <span>Доступно единиц:</span>
+                                        <span class="stock-value" id="available-units">-</span>
+                                    </div>
+                                    <div class="stock-item">
+                                        <span>В упаковке:</span>
+                                        <span class="stock-value" id="in-pack">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6 required-field">
+                                <div class="form-group">
+                                    <label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger">
+                                            {{ form.quantity.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.unit_quantity.id_for_label }}">{{ form.unit_quantity.label }}</label>
+                                    {{ form.unit_quantity }}
+                                    {% if form.unit_quantity.errors %}
+                                        <div class="text-danger">
+                                            {{ form.unit_quantity.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Information -->
+                    <div class="form-section">
+                        <h4 class="section-title">Дополнительная информация</h4>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger">
+                                            {{ form.notes.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-help-text">Примечания к перемещению (причина, комментарии и т.д.)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 text-right">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-exchange-alt"></i> Выполнить перемещение
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+        
+        // Pre-select source warehouse if specified in URL
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('source')) {
+            $('#id_source_warehouse').val(urlParams.get('source')).trigger('change');
+        }
+        
+        // Pre-select destination warehouse if specified in URL
+        if (urlParams.has('destination')) {
+            $('#id_destination_warehouse').val(urlParams.get('destination')).trigger('change');
+        }
+        
+        // Pre-select medication if specified in URL
+        if (urlParams.has('medication')) {
+            $('#id_medication').val(urlParams.get('medication')).trigger('change');
+        }
+        
+        // When source warehouse or medication changes, update batch options
+        $('#id_source_warehouse, #id_medication').change(function() {
+            var warehouseId = $('#id_source_warehouse').val();
+            var medicationId = $('#id_medication').val();
+            
+            if (warehouseId && medicationId) {
+                // Clear current options
+                $('#id_batch').empty().append('<option value="">-- Выберите партию --</option>');
+                
+                // Get batches for this warehouse and medication
+                $.ajax({
+                    url: '{% url "warehouse:get_batches" %}',
+                    data: {
+                        'warehouse_id': warehouseId,
+                        'medication_id': medicationId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.results && data.results.length > 0) {
+                            // Add new options
+                            $.each(data.results, function(index, batch) {
+                                $('#id_batch').append($('<option></option>')
+                                    .attr('value', batch.id)
+                                    .text(batch.text)
+                                    .data('quantity', batch.quantity)
+                                    .data('unit-quantity', batch.unit_quantity)
+                                );
+                            });
+                            
+                            // Enable the batch select
+                            $('#id_batch').prop('disabled', false);
+                        } else {
+                            // No batches found
+                            $('#id_batch').append($('<option></option>')
+                                .attr('value', '')
+                                .text('Нет доступных партий')
+                            );
+                            
+                            // Disable the batch select
+                            $('#id_batch').prop('disabled', true);
+                        }
+                        
+                        // Refresh Select2
+                        $('#id_batch').trigger('change');
+                    },
+                    error: function() {
+                        alert('Ошибка при загрузке партий. Пожалуйста, попробуйте еще раз.');
+                    }
+                });
+            }
+        });
+        
+        // When batch changes, update stock information
+        $('#id_batch').change(function() {
+            var batchOption = $(this).find('option:selected');
+            
+            if (batchOption.val()) {
+                // Show stock summary
+                $('#stock-summary').show();
+                
+                // Update stock information
+                $('#medication-name').text($('#id_medication option:selected').text());
+                $('#batch-name').text(batchOption.val());
+                
+                var batchText = batchOption.text();
+                var expireDateMatch = batchText.match(/Срок годности: (\d{2}\.\d{2}\.\d{4})/);
+                if (expireDateMatch) {
+                    $('#expire-date').text(expireDateMatch[1]);
+                } else {
+                    $('#expire-date').text('Не указано');
+                }
+                
+                var quantityMatch = batchText.match(/Остаток: (\d+) уп\. \+ (\d+) ед\./);
+                if (quantityMatch) {
+                    $('#available-packs').text(quantityMatch[1]);
+                    $('#available-units').text(quantityMatch[2]);
+                    
+                    // Set max values for quantity inputs
+                    $('#id_quantity').attr('max', quantityMatch[1]);
+                    $('#id_unit_quantity').attr('max', quantityMatch[2]);
+                }
+                
+                // Get in_pack value for selected medication
+                $.ajax({
+                    url: '{% url "warehouse:get_medication_info" %}',
+                    data: {
+                        'medication_id': $('#id_medication').val()
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.in_pack) {
+                            $('#in-pack').text(data.in_pack + ' ' + data.unit);
+                        } else {
+                            $('#in-pack').text('Не указано');
+                        }
+                    }
+                });
+            } else {
+                // Hide stock summary
+                $('#stock-summary').hide();
+            }
+        });
+        
+        // Validate form before submission
+        $('#transfer-form').submit(function(e) {
+            var sourceWarehouse = $('#id_source_warehouse').val();
+            var destinationWarehouse = $('#id_destination_warehouse').val();
+            var medication = $('#id_medication').val();
+            var batch = $('#id_batch').val();
+            var quantity = parseInt($('#id_quantity').val()) || 0;
+            var unitQuantity = parseInt($('#id_unit_quantity').val()) || 0;
+            
+            // Check that all required fields are filled
+            if (!sourceWarehouse || !destinationWarehouse || !medication || !batch) {
+                alert('Пожалуйста, заполните все обязательные поля.');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Check that source and destination warehouses are different
+            if (sourceWarehouse === destinationWarehouse) {
+                alert('Склад-источник и склад-получатель должны быть разными.');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Check that quantity is positive
+            if (quantity <= 0 && unitQuantity <= 0) {
+                alert('Пожалуйста, укажите количество для перемещения.');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Check that quantity does not exceed available stock
+            var availablePacks = parseInt($('#available-packs').text()) || 0;
+            var availableUnits = parseInt($('#available-units').text()) || 0;
+            
+            if (quantity > availablePacks || (quantity === availablePacks && unitQuantity > availableUnits)) {
+                alert('Недостаточно запасов для перемещения. Доступно: ' + availablePacks + ' упаковок и ' + availableUnits + ' единиц.');
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}

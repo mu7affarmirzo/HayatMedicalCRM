@@ -1,0 +1,330 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Отчет по срокам годности - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-box {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .status-expired {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    .status-critical {
+        background-color: rgba(253, 126, 20, 0.1);
+    }
+    .status-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    .chart-container {
+        position: relative;
+        height: 250px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Отчет по срокам годности</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Отчеты</li>
+                    <li class="breadcrumb-item active">Сроки годности</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Info boxes -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-calendar-times"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Просрочено</span>
+                        <span class="info-box-number">{{ expired_count }}</span>
+                        <span class="text-danger">{{ total_expired_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-exclamation-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Критический срок</span>
+                        <span class="info-box-number">{{ critical_count }}</span>
+                        <span class="text-warning">{{ total_critical_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-exclamation-triangle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Предупреждение</span>
+                        <span class="info-box-number">{{ warning_count }}</span>
+                        <span class="text-info">{{ total_warning_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-money-bill-wave"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Всего</span>
+                        <span class="info-box-number">{{ item_count }} наим.</span>
+                        <span class="text-success">{{ total_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Box -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Склад:</label>
+                                <select name="warehouse" class="form-control">
+                                    <option value="">Все склады</option>
+                                    {% for warehouse in warehouses %}
+                                    <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ warehouse.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Временной период (дней):</label>
+                                <select name="timeframe" class="form-control">
+                                    <option value="30" {% if timeframe == '30' %}selected{% endif %}>30 дней</option>
+                                    <option value="60" {% if timeframe == '60' %}selected{% endif %}>60 дней</option>
+                                    <option value="90" {% if timeframe == '90' %}selected{% endif %}>90 дней</option>
+                                    <option value="180" {% if timeframe == '180' %}selected{% endif %}>180 дней</option>
+                                    <option value="365" {% if timeframe == '365' %}selected{% endif %}>365 дней</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Статус:</label>
+                                <select name="status" class="form-control">
+                                    <option value="all" {% if expiry_status == 'all' %}selected{% endif %}>Все</option>
+                                    <option value="expired" {% if expiry_status == 'expired' %}selected{% endif %}>Только просроченные</option>
+                                    <option value="expiring" {% if expiry_status == 'expiring' %}selected{% endif %}>Только истекающие</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="show-zero" name="show_zero" {% if show_zero %}checked{% endif %}>
+                                    <label class="custom-control-label" for="show-zero">Показать с нулевым количеством</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Применить фильтры
+                            </button>
+                            <a href="{% url 'warehouse:expiry_report' %}" class="btn btn-default">
+                                <i class="fas fa-sync"></i> Сбросить
+                            </a>
+                            <button type="submit" name="export" value="csv" class="btn btn-success float-right">
+                                <i class="fas fa-file-csv"></i> Экспорт в CSV
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">График распределения по срокам годности</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="expiryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiry Report Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Список лекарств с истекающим сроком годности</h3>
+                <div class="card-tools">
+                    <span class="badge badge-info">Период: {{ today|date:"d.m.Y" }} - {{ future_date|date:"d.m.Y" }}</span>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Лекарство</th>
+                            <th>Серия</th>
+                            <th>Склад</th>
+                            <th>Срок годности</th>
+                            <th>Дней до истечения</th>
+                            <th>Количество</th>
+                            <th>Стоимость</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in report_data %}
+                        <tr class="status-{% if item.status == 'Expired' %}expired{% elif item.status == 'Critical' %}critical{% elif item.status == 'Warning' %}warning{% endif %}">
+                            <td>
+                                <strong>{{ item.medication.name }}</strong><br>
+                                <small>{{ item.medication.get_unit_display }}, {{ item.medication.in_pack }}/уп.</small>
+                            </td>
+                            <td>{{ item.income_seria|default:"—" }}</td>
+                            <td>{{ item.warehouse.name }}</td>
+                            <td>{{ item.expire_date|date:"d.m.Y" }}</td>
+                            <td>
+                                {% if item.days_until_expiry < 0 %}
+                                <span class="text-danger">{{ item.days_until_expiry }}</span>
+                                {% elif item.days_until_expiry <= 30 %}
+                                <span class="text-warning">{{ item.days_until_expiry }}</span>
+                                {% else %}
+                                {{ item.days_until_expiry }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ item.quantity }} уп.
+                                {% if item.unit_quantity > 0 %}
+                                + {{ item.unit_quantity }} {{ item.medication.get_unit_display }}
+                                {% endif %}
+                                <br>
+                                <small>Всего: {{ item.total_units }} ед.</small>
+                            </td>
+                            <td>{{ item.total_value|intcomma }} сум</td>
+                            <td>
+                                {% if item.status == 'Expired' %}
+                                <span class="badge badge-danger">Просрочено</span>
+                                {% elif item.status == 'Critical' %}
+                                <span class="badge badge-warning">< 30 дней</span>
+                                {% elif item.status == 'Warning' %}
+                                <span class="badge badge-info">< 90 дней</span>
+                                {% else %}
+                                <span class="badge badge-success">В норме</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">Нет данных для отображения</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer clearfix">
+                <div class="float-right">
+                    Всего записей: {{ item_count }}
+                </div>
+            </div>
+        </div>
+        <!-- /.card -->
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script>
+    $(function() {
+        // Automatically submit form when changing filters
+        $('select[name="warehouse"], select[name="timeframe"], select[name="status"], #show-zero').change(function() {
+            $('#filter-form').submit();
+        });
+        
+        // Prepare chart data
+        var ctx = document.getElementById('expiryChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Просрочено', 'Критический срок (<30 дней)', 'Предупреждение (<90 дней)', 'В норме'],
+                datasets: [{
+                    data: [{{ expired_count }}, {{ critical_count }}, {{ warning_count }}, {{ item_count|default:0 }} - {{ expired_count|default:0 }} - {{ critical_count|default:0 }} - {{ warning_count|default:0 }}],
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(253, 126, 20, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(40, 167, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(220, 53, 69, 1)',
+                        'rgba(253, 126, 20, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(40, 167, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: {
+                    position: 'right',
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var dataset = data.datasets[tooltipItem.datasetIndex];
+                            var total = dataset.data.reduce(function(previousValue, currentValue) {
+                                return previousValue + currentValue;
+                            });
+                            var currentValue = dataset.data[tooltipItem.index];
+                            var percentage = Math.floor(((currentValue/total) * 100)+0.5);
+                            return data.labels[tooltipItem.index] + ': ' + currentValue + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

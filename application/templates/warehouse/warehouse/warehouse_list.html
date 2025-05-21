@@ -1,0 +1,171 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Склады - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .warehouse-card {
+        transition: all 0.3s ease;
+    }
+    .warehouse-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .main-warehouse {
+        border-left: 5px solid #007bff;
+    }
+    .emergency-warehouse {
+        border-left: 5px solid #dc3545;
+    }
+    .warehouse-badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .warehouse-icon {
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    .warehouse-stats {
+        font-size: 0.9rem;
+    }
+    .warehouse-stats .stat-item {
+        margin-right: 15px;
+    }
+    .stat-count {
+        font-weight: bold;
+        margin-left: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Склады</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Склады</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Action buttons -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Добавить склад
+                </a>
+                <a href="{% url 'warehouse:warehouse_transfer' %}" class="btn btn-success">
+                    <i class="fas fa-exchange-alt"></i> Перемещение
+                </a>
+            </div>
+        </div>
+
+        <!-- Warehouses -->
+        <div class="row">
+            {% for warehouse in warehouses %}
+            <div class="col-md-4">
+                <div class="card {% if warehouse.is_main %}main-warehouse{% elif warehouse.is_emergency %}emergency-warehouse{% endif %} warehouse-card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ warehouse.name }}</h3>
+                        <div class="card-tools">
+                            {% if warehouse.is_main %}
+                            <span class="badge badge-primary warehouse-badge">Основной</span>
+                            {% elif warehouse.is_emergency %}
+                            <span class="badge badge-danger warehouse-badge">Экстренный</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="warehouse-icon">
+                            <i class="fas {% if warehouse.is_main %}fa-warehouse{% elif warehouse.is_emergency %}fa-first-aid{% else %}fa-box-open{% endif %}"></i>
+                        </div>
+                        <p><strong>Адрес:</strong> {{ warehouse.address }}</p>
+                        <p><strong>Email:</strong> {{ warehouse.email }}</p>
+                        <div class="warehouse-stats d-flex justify-content-center">
+                            <div class="stat-item">
+                                <i class="fas fa-pills text-primary"></i>
+                                <span class="stat-count" id="med-count-{{ warehouse.id }}">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                                <span class="stat-count" id="exp-count-{{ warehouse.id }}">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-arrow-down text-danger"></i>
+                                <span class="stat-count" id="low-count-{{ warehouse.id }}">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'warehouse:warehouse_detail' warehouse.id %}" class="btn btn-info btn-block">
+                            <i class="fas fa-eye"></i> Подробности
+                        </a>
+                        <div class="btn-group w-100 mt-2">
+                            <a href="{% url 'warehouse:warehouse_update' warehouse.id %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                            <a href="{% url 'warehouse:warehouse_transfer' %}?source={{ warehouse.id }}" class="btn btn-success">
+                                <i class="fas fa-exchange-alt"></i> Перемещение
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h5><i class="icon fas fa-info"></i> Нет складов</h5>
+                    <p>В системе пока нет ни одного склада. Нажмите кнопку "Добавить склад", чтобы создать склад.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Load warehouse statistics via AJAX for each warehouse
+        {% for warehouse in warehouses %}
+        $.ajax({
+            url: '{% url "warehouse:warehouse_stats" %}',
+            data: {
+                'warehouse_id': {{ warehouse.id }}
+            },
+            success: function(data) {
+                $('#med-count-{{ warehouse.id }}').text(data.total_medications);
+                $('#exp-count-{{ warehouse.id }}').text(data.expiring_soon);
+                $('#low-count-{{ warehouse.id }}').text(data.low_stock);
+            }
+        });
+        {% endfor %}
+    });
+</script>
+{% endblock %}

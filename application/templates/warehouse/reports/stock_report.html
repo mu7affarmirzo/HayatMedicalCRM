@@ -1,0 +1,244 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Отчет по складским запасам - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-box {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .low-stock {
+        background-color: #fff3cd;
+    }
+    .expires-soon {
+        color: #fd7e14;
+    }
+    .expired {
+        color: #dc3545;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Отчет по складским запасам</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Отчеты</li>
+                    <li class="breadcrumb-item active">Складские запасы</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Info boxes -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-pills"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Всего наименований</span>
+                        <span class="info-box-number">{{ total_items }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-money-bill-wave"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Общая стоимость</span>
+                        <span class="info-box-number">{{ total_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-exclamation-triangle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Заканчивается</span>
+                        <span class="info-box-number">{{ low_stock_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-calendar-times"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Срок истекает</span>
+                        <span class="info-box-number">{{ expiring_soon_count }}</span>
+                        <span class="text-sm text-danger">{{ expired_count }} просрочено</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Box -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Склад:</label>
+                                <select name="warehouse" class="form-control">
+                                    <option value="">Все склады</option>
+                                    {% for warehouse in warehouses %}
+                                    <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ warehouse.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Поиск по названию:</label>
+                                <input type="text" name="search" class="form-control" placeholder="Введите название..." value="{{ search_query }}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Фильтр по наличию:</label>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="low-stock" name="low_stock" {% if low_stock_only %}checked{% endif %}>
+                                    <label class="custom-control-label" for="low-stock">Только заканчивающиеся</label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="out-of-stock" name="out_of_stock" {% if out_of_stock %}checked{% endif %}>
+                                    <label class="custom-control-label" for="out-of-stock">Только отсутствующие</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Применить фильтры
+                            </button>
+                            <a href="{% url 'warehouse:stock_report' %}" class="btn btn-default">
+                                <i class="fas fa-sync"></i> Сбросить
+                            </a>
+                            <button type="submit" name="export" value="csv" class="btn btn-success float-right">
+                                <i class="fas fa-file-csv"></i> Экспорт в CSV
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stock Report Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Отчет по складским запасам</h3>
+                <div class="card-tools">
+                    <span class="badge badge-info">{{ now|date:"d.m.Y H:i" }}</span>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Лекарство</th>
+                            <th>Склад</th>
+                            <th>Упаковки</th>
+                            <th>Единицы</th>
+                            <th>Всего единиц</th>
+                            <th>Стоимость</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in report_data %}
+                        <tr {% if item.low_stock %}class="low-stock"{% endif %}>
+                            <td>
+                                <strong>{{ item.medication.name }}</strong><br>
+                                <small>{{ item.medication.get_unit_display }}, {{ item.medication.in_pack }}/уп.</small>
+                            </td>
+                            <td>{{ item.warehouse.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.unit_quantity }}</td>
+                            <td>{{ item.total_units }}</td>
+                            <td>{{ item.total_value|intcomma }} сум</td>
+                            <td>
+                                {% if item.expired %}
+                                <span class="badge badge-danger">Просрочено</span>
+                                {% elif item.expires_soon %}
+                                <span class="badge badge-warning">Срок истекает</span>
+                                {% endif %}
+
+                                {% if item.low_stock %}
+                                <span class="badge badge-warning">Мало</span>
+                                {% endif %}
+
+                                {% if item.total_units == 0 %}
+                                <span class="badge badge-secondary">Нет в наличии</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">Нет данных для отображения</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer clearfix">
+                <div class="float-right">
+                    Всего записей: {{ total_items }}
+                </div>
+            </div>
+        </div>
+        <!-- /.card -->
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Automatically submit form when changing warehouse or checking/unchecking boxes
+        $('select[name="warehouse"]').change(function() {
+            $('#filter-form').submit();
+        });
+
+        $('#low-stock, #out-of-stock').change(function() {
+            $('#filter-form').submit();
+        });
+    });
+</script>
+{% endblock %}

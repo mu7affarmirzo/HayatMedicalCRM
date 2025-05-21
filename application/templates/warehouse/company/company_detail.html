@@ -1,0 +1,229 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ company.name }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ company.name }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:company_list' %}">Компании</a></li>
+                    <li class="breadcrumb-item active">{{ company.name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Action buttons -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{% url 'warehouse:company_update' company.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <a href="{% url 'warehouse:company_list' %}" class="btn btn-default">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Boxes -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-pills"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Лекарства</span>
+                        <span class="info-box-number">{{ medication_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-truck-loading"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Поставки</span>
+                        <span class="info-box-number">{{ income_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-money-bill-wave"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Общая стоимость</span>
+                        <span class="info-box-number">{{ total_stock_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-calendar-alt"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Поставки за 30 дней</span>
+                        <span class="info-box-number">{{ recent_income_count }} ({{ recent_income_value|intcomma }} сум)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Information -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о компании</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">ID:</dt>
+                            <dd class="col-sm-8">{{ company.id }}</dd>
+
+                            <dt class="col-sm-4">Название:</dt>
+                            <dd class="col-sm-8">{{ company.name }}</dd>
+
+                            <dt class="col-sm-4">Дата создания:</dt>
+                            <dd class="col-sm-8">{{ company.created_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Создан:</dt>
+                            <dd class="col-sm-8">{{ company.created_by.get_full_name }}</dd>
+
+                            <dt class="col-sm-4">Последнее обновление:</dt>
+                            <dd class="col-sm-8">{{ company.modified_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Обновлен:</dt>
+                            <dd class="col-sm-8">{{ company.modified_by.get_full_name }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Income Records -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Последние поставки</h3>
+                        {% if income_count > 10 %}
+                        <span class="badge badge-info ml-2">Показаны 10 из {{ income_count }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Серия</th>
+                                    <th>Склад</th>
+                                    <th>Дата</th>
+                                    <th>Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for income in incomes %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'warehouse:income_detail' income.id %}">{{ income.serial|truncatechars:12 }}</a>
+                                    </td>
+                                    <td>{{ income.receiver.name }}</td>
+                                    <td>{{ income.created_at|date:"d.m.Y" }}</td>
+                                    <td>{{ income.overall_sum|intcomma }} сум</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Нет данных о поставках</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="btn btn-primary btn-sm">Посмотреть все поставки</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medications Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Лекарства от этого поставщика</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Форма выпуска</th>
+                            <th>В упаковке</th>
+                            <th>Единица измерения</th>
+                            <th>Срок годности</th>
+                            <th>На складе</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medication in medications %}
+                        <tr>
+                            <td>{{ medication.name }}</td>
+                            <td>{{ medication.dosage_form|default:"—" }}</td>
+                            <td>{{ medication.in_pack }}</td>
+                            <td>{{ medication.get_unit_display }}</td>
+                            <td>
+                                {% if medication.expiry_date %}
+                                {{ medication.expiry_date|date:"d.m.Y" }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for stock in medication.in_stock.all %}
+                                {% if stock.quantity > 0 or stock.unit_quantity > 0 %}
+                                <span class="badge badge-info">
+                                    {{ stock.warehouse.name }}: {{ stock.quantity }} уп.
+                                    {% if stock.unit_quantity > 0 %}
+                                    + {{ stock.unit_quantity }} {{ medication.get_unit_display }}
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                                {% empty %}
+                                <span class="badge badge-secondary">Нет на складе</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{% url 'warehouse:medication_detail' medication.id %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">Нет лекарств от этого поставщика</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if medication_count > medications|length %}
+            <div class="card-footer">
+                <a href="#" class="btn btn-primary btn-sm">Посмотреть все лекарства ({{ medication_count }})</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Каталог лекарств - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
+<style>
+    .medication-status {
+        font-weight: bold;
+    }
+    .status-active {
+        color: #28a745;
+    }
+    .status-inactive {
+        color: #dc3545;
+    }
+    .filters-card {
+        margin-bottom: 1.5rem;
+    }
+    .unit-badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        background-color: #17a2b8;
+        color: white;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Каталог лекарств</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Каталог лекарств</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Filters Card -->
+        <div class="card filters-card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'warehouse:medication_list' %}" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Наименование:</label>
+                                <input type="text" class="form-control" name="name" value="{{ request.GET.name|default:'' }}" placeholder="Введите название...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Компания-производитель:</label>
+                                <select class="form-control select2bs4" name="company" style="width: 100%;">
+                                    <option value="">Все компании</option>
+                                    {% for company in companies %}
+                                        <option value="{{ company.id }}" {% if request.GET.company == company.id|stringformat:"i" %}selected{% endif %}>{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Единица измерения:</label>
+                                <select class="form-control select2bs4" name="unit" style="width: 100%;">
+                                    <option value="">Все единицы</option>
+                                    {% for unit_code, unit_name in unit_choices %}
+                                        <option value="{{ unit_code }}" {% if request.GET.unit == unit_code %}selected{% endif %}>{{ unit_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Статус:</label>
+                                <select class="form-control select2bs4" name="is_active" style="width: 100%;">
+                                    <option value="">Все статусы</option>
+                                    <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>Активный</option>
+                                    <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>Неактивный</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Применить фильтры
+                            </button>
+                            <a href="{% url 'warehouse:medication_list' %}" class="btn btn-default">
+                                <i class="fas fa-sync"></i> Сбросить
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Medications List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Список лекарств</h3>
+                <div class="card-tools">
+                    <a href="{% url 'warehouse:medication_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Добавить лекарство
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="medications-table" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Наименование</th>
+                            <th>Компания</th>
+                            <th>Ед. изм.</th>
+                            <th>В упаковке</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medication in medications %}
+                        <tr>
+                            <td>{{ medication.id }}</td>
+                            <td>{{ medication.name }}</td>
+                            <td>{{ medication.company.name }}</td>
+                            <td><span class="unit-badge">{{ medication.get_unit_display }}</span></td>
+                            <td>{{ medication.in_pack }}</td>
+                            <td>
+                                {% if medication.is_active %}
+                                    <span class="medication-status status-active"><i class="fas fa-check-circle"></i> Активный</span>
+                                {% else %}
+                                    <span class="medication-status status-inactive"><i class="fas fa-times-circle"></i> Неактивный</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'warehouse:medication_detail' medication.id %}" class="btn btn-sm btn-info" title="Детали">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'warehouse:medication_update' medication.id %}" class="btn btn-sm btn-warning" title="Редактировать">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">Записей не найдено</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+                <ul class="pagination pagination-sm m-0 float-right">
+                    {% if medications.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo; первая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ medications.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">назад</a></li>
+                    {% endif %}
+
+                    <li class="page-item disabled"><a class="page-link" href="#">Страница {{ medications.number }} из {{ medications.paginator.num_pages }}</a></li>
+
+                    {% if medications.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ medications.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">вперед</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ medications.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">последняя &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables & Plugins -->
+<script src="{% static 'adminlte3_assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+
+<script>
+    $(function () {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Optional: Initialize DataTable for better mobile responsiveness
+        $('#medications-table').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "responsive": true,
+        });
+    });
+</script>
+{% endblock %}

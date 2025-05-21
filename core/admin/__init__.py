@@ -3,3 +3,4 @@ from core.admin.appointments import *
 from core.admin.treatments import *
 from core.admin.lab_researchs import *
 from .sanaorium import *
+from .warehouse import *

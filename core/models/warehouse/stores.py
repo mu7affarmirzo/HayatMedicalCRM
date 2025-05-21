@@ -12,4 +12,7 @@ class Warehouse(BaseAuditModel):
     def __str__(self):
         return f"{self.name} - {self.address} - {self.is_main}"
 
+    class Meta:
+        verbose_name_plural = "Warehouses | Warehouse"
+        verbose_name = "Warehouses | Warehouse"
 

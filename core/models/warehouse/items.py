@@ -11,6 +11,10 @@ class CompanyModel(BaseAuditModel):
     def __str__(self):
         return f"{self.name}"
 
+    class Meta:
+        verbose_name = "Warehouses | Company"
+        verbose_name_plural = "Warehouses | Company"
+
 
 class MedicationModel(BaseAuditModel):
     # Common unit choices for medications
@@ -52,6 +56,8 @@ class MedicationModel(BaseAuditModel):
             models.Index(fields=['name']),
             models.Index(fields=['expiry_date']),
         ]
+        verbose_name = "Warehouses | Medications"
+        verbose_name_plural = "Warehouses | Medications"
 
     def __str__(self):
         return f"{self.name} ({self.get_unit_display()}, {self.in_pack}/pack)"
@@ -128,4 +134,7 @@ class MedicationsInStockModel(BaseAuditModel):
     class Meta:
         unique_together = ('item', 'warehouse', 'expire_date', 'income_seria')
         ordering = ('expire_date', )
+
+        verbose_name_plural = "Warehouses | In Stock Medication"
+        verbose_name = "Warehouses | In Stock Medication"
 

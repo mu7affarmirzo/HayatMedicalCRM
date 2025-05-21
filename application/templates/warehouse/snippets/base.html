@@ -50,11 +50,9 @@
                     <a href="#" class="nav-link">Консультации</a>
                 </li>
             {% endif %}
+
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="#" class="nav-link">Пациенты</a>
-            </li>
-            <li class="nav-item d-none d-sm-inline-block">
-                <a href="#" class="nav-link">Склад</a>
+                <a href="{% url 'warehouse:warehouse_list' %}" class="nav-link">Склад</a>
             </li>
         </ul>
 

@@ -160,7 +160,7 @@
                                     <span class="info-box-icon bg-danger"><i class="fas fa-file-invoice-dollar"></i></span>
                                     <div class="info-box-content">
                                         <h5>Сумма счета</h5>
-                                        <span class="info-box-text">{{ income.bill_amount|default:"Не указано" }} ₸</span>
+                                        <span class="info-box-text">{{ income.bill_amount|intcomma|default:"Не указано" }} сум</span>
                                     </div>
                                 </div>
                             </div>
@@ -205,7 +205,7 @@
                                     <span class="info-box-icon bg-success"><i class="fas fa-calculator"></i></span>
                                     <div class="info-box-content">
                                         <h5>Общая сумма</h5>
-                                        <span class="info-box-text">{{ income.overall_sum }} ₸</span>
+                                        <span class="info-box-text">{{ income.overall_sum }} сум</span>
                                     </div>
                                 </div>
                             </div>
@@ -306,12 +306,12 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ item.item.name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>{{ item.unit_quantity|default:"0" }}</td>
-                            <td>{{ item.price|default:"0" }} ₸</td>
-                            <td>{{ item.unit_price|default:"0" }} ₸</td>
-                            <td>{{ item.nds|default:"0" }}%</td>
+                            <td>{{ item.unit_quantity|intcomma }}</td>
+                            <td>{{ item.price|intcomma }} сум</td>
+                            <td>{{ item.unit_price|intcomma }} сум</td>
+                            <td>{{ item.nds|intcomma }}%</td>
                             <td>{{ item.expire_date|date:"d.m.Y" }}</td>
-                            <td>{{ item.overall_price|default:"0" }} ₸</td>
+                            <td>{{ item.overall_price|intcomma }} сум</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -322,7 +322,7 @@
                     <tfoot>
                         <tr>
                             <th colspan="8" class="text-right">Итого:</th>
-                            <th>{{ income.overall_sum }} ₸</th>
+                            <th>{{ income.overall_sum|intcomma }} сум</th>
                         </tr>
                     </tfoot>
                 </table>

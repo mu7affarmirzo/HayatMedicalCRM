@@ -62,17 +62,17 @@
             <li class="nav-item dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#">
                     <i class="far fa-bell"></i>
-                    <span class="badge badge-warning navbar-badge">{{ expiring_soon_count|default:"0" }}</span>
+                    <span class="badge badge-warning navbar-badge">{{ expiring_soon_count|intcomma }}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <span class="dropdown-item dropdown-header">Оповещения</span>
                     <div class="dropdown-divider"></div>
                     <a href="#" class="dropdown-item">
-                        <i class="fas fa-exclamation-triangle mr-2"></i> {{ expiring_soon_count|default:"0" }} лекарств скоро истекает
+                        <i class="fas fa-exclamation-triangle mr-2"></i> {{ expiring_soon_count|intcomma }} лекарств скоро истекает
                     </a>
                     <div class="dropdown-divider"></div>
                     <a href="#" class="dropdown-item">
-                        <i class="fas fa-exclamation-circle mr-2"></i> {{ low_stock_count|default:"0" }} препаратов заканчивается
+                        <i class="fas fa-exclamation-circle mr-2"></i> {{ low_stock_count|intcomma }} препаратов заканчивается
                     </a>
                 </div>
             </li>

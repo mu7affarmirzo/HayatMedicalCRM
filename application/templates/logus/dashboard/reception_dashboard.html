@@ -1,0 +1,828 @@
+{% extends 'snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Панель управления - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-box-number {
+        font-size: 30px;
+    }
+
+    .availability-table td {
+        vertical-align: middle;
+    }
+
+    .room-available {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .room-occupied {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .date-filter-card {
+        border-top: 3px solid #007bff;
+    }
+
+    .room-status-badge {
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+
+    .availability-summary {
+        background: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    #new-patient-form .card {
+        border: 1px solid #17a2b8;
+        margin-bottom: 15px;
+    }
+
+    #new-patient-form .card-header {
+        background-color: #17a2b8;
+        color: white;
+        padding: 10px 15px;
+    }
+
+    #new-patient-form .form-group {
+        margin-bottom: 10px;
+    }
+
+    #new-patient-form label {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .modal-lg {
+        max-width: 800px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Панель управления</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item active">Панель управления</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Summary Info Boxes -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-door-open"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Всего комнат</span>
+                        <span class="info-box-number">{{ total_rooms }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Доступно сегодня</span>
+                        <span class="info-box-number">{{ available_today }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-user-check"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Заселений сегодня</span>
+                        <span class="info-box-number">{{ checkins_today }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger"><i class="fas fa-user-times"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Выселений сегодня</span>
+                        <span class="info-box-number">{{ checkouts_today }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Availability Check Section -->
+        <div class="card date-filter-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-search mr-1"></i> Проверка доступности комнат
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post" id="availability-form">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Диапазон дат:</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" class="form-control" id="date-range" name="date_range"
+                                           value="{{ date_range|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Тип комнаты:</label>
+                                <select class="form-control select2" name="room_type_id" id="room-type-select">
+                                    <option value="">Все типы</option>
+                                    {% for room_type in room_types %}
+                                        <option value="{{ room_type.id }}"
+                                                {% if selected_room_type_id == room_type.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ room_type.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-search mr-1"></i> Проверить доступность
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if show_results %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list mr-1"></i>
+                    Доступность комнат {% if selected_room_type %}типа "{{ selected_room_type.name }}"{% endif %}
+                    {% if start_date and end_date %}
+                        с {{ start_date|date:"d.m.Y" }} по {{ end_date|date:"d.m.Y" }}
+                    {% endif %}
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Summary -->
+                <div class="availability-summary">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4>{{ available_rooms|length }}</h4>
+                                <p class="text-muted">Доступно комнат</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4>{{ occupied_rooms|length }}</h4>
+                                <p class="text-muted">Занято комнат</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4>{{ total_capacity }}</h4>
+                                <p class="text-muted">Общая вместимость</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4>{{ occupancy_rate|floatformat:1 }}%</h4>
+                                <p class="text-muted">Загруженность</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Rooms Table -->
+                {% if available_rooms %}
+                <h5 class="mb-3"><i class="fas fa-check-circle text-success"></i> Доступные комнаты</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered availability-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%">Номер</th>
+                                <th style="width: 20%">Название</th>
+                                <th style="width: 20%">Тип</th>
+                                <th style="width: 15%">Вместимость</th>
+                                <th style="width: 15%">Цена</th>
+                                <th style="width: 20%">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in available_rooms %}
+                            <tr>
+                                <td class="text-center">{{ room.id }}</td>
+                                <td>{{ room.name }}</td>
+                                <td>
+                                    <span class="badge badge-info">{{ room.room_type.name }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <i class="fas fa-user"></i> × {{ room.capacity }}
+                                </td>
+                                <td class="text-right">
+                                    {% if room.price %}
+                                        <strong>{{ room.price|intcomma }} сум</strong>
+                                    {% else %}
+                                        <span class="text-muted">Не указана</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success quick-book-btn"
+                                            data-room-id="{{ room.id }}"
+                                            data-room-name="{{ room.name }}"
+                                            data-room-type="{{ room.room_type.name }}"
+                                            data-start-date="{{ start_date|date:'Y-m-d' }}"
+                                            data-end-date="{{ end_date|date:'Y-m-d' }}">
+                                        <i class="fas fa-calendar-plus"></i> Забронировать
+                                    </button>
+                                    <a href="#" class="btn btn-sm btn-info">
+                                        <i class="fas fa-info-circle"></i> Детали
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Нет доступных комнат для выбранных параметров.
+                </div>
+                {% endif %}
+
+                <!-- Occupied Rooms Table -->
+                {% if occupied_rooms %}
+                <h5 class="mb-3 mt-4"><i class="fas fa-times-circle text-danger"></i> Занятые комнаты</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered availability-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%">Номер</th>
+                                <th style="width: 20%">Название</th>
+                                <th style="width: 20%">Тип</th>
+                                <th style="width: 20%">Гость</th>
+                                <th style="width: 15%">Выселение</th>
+                                <th style="width: 15%">Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_data in occupied_rooms %}
+                            <tr>
+                                <td class="text-center">{{ room_data.room.id }}</td>
+                                <td>{{ room_data.room.name }}</td>
+                                <td>
+                                    <span class="badge badge-info">{{ room_data.room.room_type.name }}</span>
+                                </td>
+                                <td>{{ room_data.client_name }}</td>
+                                <td>{{ room_data.checkout_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    <span class="badge badge-{{ room_data.status_class }}">
+                                        {{ room_data.status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Today's Activities -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-check mr-1"></i> Заселения сегодня
+                        </h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-striped table-valign-middle">
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Гость</th>
+                                    <th>Комната</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for checkin in todays_checkins %}
+                                <tr>
+                                    <td>{{ checkin.booking.start_date|date:"H:i" }}</td>
+                                    <td>{{ checkin.client.full_name }}</td>
+                                    <td>{{ checkin.room.name }}</td>
+                                    <td>
+                                        <a href="{% url 'logus:booking_detail' checkin.booking.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Нет заселений на сегодня</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-times mr-1"></i> Выселения сегодня
+                        </h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-striped table-valign-middle">
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Гость</th>
+                                    <th>Комната</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for checkout in todays_checkouts %}
+                                <tr>
+                                    <td>{{ checkout.booking.end_date|date:"H:i" }}</td>
+                                    <td>{{ checkout.client.full_name }}</td>
+                                    <td>{{ checkout.room.name }}</td>
+                                    <td>
+                                        <a href="{% url 'logus:booking_detail' checkout.booking.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Нет выселений на сегодня</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Booking Modal -->
+<div class="modal fade" id="quickBookingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-calendar-plus"></i> Быстрое бронирование
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-info mb-3">
+                    <p><strong>Комната:</strong> <span id="modal-room-name"></span></p>
+                    <p><strong>Тип:</strong> <span id="modal-room-type"></span></p>
+                    <p><strong>Даты:</strong> <span id="modal-dates"></span></p>
+                </div>
+
+                <form id="quick-booking-form">
+                    <!-- Patient Selection or Creation -->
+                    <div class="form-group">
+                        <label>Пациент:</label>
+                        <div class="input-group">
+                            <select class="form-control select2" id="patient-select" style="width: calc(100% - 140px);">
+                                <option value="">-- Выберите пациента --</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}">
+                                    {{ patient.full_name }} ({{ patient.mobile_phone_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-info" id="new-patient-btn">
+                                    <i class="fas fa-user-plus"></i> Новый пациент
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Patient Form (Hidden by default) -->
+                    <div id="new-patient-form" style="display: none;">
+                        <div class="card card-info">
+                            <div class="card-header">
+                                <h6 class="card-title m-0">Регистрация нового пациента</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Фамилия <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="patient-l-name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Имя <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="patient-f-name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Отчество</label>
+                                            <input type="text" class="form-control" id="patient-mid-name">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Дата рождения <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control" id="patient-dob" required
+                                                   max="{{ today|date:'Y-m-d' }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Пол <span class="text-danger">*</span></label>
+                                            <select class="form-control" id="patient-gender" required>
+                                                <option value="">-- Выберите --</option>
+                                                <option value="1">Мужской</option>
+                                                <option value="0">Женский</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Мобильный телефон</label>
+                                            <input type="text" class="form-control" id="patient-mobile"
+                                                   placeholder="+998 XX XXX XX XX">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input type="email" class="form-control" id="patient-email">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Домашний телефон</label>
+                                            <input type="text" class="form-control" id="patient-home-phone">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Страна</label>
+                                            <input type="text" class="form-control" id="patient-country" value="Узбекистан">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Тип документа</label>
+                                            <select class="form-control" id="patient-doc-type">
+                                                <option value="">-- Выберите --</option>
+                                                <option value="passport">Паспорт</option>
+                                                <option value="birth_certificate">Свидетельство о рождении</option>
+                                                <option value="id_card">ID карта</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Номер документа</label>
+                                            <input type="text" class="form-control" id="patient-doc-number">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Адрес</label>
+                                            <textarea class="form-control" id="patient-address" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-sm btn-secondary" id="cancel-new-patient">
+                                            <i class="fas fa-times"></i> Отмена
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Тариф:</label>
+                        <select class="form-control" id="tariff-select" required>
+                            <option value="">-- Выберите тариф --</option>
+                            {% for tariff in tariffs %}
+                            <option value="{{ tariff.id }}">{{ tariff.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Примечания:</label>
+                        <textarea class="form-control" id="booking-notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" id="confirm-booking">
+                    <i class="fas fa-save"></i> Создать бронирование
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+$(function() {
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Initialize date range picker
+    $('#date-range').daterangepicker({
+        locale: {
+            format: 'DD.MM.YYYY',
+            separator: ' - ',
+            applyLabel: 'Применить',
+            cancelLabel: 'Отмена',
+            fromLabel: 'С',
+            toLabel: 'По',
+            customRangeLabel: 'Произвольный',
+            weekLabel: 'Н',
+            daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+            monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                         'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+            firstDay: 1
+        },
+        startDate: moment(),
+        endDate: moment().add(7, 'days'),
+        minDate: moment(),
+        maxDate: moment().add(1, 'year'),
+        opens: 'left'
+    });
+
+    // Phone number formatting
+    $('#patient-mobile').on('input', function() {
+        var value = $(this).val().replace(/\D/g, '');
+        var formattedValue = '';
+
+        if (value.startsWith('998')) {
+            // Format: +998 XX XXX XX XX
+            if (value.length > 0) formattedValue = '+' + value.substring(0, 3);
+            if (value.length > 3) formattedValue += ' ' + value.substring(3, 5);
+            if (value.length > 5) formattedValue += ' ' + value.substring(5, 8);
+            if (value.length > 8) formattedValue += ' ' + value.substring(8, 10);
+            if (value.length > 10) formattedValue += ' ' + value.substring(10, 12);
+        } else if (value.length > 0) {
+            // Assume local format without country code
+            if (value.length > 0) formattedValue = value.substring(0, 2);
+            if (value.length > 2) formattedValue += ' ' + value.substring(2, 5);
+            if (value.length > 5) formattedValue += ' ' + value.substring(5, 7);
+            if (value.length > 7) formattedValue += ' ' + value.substring(7, 9);
+        }
+
+        $(this).val(formattedValue);
+    });
+
+    // Quick booking button handler
+    $('.quick-book-btn').on('click', function() {
+        var roomId = $(this).data('room-id');
+        var roomName = $(this).data('room-name');
+        var roomType = $(this).data('room-type');
+        var startDate = $(this).data('start-date');
+        var endDate = $(this).data('end-date');
+
+        // Format dates for display
+        var startDisplay = moment(startDate).format('DD.MM.YYYY');
+        var endDisplay = moment(endDate).format('DD.MM.YYYY');
+
+        // Set modal data
+        $('#modal-room-name').text(roomName);
+        $('#modal-room-type').text(roomType);
+        $('#modal-dates').text(startDisplay + ' - ' + endDisplay);
+
+        // Store data for submission
+        $('#quickBookingModal').data({
+            'room-id': roomId,
+            'start-date': startDate,
+            'end-date': endDate
+        });
+
+        // Reset forms
+        $('#new-patient-form').hide();
+        $('#patient-select').prop('disabled', false).val('').trigger('change');
+
+        // Show modal
+        $('#quickBookingModal').modal('show');
+    });
+
+    // New patient button handler
+    $('#new-patient-btn').on('click', function() {
+        $('#new-patient-form').slideDown();
+        $('#patient-select').prop('disabled', true);
+    });
+
+    // Cancel new patient
+    $('#cancel-new-patient').on('click', function() {
+        $('#new-patient-form').slideUp();
+        $('#patient-select').prop('disabled', false);
+        // Clear form fields
+        $('#new-patient-form input, #new-patient-form textarea, #new-patient-form select').val('');
+        $('#patient-country').val('Узбекистан'); // Default country
+    });
+
+    // Confirm booking handler
+    $('#confirm-booking').on('click', function() {
+        var roomId = $('#quickBookingModal').data('room-id');
+        var startDate = $('#quickBookingModal').data('start-date');
+        var endDate = $('#quickBookingModal').data('end-date');
+        var patientId = $('#patient-select').val();
+        var tariffId = $('#tariff-select').val();
+        var notes = $('#booking-notes').val();
+
+        // Check if creating new patient
+        var isNewPatient = $('#new-patient-form').is(':visible');
+        var newPatientData = null;
+
+        if (isNewPatient) {
+            // Validate new patient form
+            var lName = $('#patient-l-name').val();
+            var fName = $('#patient-f-name').val();
+            var dob = $('#patient-dob').val();
+            var gender = $('#patient-gender').val();
+
+            if (!lName || !fName || !dob || !gender) {
+                alert('Пожалуйста, заполните все обязательные поля для нового пациента');
+                return;
+            }
+
+            newPatientData = {
+                'l_name': lName,
+                'f_name': fName,
+                'mid_name': $('#patient-mid-name').val(),
+                'date_of_birth': dob,
+                'gender': gender,
+                'mobile_phone_number': $('#patient-mobile').val(),
+                'home_phone_number': $('#patient-home-phone').val(),
+                'email': $('#patient-email').val(),
+                'country': $('#patient-country').val(),
+                'address': $('#patient-address').val(),
+                'doc_type': $('#patient-doc-type').val(),
+                'doc_number': $('#patient-doc-number').val()
+            };
+        } else {
+            // Validate existing patient selection
+            if (!patientId) {
+                alert('Пожалуйста, выберите пациента или создайте нового');
+                return;
+            }
+        }
+
+        // Validate tariff
+        if (!tariffId) {
+            alert('Пожалуйста, выберите тариф');
+            return;
+        }
+
+        // Show loading
+        $(this).html('<i class="fas fa-spinner fa-spin"></i> Создание...').prop('disabled', true);
+
+        // Prepare data
+        var requestData = {
+            'room_id': roomId,
+            'tariff_id': tariffId,
+            'start_date': startDate,
+            'end_date': endDate,
+            'notes': notes,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        };
+
+        if (isNewPatient) {
+            requestData['is_new_patient'] = true;
+            Object.assign(requestData, newPatientData);
+        } else {
+            requestData['patient_id'] = patientId;
+        }
+
+        // Create booking via AJAX
+        $.ajax({
+            url: '{% url "logus:create_quick_booking" %}',
+            type: 'POST',
+            data: requestData,
+            success: function(response) {
+                if (response.success) {
+                    $('#quickBookingModal').modal('hide');
+
+                    // Show success message
+                    $('body').append(
+                        '<div class="alert alert-success alert-dismissible fade show position-fixed" ' +
+                        'style="top: 20px; right: 20px; z-index: 9999;">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<h5><i class="icon fas fa-check"></i> Успешно!</h5>' +
+                        'Бронирование #' + response.booking_number + ' создано.' +
+                        (response.new_patient_created ? '<br>Новый пациент зарегистрирован.' : '') +
+                        '</div>'
+                    );
+
+                    // Reload page after delay
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert('Ошибка: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при создании бронирования');
+            },
+            complete: function() {
+                $('#confirm-booking').html('<i class="fas fa-save"></i> Создать бронирование').prop('disabled', false);
+            }
+        });
+    });
+
+    // Reset modal on close
+    $('#quickBookingModal').on('hidden.bs.modal', function() {
+        $('#patient-select').val('').trigger('change').prop('disabled', false);
+        $('#tariff-select').val('');
+        $('#booking-notes').val('');
+        $('#new-patient-form').hide();
+        // Clear new patient form
+        $('#new-patient-form input, #new-patient-form textarea, #new-patient-form select').val('');
+        $('#patient-country').val('Узбекистан');
+    });
+});
+</script>
+{% endblock %}

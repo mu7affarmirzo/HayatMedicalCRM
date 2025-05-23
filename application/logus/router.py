@@ -1,12 +1,16 @@
 from django.urls import path, include
 
-from application.logus.views.rooms import available_room_view
+from application.logus.views.rooms import available_room_view, reception_dashboard, create_quick_booking
+
+app_name = 'logus'
 
 urlpatterns = [
     path('', include('application.logus.urls.booking_list')),
-    path('availability/', available_room_view, name='check_availability'),
     path('booking/', include('application.logus.urls.booking')),
-    # path('booking/', include('core.reception.urls.registration')),
-    # path('adminstration/', include('core.adminstration.urls.adminstration')),
-    # path('adminstration/services/', include('core.adminstration.urls.services')),
+
+
+    path('availability/', available_room_view, name='check_availability'),
+    path('new/dashboard/', reception_dashboard, name='reception_dashboard'),
+    path('dashboard/quick-booking/', create_quick_booking, name='create_quick_booking'),
+
 ]

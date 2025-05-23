@@ -33,7 +33,7 @@ urlpatterns = [
     path('warehouses/stats/', warehouses.warehouse_stats, name='warehouse_stats'),
     path('warehouses/batches/', warehouses.get_batches, name='get_batches'),
     path('warehouses/medicaion-info/', warehouses.get_medication_info, name='get_medication_info'),
-    #
+
     # # Company Management
     path('companies/', company.company_list, name='company_list'),
     path('companies/create/', company.company_create, name='company_create'),

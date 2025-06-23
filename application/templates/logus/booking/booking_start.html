@@ -231,7 +231,7 @@
                         </div>
 
                         <form id="registerPatientForm" method="POST"
-                              action="{% url 'add-new-patient' %}">
+                              action="{% url 'logus:add-new-patient' %}">
                             {% csrf_token %}
                             <div class="card-body">
                                 <div class="form-group">
@@ -379,7 +379,7 @@
 
     <script>
         // Define URL for availability checking
-        const check_availability_url = "{% url 'check_room_availability' %}";
+        const check_availability_url = "{% url 'logus:check_room_availability' %}";
 
         $(function () {
             // Initialize Select2

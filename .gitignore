@@ -410,3 +410,5 @@ fabric.properties
 
 static
 static_cdn
+
+migrations

@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'https://back.dev-hayat.uz'
+    'back.dev-hayat.uz'
 ]
 
 

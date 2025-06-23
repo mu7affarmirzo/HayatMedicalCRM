@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-n34ksn2lvmj56v60+yj)9g2q791ug#2$e*g2rni+g5pw4ja9-e
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'https://back.dev-hayat.uz'
+    'https://back.dev-hayat.uz',
     'back.dev-hayat.uz'
 ]
 

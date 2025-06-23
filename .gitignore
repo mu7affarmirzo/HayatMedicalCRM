@@ -412,3 +412,4 @@ static
 static_cdn
 
 migrations
+/migrations/*

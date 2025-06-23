@@ -77,7 +77,7 @@ def redirect_by_role(user):
     elif main_role == RolesModel.THERAPIST:
         return redirect('therapist_dashboard')
     elif main_role == RolesModel.RECEPTIONIST:
-        return redirect('logus_dashboard')
+        return redirect('logus:logus_dashboard')
     elif main_role == RolesModel.DOCTOR:
         return redirect('doctors_main_screen')
     elif main_role.name == "massagist":

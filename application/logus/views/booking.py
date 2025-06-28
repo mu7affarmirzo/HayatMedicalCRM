@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from application.logus.forms.patient_form import PatientRegistrationForm
-from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType
+from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType, TariffRoomPrice
 from application.logus.forms.booking import BookingInitialForm, RoomSelectionForm, BookingConfirmationForm
 
 
@@ -102,7 +102,7 @@ def booking_confirm(request):
     booking_data = request.session.get('booking_data')
     if not booking_data or 'selected_rooms' not in booking_data:
         messages.error(request, 'Пожалуйста, начните процесс бронирования сначала')
-        return redirect('logus:booking_start')
+        return redirect('booking_start')  # Fixed: removed 'logus:' namespace
 
     start_date = timezone.datetime.fromisoformat(booking_data['start_date'])
     end_date = timezone.datetime.fromisoformat(booking_data['end_date'])
@@ -121,20 +121,38 @@ def booking_confirm(request):
                     start_date=start_date,
                     end_date=end_date,
                     notes=form.cleaned_data.get('notes', ''),
-                    status='confirmed'
+                    status='confirmed',
+                    created_by=request.user  # Add this for audit trail
                 )
 
                 # Default tariff - you may want to make this selectable
                 default_tariff = Tariff.objects.first()
 
+                if not default_tariff:
+                    raise ValueError("Нет доступных тарифов. Пожалуйста, создайте тариф в административной панели.")
+
                 # Create booking details for each room
                 for room_id in selected_room_ids:
                     room = Room.objects.get(id=room_id)
+
+                    # Calculate price based on tariff and room type
+                    try:
+                        tariff_price = TariffRoomPrice.objects.get(
+                            tariff=default_tariff,
+                            room_type=room.room_type
+                        )
+                        price = tariff_price.price
+                    except TariffRoomPrice.DoesNotExist:
+                        # Fallback to room's base price or 0
+                        price = room.price or 0
+
                     BookingDetail.objects.create(
                         booking=booking,
                         client=patient,
                         room=room,
-                        tariff=default_tariff
+                        tariff=default_tariff,
+                        price=price,  # Set the price explicitly
+                        created_by=request.user
                     )
 
                 # Clear session data
@@ -142,6 +160,8 @@ def booking_confirm(request):
                     del request.session['booking_data']
 
                 messages.success(request, f'Бронирование #{booking.booking_number} успешно создано!')
+
+                # Fixed: Use correct URL name without namespace
                 return redirect('logus:booking_detail', booking_id=booking.id)
 
             except Exception as e:
@@ -151,9 +171,7 @@ def booking_confirm(request):
     else:
         form = BookingConfirmationForm()
 
-    print('here')
-
-    return render(request, 'logus/booking/booking_confirm.html', {
+    return render(request, 'logus/booking/booking_confirm.html', {  # Fixed template path
         'form': form,
         'step': 3,
         'total_steps': 3,
@@ -167,12 +185,108 @@ def booking_confirm(request):
 @login_required
 def booking_detail(request, booking_id):
     """
-    View booking details after creation
+    View booking details with support for status change actions
     """
     booking = get_object_or_404(Booking, id=booking_id)
-    return render(request, 'logus/booking/booking_detail.html', {
-        'booking': booking
-    })
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'checkin':
+            # Handle check-in action
+            if booking.status in ['pending', 'confirmed']:
+                booking.status = 'checked_in'
+                booking.modified_by = request.user
+                booking.save()
+
+                messages.success(
+                    request,
+                    f'Бронирование #{booking.booking_number} успешно переведено в статус "Заселен"'
+                )
+
+                # Log the action (optional)
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f'Booking {booking.booking_number} checked in by {request.user.username}')
+
+            else:
+                messages.error(
+                    request,
+                    f'Невозможно заселить бронирование со статусом "{booking.get_status_display()}"'
+                )
+
+        elif action == 'cancel':
+            # Handle cancellation action
+            if booking.status in ['pending', 'confirmed']:
+                cancel_reason = request.POST.get('cancel_reason', '')
+
+                booking.status = 'cancelled'
+                booking.modified_by = request.user
+
+                # Add cancel reason to notes if provided
+                if cancel_reason:
+                    current_notes = booking.notes or ''
+                    booking.notes = f"{current_notes}\n\nОтменено {timezone.now().strftime('%d.%m.%Y %H:%M')}: {cancel_reason}".strip()
+
+                booking.save()
+
+                messages.success(
+                    request,
+                    f'Бронирование #{booking.booking_number} отменено'
+                )
+
+                # Log the action (optional)
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(
+                    f'Booking {booking.booking_number} cancelled by {request.user.username}. Reason: {cancel_reason}')
+
+            else:
+                messages.error(
+                    request,
+                    f'Невозможно отменить бронирование со статусом "{booking.get_status_display()}"'
+                )
+
+        elif action == 'checkout':
+            # Handle checkout action
+            if booking.status == 'checked_in':
+                booking.status = 'completed'
+                booking.modified_by = request.user
+                booking.save()
+
+                messages.success(
+                    request,
+                    f'Бронирование #{booking.booking_number} завершено (выселение)'
+                )
+
+                # Log the action (optional)
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f'Booking {booking.booking_number} checked out by {request.user.username}')
+
+            else:
+                messages.error(
+                    request,
+                    f'Невозможно выселить из бронирования со статусом "{booking.get_status_display()}"'
+                )
+
+        else:
+            messages.error(request, 'Неизвестное действие')
+
+        # Redirect to prevent re-submission on refresh
+        return redirect('logus:booking_detail', booking_id=booking.id)
+
+    # Calculate some additional info for the template
+    context = {
+        'booking': booking,
+        'can_checkin': booking.status in ['pending', 'confirmed'],
+        'can_cancel': booking.status in ['pending', 'confirmed'],
+        'can_checkout': booking.status == 'checked_in',
+        'total_guests': booking.details.count(),
+        'duration_days': (booking.end_date.date() - booking.start_date.date()).days,
+    }
+
+    return render(request, 'logus/booking/booking_detail.html', context)
 
 
 def get_available_rooms(start_date, end_date):

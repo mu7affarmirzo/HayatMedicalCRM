@@ -11,7 +11,12 @@ class BookingInitialForm(forms.Form):
     """
     patient = forms.ModelChoiceField(
         queryset=PatientModel.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control select2', 'style': 'width: 100%;'})
+        widget=forms.Select(attrs={
+            'class': 'form-control select2 select2-primary',
+            'style': 'width: 100%;',
+            'data-dropdown-css-class': 'select2-primary'
+        }),
+        empty_label="-- Выберите пациента --"
     )
 
     date_range = forms.CharField(

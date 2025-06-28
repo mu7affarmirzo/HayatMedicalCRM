@@ -236,7 +236,7 @@
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="fas fa-filter mr-1"></i> Применить
                                             </button>
-                                            <a href="{% url 'booking_list' %}" class="btn btn-default">
+                                            <a href="{% url 'logus:booking_list' %}" class="btn btn-default">
                                                 <i class="fas fa-sync-alt"></i>
                                             </a>
                                         </div>
@@ -247,7 +247,7 @@
                         
                         <div class="row mt-2">
                             <div class="col-md-12 text-right">
-                                <a href="{% url 'booking_start' %}" class="btn btn-success">
+                                <a href="{% url 'logus:booking_start' %}" class="btn btn-success">
                                     <i class="fas fa-plus mr-1"></i> Новое бронирование
                                 </a>
                             </div>
@@ -332,7 +332,7 @@
                                         </td>
                                         <td class="booking-actions">
                                             <div class="btn-group">
-                                                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-info btn-sm">
+                                                <a href="{% url 'logus:booking_detail' booking.id %}" class="btn btn-info btn-sm">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 
@@ -375,7 +375,7 @@
                                                 <i class="fas fa-search mr-2"></i> Бронирования не найдены
                                             </div>
                                             <div class="mt-3">
-                                                <a href="{% url 'booking_start' %}" class="btn btn-primary">
+                                                <a href="{% url 'logus:booking_start' %}" class="btn btn-primary">
                                                     <i class="fas fa-plus mr-1"></i> Создать бронирование
                                                 </a>
                                             </div>

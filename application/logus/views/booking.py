@@ -33,7 +33,7 @@ def booking_start(request):
                 'guests_count': form.cleaned_data['guests_count'],
                 'date_range': form.cleaned_data['date_range']  # Store the original date range string
             }
-            return redirect('booking_select_rooms')
+            return redirect('logus:booking_select_rooms')
     else:
         form = BookingInitialForm(initial={'date_range': default_date_range})
 
@@ -53,7 +53,7 @@ def booking_select_rooms(request):
     booking_data = request.session.get('booking_data')
     if not booking_data:
         messages.error(request, 'Пожалуйста, начните процесс бронирования сначала')
-        return redirect('booking_start')
+        return redirect('logus:booking_start')
 
     # Convert session data back to Python objects
     start_date = timezone.datetime.fromisoformat(booking_data['start_date'])
@@ -75,7 +75,7 @@ def booking_select_rooms(request):
 
             booking_data['selected_rooms'] = selected_rooms
             request.session['booking_data'] = booking_data
-            return redirect('booking_confirm')
+            return redirect('logus:booking_confirm')
     else:
         form = RoomSelectionForm(available_rooms=available_rooms, guests_count=guests_count)
 
@@ -102,7 +102,7 @@ def booking_confirm(request):
     booking_data = request.session.get('booking_data')
     if not booking_data or 'selected_rooms' not in booking_data:
         messages.error(request, 'Пожалуйста, начните процесс бронирования сначала')
-        return redirect('booking_start')
+        return redirect('logus:booking_start')
 
     start_date = timezone.datetime.fromisoformat(booking_data['start_date'])
     end_date = timezone.datetime.fromisoformat(booking_data['end_date'])
@@ -142,7 +142,7 @@ def booking_confirm(request):
                     del request.session['booking_data']
 
                 messages.success(request, f'Бронирование #{booking.booking_number} успешно создано!')
-                return redirect('booking_detail', booking_id=booking.id)
+                return redirect('logus:booking_detail', booking_id=booking.id)
 
             except Exception as e:
                 messages.error(request, f'Ошибка при создании бронирования: {str(e)}')
@@ -150,6 +150,8 @@ def booking_confirm(request):
             messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
     else:
         form = BookingConfirmationForm()
+
+    print('here')
 
     return render(request, 'logus/booking/booking_confirm.html', {
         'form': form,
@@ -299,10 +301,10 @@ def add_new_patient(request):
             patient.created_by = request.user
             patient.modified_by = request.user
             patient.save()
-            return redirect('booking_start')  # Replace with your success URL
+            return redirect('logus:booking_start')  # Replace with your success URL
         print(form.errors)
     else:
-        return redirect('booking_start')
+        return redirect('logus:booking_start')
     return render(request, 'logus/booking/booking_start.html', {'form': form})
 
 

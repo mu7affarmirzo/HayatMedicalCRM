@@ -10,7 +10,7 @@ urlpatterns = [
 
 
     path('availability/', available_room_view, name='check_availability'),
-    path('new/dashboard/', reception_dashboard, name='reception_dashboard'),
+    path('new/dashboard/', reception_dashboard, name='logus_dashboard'),
     path('dashboard/quick-booking/', create_quick_booking, name='create_quick_booking'),
 
 ]

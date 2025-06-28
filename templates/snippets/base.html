@@ -103,7 +103,7 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                     data-accordion="false">
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'logus:logus_dashboard' %}" class="nav-link">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Главная</p>
                         </a>
@@ -111,7 +111,7 @@
 
                     <!-- Booking Management Section -->
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'logus:logus_dashboard' %}" class="nav-link">
                             <i class="nav-icon fas fa-calendar-alt"></i>
                             <p>
                                 Записи
@@ -120,7 +120,7 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="{% url 'logus:booking_start' %}" class="nav-link">
                                     <i class="far fa-calendar-plus nav-icon"></i>
                                     <p>Новая запись</p>
                                 </a>

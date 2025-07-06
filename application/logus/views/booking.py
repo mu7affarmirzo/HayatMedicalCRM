@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from application.logus.forms.patient_form import PatientRegistrationForm
-from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType, TariffRoomPrice
+from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType, TariffRoomPrice, District, Region
 from application.logus.forms.booking import BookingInitialForm, RoomSelectionForm, BookingConfirmationForm
 
 
@@ -422,3 +422,28 @@ def add_new_patient(request):
     return render(request, 'logus/booking/booking_start.html', {'form': form})
 
 
+def get_districts(request):
+    region_id = request.GET.get('region_id')
+    districts = District.objects.filter(region_id=region_id, is_active=True).values('id', 'name')
+    return JsonResponse(list(districts), safe=False)
+
+
+@csrf_exempt
+def patient_registration(request):
+    # Form processing logic here
+    if request.method == 'POST':
+        form = PatientRegistrationForm(request.POST)
+        if form.is_valid():
+            patient = form.save(commit=False)
+            patient.created_by = request.user
+            patient.modified_by = request.user
+            patient.save()
+            return redirect('logus:booking_start')  # Replace with your success URL
+    # else:
+    #     return redirect('logus:booking_start')
+    form = PatientRegistrationForm()
+    context = {
+        'form': form,
+        'regions': Region.objects.filter(is_active=True)
+    }
+    return render(request, 'logus/booking/patient_registration_page.html', context)

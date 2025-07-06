@@ -12,5 +12,7 @@ urlpatterns = [
     path('booking/check-availability/', booking.check_room_availability_ajax, name='check_room_availability'),
 
     path('add-new-patient/', booking.add_new_patient, name='add-new-patient'),
+    path('patient-registration/', booking.patient_registration, name='patient_registration'),
+    path('get-districts/', booking.get_districts, name='get_districts'),
 
 ]

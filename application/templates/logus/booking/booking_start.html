@@ -84,7 +84,6 @@
                                     </div>
                                 {% endif %}
 
-{#                                <h5>Пациент</h5>#}
                                 <div class="row">
                                     <div class="col-12 col-sm-6">
                                         <div class="form-group">
@@ -98,24 +97,15 @@
                                             </div>
                                             {% endif %}
                                         </div>
-{#                                        <div class="form-group">#}
-{#                                            <select class="form-control select2 select2-primary" id="patient-select"#}
-{#                                                    name="patient" data-dropdown-css-class="select2-primary"#}
-{#                                                    style="width: 100%;">#}
-{#                                                {% for patient in patients %}#}
-{#                                                    <option value="{{ patient.id }}">{{ patient.full_name }}</option>#}
-{#                                                {% endfor %}#}
-{#                                            </select>#}
-{#                                        </div>#}
-                                        <!-- /.form-group -->
                                     </div>
                                     <!-- /.col -->
                                     <div class="col-12 col-sm-6">
                                         <div class="form-group">
-                                            <div class="select2-primary">
+                                            <label>&nbsp;</label>
+                                            <div>
                                                 <button type="button" class="btn btn-warning" data-toggle="modal"
                                                         data-target="#modal-default">
-                                                    Добавить новый пациент
+                                                    <i class="fas fa-plus"></i> Добавить нового пациента
                                                 </button>
                                             </div>
                                         </div>
@@ -220,91 +210,121 @@
                 </div>
             </div>
 
+            <!-- Add New Patient Modal -->
             <div class="modal fade" id="modal-default">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h4 class="modal-title">Добавить пациент</h4>
+                            <h4 class="modal-title">Добавить пациента</h4>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
 
-                        <form id="registerPatientForm" method="POST"
-                              action="{% url 'logus:add-new-patient' %}">
+                        <form id="registerPatientForm" method="POST" action="{% url 'logus:add-new-patient' %}">
                             {% csrf_token %}
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label for="example_fname">Имя</label>
-                                    <input name="f_name" type="text" class="form-control" id="example_fname"
-                                           placeholder="Отабек">
-                                </div>
-                                <div class="form-group">
-                                    <label for="example_fname">Фамилия</label>
-                                    <input name="mid_name" type="text" class="form-control" id="example_fname"
-                                           placeholder="Равшанов">
-                                </div>
-                                <div class="form-group">
-                                    <label for="example_last_name">Отчества</label>
-                                    <input name="l_name" type="text" class="form-control" id="example_last_name"
-                                           placeholder="Ботирович">
-                                </div>
-                                <div class="form-group">
-                                    <label for="example_phone_nm">Телефон</label>
-                                    <input name="mobile_phone_number" type="text" class="form-control"
-                                           id="example_phone_nm" placeholder="+998901002030">
-                                </div>
-                                <div class="form-group">
-                                    <label for="example_fname">ПИНФЛ</label>
-                                    <input name="INN" type="text" class="form-control" id="example_inn"
-                                           placeholder="123456789">
-                                </div>
-                                <div class="form-group">
-                                    <label for="example_phone_nm">Адрес</label>
-                                    <input name="address" type="text" class="form-control " id="example_address"
-                                           placeholder="Ташкентская область, Кибрайский район, городской посёлок Салар, улица Гулимамур, 5/1">
-                                </div>
-
-
-                                <div class="col-sm-6">
-                                    <!-- radio -->
-                                    <div class="form-group">
-                                        <div class="custom-control custom-radio">
-                                            <input value='False' class="custom-control-input" type="radio"
-                                                   id="customRadio1" name="gender">
-                                            <label for="customRadio1" class="custom-control-label">Женщина</label>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="patient_fname">Имя <span class="text-danger">*</span></label>
+                                            <input name="f_name" type="text" class="form-control" id="patient_fname"
+                                                   placeholder="Отабек" required>
                                         </div>
-                                        <div class="custom-control custom-radio">
-                                            <input value='True' class="custom-control-input" type="radio"
-                                                   id="customRadio2" name="gender" checked>
-                                            <label for="customRadio2" class="custom-control-label">Мужчина</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="patient_lname">Фамилия <span class="text-danger">*</span></label>
+                                            <input name="l_name" type="text" class="form-control" id="patient_lname"
+                                                   placeholder="Равшанов" required>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label>Дата рождения:</label>
-                                    <div class="input-group date" id="birthdatepicker" data-target-input="nearest">
-                                        <input name="date_of_birth" type="text" class="form-control datetimepicker-input" data-target="#birthdatepicker"/>
-                                        <div class="input-group-append" data-target="#birthdatepicker" data-toggle="datetimepicker">
-                                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="patient_midname">Отчество</label>
+                                            <input name="mid_name" type="text" class="form-control" id="patient_midname"
+                                                   placeholder="Ботирович">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="patient_phone">Телефон <span class="text-danger">*</span></label>
+                                            <input name="mobile_phone_number" type="text" class="form-control"
+                                                   id="patient_phone" placeholder="+998901002030" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="patient_inn">ПИНФЛ</label>
+                                            <input name="INN" type="text" class="form-control" id="patient_inn"
+                                                   placeholder="123456789">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Дата рождения <span class="text-danger">*</span></label>
+                                            <div class="input-group date" id="birthdatepicker" data-target-input="nearest">
+                                                <input name="date_of_birth" type="text"
+                                                       class="form-control datetimepicker-input"
+                                                       data-target="#birthdatepicker"
+                                                       placeholder="ДД.ММ.ГГГГ"
+                                                       required/>
+                                                <div class="input-group-append" data-target="#birthdatepicker" data-toggle="datetimepicker">
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Пол <span class="text-danger">*</span></label>
+                                            <div class="mt-2">
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input value='True' class="custom-control-input" type="radio"
+                                                           id="customRadio_male" name="gender" checked>
+                                                    <label for="customRadio_male" class="custom-control-label">Мужчина</label>
+                                                </div>
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input value='False' class="custom-control-input" type="radio"
+                                                           id="customRadio_female" name="gender">
+                                                    <label for="customRadio_female" class="custom-control-label">Женщина</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="patient_address">Адрес</label>
+                                            <textarea name="address" class="form-control" id="patient_address" rows="3"
+                                                      placeholder="Ташкентская область, Кибрайский район..."></textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <!-- /.card-body -->
+                            <!-- /.modal-body -->
 
                             <div class="modal-footer justify-content-between">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
-                                <button type="submit" class="btn btn-primary">Сохранить</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Сохранить
+                                </button>
                             </div>
                         </form>
-
                     </div>
                     <!-- /.modal-content -->
                 </div>
                 <!-- /.modal-dialog -->
             </div>
+            <!-- /.modal -->
         </div>
     </section>
 
@@ -362,6 +382,60 @@
         .table-loading {
             opacity: 0.6;
         }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 60%;
+            width: 80%;
+            height: 2px;
+            background-color: #e9ecef;
+            z-index: 1;
+        }
+
+        .step.active:not(:last-child):after {
+            background-color: #007bff;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step.active .step-icon {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .step.active .step-text {
+            color: #007bff;
+            font-weight: bold;
+        }
     </style>
 {% endblock %}
 
@@ -374,8 +448,6 @@
     <script src="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.js' %}"></script>
     <!-- Tempusdominus Bootstrap 4 -->
     <script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
-    <!-- Booking JS -->
-    <script src="{% static 'adminlte3_assets/dist/js/booking.js' %}"></script>
 
     <script>
         // Define URL for availability checking
@@ -387,7 +459,7 @@
                 theme: 'bootstrap4'
             });
 
-            // Initialize DateRangePicker
+            // Initialize DateRangePicker for booking dates
             $('#date-range').daterangepicker({
                 locale: {
                     format: 'DD.MM.YYYY',
@@ -412,22 +484,56 @@
                 showCustomRangeLabel: false
             });
 
-            // Initialize the date picker for birthdate
-            $('#birthdatepicker').datetimepicker({
-                format: 'DD.MM.YYYY',
-                locale: 'ru',
-                useCurrent: false,
-                maxDate: moment(), // Ensures dates in the future can't be selected
-                icons: {
-                    time: 'far fa-clock',
-                    date: 'far fa-calendar',
-                    up: 'fas fa-chevron-up',
-                    down: 'fas fa-chevron-down',
-                    previous: 'fas fa-chevron-left',
-                    next: 'fas fa-chevron-right',
-                    today: 'fas fa-calendar-check',
-                    clear: 'far fa-trash-alt',
-                    close: 'fas fa-times'
+            // Function to initialize birth date picker
+            function initBirthDatePicker() {
+                // Destroy existing instance if it exists
+                if ($('#birthdatepicker').hasClass('datetimepicker-input')) {
+                    $('#birthdatepicker').datetimepicker('destroy');
+                }
+
+                // Initialize birth date picker
+                $('#birthdatepicker').datetimepicker({
+                    format: 'DD.MM.YYYY',
+                    locale: 'ru',
+                    useCurrent: false,
+                    maxDate: moment().subtract(1, 'day'), // Yesterday as max date
+                    defaultDate: moment().subtract(25, 'years'), // Default to 25 years ago
+                    viewMode: 'years',
+                    icons: {
+                        time: 'far fa-clock',
+                        date: 'far fa-calendar',
+                        up: 'fas fa-chevron-up',
+                        down: 'fas fa-chevron-down',
+                        previous: 'fas fa-chevron-left',
+                        next: 'fas fa-chevron-right',
+                        today: 'fas fa-calendar-check',
+                        clear: 'far fa-trash-alt',
+                        close: 'fas fa-times'
+                    },
+                    buttons: {
+                        showToday: true,
+                        showClear: true,
+                        showClose: true
+                    }
+                });
+            }
+
+            // Initialize birth date picker when modal is shown
+            $('#modal-default').on('shown.bs.modal', function () {
+                // Small delay to ensure modal is fully rendered
+                setTimeout(function() {
+                    initBirthDatePicker();
+                }, 100);
+            });
+
+            // Clean up when modal is hidden
+            $('#modal-default').on('hidden.bs.modal', function () {
+                // Reset form
+                $('#registerPatientForm')[0].reset();
+
+                // Destroy date picker instance
+                if ($('#birthdatepicker').hasClass('datetimepicker-input')) {
+                    $('#birthdatepicker').datetimepicker('destroy');
                 }
             });
 
@@ -452,7 +558,7 @@
                 // Show availability panel
                 $('#availability-preview-panel').removeClass('d-none');
 
-                // Define a local updateRoomAvailability function if using booking.js doesn't work
+                // Define a local updateRoomAvailability function
                 function localUpdateRoomAvailability() {
                     // Get dates from daterangepicker
                     const dateRangePicker = $('#date-range').data('daterangepicker');
@@ -574,79 +680,39 @@
                     $('#alerts-container').html(alertHtml);
                 }
 
-                // Try to use the global function first, fallback to local if it doesn't exist
-                if (typeof updateRoomAvailability === 'function') {
-                    updateRoomAvailability();
-                } else {
-                    localUpdateRoomAvailability();
-                }
+                localUpdateRoomAvailability();
             });
 
-            // Make sure clicking on the calendar icon triggers the date picker
-            $(document).on('click', '.fa-calendar, .input-group-text', function() {
-                $(this).closest('.input-group').find('.datetimepicker-input').focus();
-            });
+            // Handle new patient form submission
+            $('#registerPatientForm').on('submit', function(e) {
+                e.preventDefault();
 
-            // Initialize modal elements properly when the modal is shown
-            $('#modal-default').on('shown.bs.modal', function () {
-                $('#birthdatepicker').datetimepicker('update');
+                const formData = $(this).serialize();
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            // Add new patient to select dropdown
+                            const newOption = new Option(response.patient.full_name, response.patient.id, true, true);
+                            $('#id_patient').append(newOption).trigger('change');
+
+                            // Close modal
+                            $('#modal-default').modal('hide');
+
+                            // Show success message
+                            alert('Пациент успешно добавлен!');
+                        } else {
+                            alert('Ошибка при добавлении пациента: ' + response.error);
+                        }
+                    },
+                    error: function() {
+                        alert('Произошла ошибка при сохранении данных пациента.');
+                    }
+                });
             });
         });
     </script>
-
-    <style>
-        .progress-steps {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .step {
-            flex: 1;
-            text-align: center;
-            position: relative;
-        }
-
-        .step:not(:last-child):after {
-            content: '';
-            position: absolute;
-            top: 25px;
-            left: 60%;
-            width: 80%;
-            height: 2px;
-            background-color: #e9ecef;
-            z-index: 1;
-        }
-
-        .step.active:not(:last-child):after {
-            background-color: #007bff;
-        }
-
-        .step-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .step.active .step-icon {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .step-text {
-            font-size: 14px;
-            color: #6c757d;
-        }
-
-        .step.active .step-text {
-            color: #007bff;
-            font-weight: bold;
-        }
-    </style>
 {% endblock %}

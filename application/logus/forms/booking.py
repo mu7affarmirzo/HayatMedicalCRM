@@ -5,30 +5,49 @@ from django.utils import timezone
 from core.models import Booking, BookingDetail, PatientModel, Room
 
 
+from django import forms
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+from core.models import Booking, BookingDetail, PatientModel, Room
+
+
 class BookingInitialForm(forms.Form):
     """
     Initial form for starting a booking - select patient, dates, and number of guests
     """
     patient = forms.ModelChoiceField(
-        queryset=PatientModel.objects.all(),
+        queryset=PatientModel.objects.filter(is_active=True),
         widget=forms.Select(attrs={
             'class': 'form-control select2 select2-primary',
             'style': 'width: 100%;',
             'data-dropdown-css-class': 'select2-primary'
         }),
-        empty_label="-- Выберите пациента --"
+        empty_label="-- Выберите пациента --",
+        label="Пациент"
     )
 
     date_range = forms.CharField(
         widget=forms.TextInput(
-            attrs={'class': 'form-control', 'id': 'date-range'}
-        )
+            attrs={
+                'class': 'form-control',
+                'id': 'date-range',
+                'placeholder': 'Выберите диапазон дат'
+            }
+        ),
+        label="Диапазон дат"
     )
 
     guests_count = forms.IntegerField(
         min_value=1,
+        max_value=10,
         initial=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': '1',
+            'max': '10'
+        }),
+        label="Количество гостей"
     )
 
     def clean(self):
@@ -69,6 +88,44 @@ class BookingInitialForm(forms.Form):
                 raise ValidationError("Неверный формат диапазона дат. Используйте формат ДД.ММ.ГГГГ - ДД.ММ.ГГГГ")
 
         return cleaned_data
+
+
+class RoomSelectionForm(forms.Form):
+    """
+    Form for selecting rooms after checking availability
+    """
+
+    def __init__(self, *args, **kwargs):
+        available_rooms = kwargs.pop('available_rooms', None)
+        guests_count = kwargs.pop('guests_count', 1)
+        super().__init__(*args, **kwargs)
+
+        if available_rooms:
+            room_choices = [(room.id, f"{room.name} - {room.room_type.name}") for room in available_rooms]
+
+            # Create multiple selection fields based on number of guests
+            for i in range(guests_count):
+                field_name = f'room_{i}'
+                self.fields[field_name] = forms.ChoiceField(
+                    choices=room_choices,
+                    label=f"Комната для гостя {i + 1}",
+                    widget=forms.Select(attrs={'class': 'form-control'})
+                )
+
+
+class BookingConfirmationForm(forms.Form):
+    """
+    Final form for confirming booking details and adding notes
+    """
+    notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Дополнительные примечания к бронированию...'
+        }),
+        label="Примечания"
+    )
 
 
 class RoomSelectionForm(forms.Form):

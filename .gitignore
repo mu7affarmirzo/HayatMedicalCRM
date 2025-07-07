@@ -413,3 +413,4 @@ static_cdn
 
 migrations
 /migrations/*
+core/migrations

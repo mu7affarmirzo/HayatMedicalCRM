@@ -417,6 +417,7 @@ def add_new_patient(request):
             patient.save()
             return redirect('logus:booking_start')  # Replace with your success URL
         print(form.errors)
+        return redirect('logus:booking_start')
     else:
         return redirect('logus:booking_start')
     return render(request, 'logus/booking/booking_start.html', {'form': form})

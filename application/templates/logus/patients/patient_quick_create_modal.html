@@ -1,0 +1,190 @@
+<!-- Modal for Quick Patient Registration -->
+<div class="modal fade" id="quickPatientModal" tabindex="-1" role="dialog" aria-labelledby="quickPatientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title" id="quickPatientModalLabel">
+                    <i class="fas fa-user-plus"></i> Быстрая регистрация пациента
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="quickPatientForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="quick_l_name" class="required-field">Фамилия</label>
+                                <input type="text" class="form-control" id="quick_l_name" name="l_name" required>
+                                <small class="help-block text-danger d-none" id="l_name_error"></small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="quick_f_name" class="required-field">Имя</label>
+                                <input type="text" class="form-control" id="quick_f_name" name="f_name" required>
+                                <small class="help-block text-danger d-none" id="f_name_error"></small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="quick_mid_name">Отчество</label>
+                                <input type="text" class="form-control" id="quick_mid_name" name="mid_name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="quick_date_of_birth" class="required-field">Дата рождения</label>
+                                <div class="input-group date" id="quickDateOfBirth" data-target-input="nearest">
+                                    <input type="text" class="form-control datetimepicker-input" data-target="#quickDateOfBirth"
+                                           id="quick_date_of_birth" name="date_of_birth" required>
+                                    <div class="input-group-append" data-target="#quickDateOfBirth" data-toggle="datetimepicker">
+                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                                <small class="help-block text-danger d-none" id="date_of_birth_error"></small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="quick_gender" class="required-field">Пол</label>
+                                <select class="form-control" id="quick_gender" name="gender" required>
+                                    <option value="">-- Выберите пол --</option>
+                                    <option value="1">Мужской</option>
+                                    <option value="0">Женский</option>
+                                </select>
+                                <small class="help-block text-danger d-none" id="gender_error"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick_mobile_phone_number" class="required-field">Мобильный телефон</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
+                            </div>
+                            <input type="text" class="form-control" id="quick_mobile_phone_number" name="mobile_phone_number"
+                                   placeholder="+998 ХХ ХХХ-ХХ-ХХ" data-inputmask='"mask": "+\\9\\98 99 999-99-99"' data-mask required>
+                        </div>
+                        <small class="help-block text-danger d-none" id="mobile_phone_number_error"></small>
+                    </div>
+                </form>
+
+                <!-- Alert area for form messages -->
+                <div id="quickPatientFormAlert" class="alert d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveQuickPatient">
+                    <i class="fas fa-save"></i> Сохранить и выбрать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Quick Patient Registration -->
+<script>
+    $(function() {
+        // Initialize date picker
+        $('#quickDateOfBirth').datetimepicker({
+            format: 'DD.MM.YYYY',
+            icons: {
+                time: 'far fa-clock'
+            },
+            maxDate: moment() // Can't select future dates
+        });
+
+        // Initialize input mask
+        $('[data-mask]').inputmask();
+
+        // Form validation and submission
+        $('#saveQuickPatient').on('click', function() {
+            // Reset error messages
+            $('.help-block').addClass('d-none');
+            $('#quickPatientFormAlert').addClass('d-none');
+
+            // Check required fields
+            var isValid = true;
+            $('#quickPatientForm [required]').each(function() {
+                if ($(this).val() === '') {
+                    isValid = false;
+                    var fieldId = $(this).attr('id') + '_error';
+                    $('#' + fieldId).text('Это поле обязательно для заполнения').removeClass('d-none');
+                }
+            });
+
+            if (!isValid) {
+                return;
+            }
+
+            // Show loading state
+            var saveBtn = $(this);
+            saveBtn.html('<i class="fas fa-spinner fa-spin"></i> Сохранение...').prop('disabled', true);
+
+            // Prepare form data
+            var formData = {
+                f_name: $('#quick_f_name').val(),
+                l_name: $('#quick_l_name').val(),
+                mid_name: $('#quick_mid_name').val(),
+                date_of_birth: $('#quick_date_of_birth').val(),
+                gender: $('#quick_gender').val(),
+                mobile_phone_number: $('#quick_mobile_phone_number').val(),
+                csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+            };
+
+            // Submit the form via AJAX
+            $.ajax({
+                url: '{% url "patients:patient_quick_create" %}',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    // Add patient to the select box and select it
+                    var patientSelect = $('#patient_id');
+                    var newOption = new Option(response.patient_name, response.patient_id, true, true);
+                    patientSelect.append(newOption).trigger('change');
+
+                    // Close the modal
+                    $('#quickPatientModal').modal('hide');
+
+                    // Show success message
+                    toastr.success(response.message);
+                },
+                error: function(xhr) {
+                    // Show error message
+                    var errorMessage = 'Произошла ошибка при сохранении пациента.';
+
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            errorMessage = response.error;
+                        }
+                    } catch (e) {}
+
+                    $('#quickPatientFormAlert')
+                        .removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .html('<i class="fas fa-exclamation-triangle"></i> ' + errorMessage);
+                },
+                complete: function() {
+                    // Reset button state
+                    saveBtn.html('<i class="fas fa-save"></i> Сохранить и выбрать').prop('disabled', false);
+                }
+            });
+        });
+
+        // Reset form when modal is hidden
+        $('#quickPatientModal').on('hidden.bs.modal', function() {
+            $('#quickPatientForm')[0].reset();
+            $('.help-block').addClass('d-none');
+            $('#quickPatientFormAlert').addClass('d-none');
+        });
+    });
+</script>

@@ -34,7 +34,6 @@ class District(models.Model):
 
     class Meta:
         ordering = ('name',)
-        unique_together = ('region', 'name')  # Prevent duplicate district names within a region
 
 
 class PatientModel(BaseAuditModel):
@@ -42,7 +41,7 @@ class PatientModel(BaseAuditModel):
     mid_name = models.CharField(max_length=255, null=True, blank=True)
     l_name = models.CharField(max_length=255)
     email = models.EmailField(null=True, blank=True)
-    date_of_birth = models.DateField(auto_now=False)
+    date_of_birth = models.DateField(null=True, blank=True)
     home_phone_number = models.CharField(max_length=255, blank=True, null=True)
     mobile_phone_number = models.CharField(max_length=255, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -93,17 +92,17 @@ class PatientModel(BaseAuditModel):
             mid_name = ''
 
         return f"{self.l_name} {self.f_name} {mid_name}"
-
-    def clean(self):
-        # Validate that district belongs to the selected region
-        if self.district and self.region and self.district.region != self.region:
-            raise ValidationError({'district': 'Выбранный район не принадлежит выбранному региону.'})
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+    #
+    # def clean(self):
+    #     # Validate that district belongs to the selected region
+    #     if self.district and self.region and self.district.region != self.region:
+    #         raise ValidationError({'district': 'Выбранный район не принадлежит выбранному региону.'})
+    #
+    #     super().clean()
+    #
+    # def save(self, *args, **kwargs):
+    #     self.full_clean()
+    #     super().save(*args, **kwargs)
 
     class Meta:
         ordering = ('-created_at',)

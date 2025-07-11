@@ -1,0 +1,290 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ patient.full_name }} - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .patient-info-box {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+
+    .timeline-item .time {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
+    .booking-card {
+        transition: all 0.3s ease;
+    }
+
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Карточка пациента</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:patient_list' %}">Пациенты</a></li>
+                    <li class="breadcrumb-item active">{{ patient.full_name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <!-- Patient Profile Card -->
+            <div class="col-md-4">
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            <img class="profile-user-img img-fluid img-circle"
+                                 src="{% static 'adminlte3_assets/dist/img/avatar.png' %}"
+                                 alt="Фото пациента">
+                        </div>
+
+                        <h3 class="profile-username text-center">{{ patient.full_name }}</h3>
+                        <p class="text-muted text-center">
+                            {% if patient.is_active %}
+                                <span class="badge badge-success">Активный</span>
+                            {% else %}
+                                <span class="badge badge-danger">Неактивный</span>
+                            {% endif %}
+                        </p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Дата рождения</b> <a class="float-right">{{ patient.date_of_birth|date:"d.m.Y" }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Возраст</b> <a class="float-right">{{ patient.age }} лет</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Пол</b> <a class="float-right">{{ patient.formatted_gender }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Телефон</b> <a class="float-right">{{ patient.mobile_phone_number|default:"-" }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Email</b> <a class="float-right">{{ patient.email|default:"-" }}</a>
+                            </li>
+                        </ul>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <a href="{% url 'logus:patient_update' patient.id %}" class="btn btn-warning btn-block">
+                                    <i class="fas fa-edit"></i> Редактировать
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{% url 'logus:booking_start' %}?patient_id={{ patient.id }}" class="btn btn-primary btn-block">
+                                    <i class="fas fa-calendar-plus"></i> Записать
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info Box -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Дополнительная информация</h3>
+                    </div>
+                    <div class="card-body">
+                        <strong><i class="fas fa-map-marker-alt mr-1"></i> Адрес</strong>
+                        <p class="text-muted">
+                            {% if patient.address %}
+                                {{ patient.country|default:"" }}
+                                {% if patient.region %}, {{ patient.region.name }}{% endif %}
+                                {% if patient.district %}, {{ patient.district.name }}{% endif %}<br>
+                                {{ patient.address }}
+                            {% else %}
+                                Нет данных
+                            {% endif %}
+                        </p>
+
+                        <hr>
+
+                        <strong><i class="fas fa-id-card mr-1"></i> Документы</strong>
+                        <p class="text-muted">
+                            {% if patient.doc_type %}
+                                {{ patient.get_doc_type_display|default:patient.doc_type }}: {{ patient.doc_number|default:"" }}<br>
+                                {% if patient.INN %}ИНН: {{ patient.INN }}{% endif %}
+                            {% else %}
+                                Нет данных
+                            {% endif %}
+                        </p>
+
+                        <hr>
+
+                        <strong><i class="fas fa-notes-medical mr-1"></i> Медицинская информация</strong>
+                        <p class="text-muted">
+                            {% if patient.gestational_age %}
+                                Гестационный возраст: {{ patient.gestational_age }} недель
+                            {% else %}
+                                Нет данных
+                            {% endif %}
+                        </p>
+
+                        <hr>
+
+                        <strong><i class="fas fa-info-circle mr-1"></i> Дополнительно</strong>
+                        <p class="text-muted">
+                            {% if patient.additional_info %}
+                                {{ patient.additional_info|linebreaks }}
+                            {% else %}
+                                Нет данных
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Activity and Bookings -->
+            <div class="col-md-8">
+                <!-- Booking History -->
+                <div class="card">
+                    <div class="card-header p-2">
+                        <h3 class="card-title">История посещений</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if patient.bookings.all %}
+                            <div class="row">
+                                {% for booking in patient.bookings.all|slice:":6" %}
+                                <div class="col-md-6">
+                                    <div class="card booking-card mb-3 position-relative">
+                                        <div class="status-badge">
+                                            <span class="badge badge-{% if booking.booking.status == 'completed' %}success{% elif booking.booking.status == 'cancelled' %}danger{% elif booking.booking.status == 'checked_in' %}info{% else %}primary{% endif %}">
+                                                {{ booking.booking.get_status_display }}
+                                            </span>
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <i class="fas fa-calendar-check mr-1"></i>
+                                                Бронирование #{{ booking.booking.booking_number }}
+                                            </h5>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <p class="mb-1"><strong>Даты:</strong></p>
+                                                    <p class="text-muted mb-1">
+                                                        {{ booking.booking.start_date|date:"d.m.Y" }} - {{ booking.booking.end_date|date:"d.m.Y" }}
+                                                    </p>
+                                                    <p class="mb-1"><strong>Комната:</strong></p>
+                                                    <p class="text-muted mb-1">{{ booking.room.name }}</p>
+                                                </div>
+                                                <div class="col-6">
+                                                    <p class="mb-1"><strong>Тариф:</strong></p>
+                                                    <p class="text-muted mb-1">{{ booking.tariff.name }}</p>
+                                                    <p class="mb-1"><strong>Цена:</strong></p>
+                                                    <p class="text-muted mb-1">{{ booking.price }} ₸</p>
+                                                </div>
+                                            </div>
+                                            <a href="#" class="btn btn-sm btn-info mt-2">
+                                                <i class="fas fa-info-circle"></i> Детали
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if patient.bookings.all.count > 6 %}
+                            <div class="text-center mt-3">
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="fas fa-history"></i> Показать все визиты ({{ patient.bookings.all.count }})
+                                </a>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle mr-1"></i> У пациента пока нет визитов
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <a href="{% url 'logus:booking_start' %}?patient_id={{ patient.id }}" class="btn btn-primary">
+                                    <i class="fas fa-calendar-plus mr-1"></i> Создать новую запись
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Record Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о записи</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-primary"><i class="fas fa-user-plus"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Дата регистрации</span>
+                                        <span class="info-box-number">{{ patient.created_at|date:"d.m.Y H:i" }}</span>
+                                        <span class="info-box-text text-sm">
+                                            <i class="fas fa-user mr-1"></i> {{ patient.created_by.full_name|default:"Система" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info"><i class="fas fa-clock"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Последнее обновление</span>
+                                        <span class="info-box-number">{{ patient.modified_at|date:"d.m.Y H:i" }}</span>
+                                        <span class="info-box-text text-sm">
+                                            <i class="fas fa-user mr-1"></i> {{ patient.modified_by.full_name|default:"Система" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}

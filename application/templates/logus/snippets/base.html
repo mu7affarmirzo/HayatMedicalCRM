@@ -1,0 +1,577 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Hayat Medical Center - Logus{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'adminlte3_assets/dist/img/favicon.png' %}">
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fontawesome-free/css/all.min.css' %}">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/jqvmap/jqvmap.min.css' %}">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/dist/css/adminlte.min.css' %}">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css' %}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/toastr/toastr.min.css' %}">
+
+    <!-- Logus module specific CSS -->
+    <link rel="stylesheet" href="{% static 'logus/css/logus-style.css' %}">
+
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        /* Common custom styles for logus module */
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .form-group.has-error .form-control {
+            border-color: #dc3545;
+        }
+        .form-group.has-error .help-block {
+            color: #dc3545;
+        }
+        .patient-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+        .patient-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+        .booking-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+        .page-title-icon {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+            color: #007bff;
+        }
+
+        /* Hayat-specific branding elements */
+        .brand-link .brand-image {
+            height: 40px;
+            max-height: none;
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+        }
+        .main-header.navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+            background-color: #007bff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <!-- Preloader -->
+    <div class="preloader flex-column justify-content-center align-items-center">
+        <img class="animation__shake" src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Logo" height="60">
+    </div>
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- Left navbar links -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="{% url 'logus:logus_dashboard' %}" class="nav-link">Главная</a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="{% url 'logus:booking_start' %}" class="nav-link">Новая запись</a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="{% url 'logus:patient_list' %}" class="nav-link">Пациенты</a>
+            </li>
+        </ul>
+
+        <!-- Right navbar links -->
+        <ul class="navbar-nav ml-auto">
+            <!-- Notifications Dropdown Menu -->
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#">
+                    <i class="far fa-bell"></i>
+                    <span class="badge badge-warning navbar-badge">{{ request.user.unread_notifications|length|default:"0" }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <span class="dropdown-item dropdown-header">{{ request.user.unread_notifications|length|default:"0" }} уведомлений</span>
+                    <div class="dropdown-divider"></div>
+
+                    {% for notification in request.user.unread_notifications|slice:":5" %}
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-envelope mr-2"></i> {{ notification.message|truncatechars:30 }}
+                        <span class="float-right text-muted text-sm">{{ notification.created_at|timesince }}</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    {% empty %}
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-check mr-2"></i> Нет новых уведомлений
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    {% endfor %}
+
+                    <a href="#" class="dropdown-item dropdown-footer">Все уведомления</a>
+                </div>
+            </li>
+
+            <!-- User Menu -->
+            <li class="nav-item dropdown user-menu">
+                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                    <img src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" class="user-image img-circle elevation-2" alt="User Image">
+                    <span class="d-none d-md-inline">{{ request.user.full_name }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <!-- User image -->
+                    <li class="user-header bg-primary">
+                        <img src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" class="img-circle elevation-2" alt="User Image">
+                        <p>
+                            {{ request.user.full_name }}
+                            <small>{{ request.user.email }}</small>
+                        </p>
+                    </li>
+                    <!-- Menu Footer-->
+                    <li class="user-footer">
+                        <a href="#" class="btn btn-default btn-flat">Профиль</a>
+                        <a href="{% url 'logout' %}" class="btn btn-default btn-flat float-right">Выйти</a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Full screen toggle -->
+            <li class="nav-item">
+                <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Brand Logo -->
+        <a href="{% url 'logus:logus_dashboard' %}" class="brand-link">
+            <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Logo" class="brand-image" style="opacity: .8">
+            <span class="brand-text font-weight-light">Hayat CRM</span>
+        </a>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Sidebar user panel (optional) -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="image">
+                    <img src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" class="img-circle elevation-2" alt="User Image">
+                </div>
+                <div class="info">
+                    <a href="#" class="d-block">{{ request.user.full_name }}</a>
+                </div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a href="{% url 'logus:logus_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'logus_dashboard' %}active{% endif %}">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Панель управления</p>
+                        </a>
+                    </li>
+
+                    <!-- Booking Section -->
+                    <li class="nav-item {% if 'booking' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'booking' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-calendar-alt"></i>
+                            <p>
+                                Записи
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'logus:booking_start' %}" class="nav-link {% if request.resolver_match.url_name == 'booking_start' %}active{% endif %}">
+                                    <i class="far fa-calendar-plus nav-icon"></i>
+                                    <p>Новая запись</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'logus:check_availability' %}" class="nav-link {% if request.resolver_match.url_name == 'check_availability' %}active{% endif %}">
+                                    <i class="far fa-calendar-check nav-icon"></i>
+                                    <p>Проверка доступности</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-list-alt nav-icon"></i>
+                                    <p>Все записи</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-calendar-day nav-icon"></i>
+                                    <p>Расписание</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Patients Section -->
+                    <li class="nav-item {% if 'patient' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'patient' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                Пациенты
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'logus:patient_list' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список пациентов</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'logus:patient_create' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_create' %}active{% endif %}">
+                                    <i class="fas fa-user-plus nav-icon"></i>
+                                    <p>Новый пациент</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Rooms Section -->
+                    <li class="nav-item {% if 'room' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'room' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-door-open"></i>
+                            <p>
+                                Комнаты
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'room_list' %}" class="nav-link {% if request.resolver_match.url_name == 'room_list' %}active{% endif %}">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список комнат</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'roomtype_list' %}" class="nav-link {% if request.resolver_match.url_name == 'roomtype_list' %}active{% endif %}">
+                                    <i class="fas fa-tags nav-icon"></i>
+                                    <p>Типы комнат</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Services Section -->
+                    <li class="nav-item {% if 'service' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'service' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-spa"></i>
+                            <p>
+                                Услуги
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список услуг</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-plus nav-icon"></i>
+                                    <p>Добавить услугу</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Tariffs Section -->
+                    <li class="nav-item {% if 'tariff' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'tariff' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-tag"></i>
+                            <p>
+                                Тарифы
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список тарифов</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-plus nav-icon"></i>
+                                    <p>Добавить тариф</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Therapist Section -->
+                    <li class="nav-item {% if 'therapist' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'therapist' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-hands-helping"></i>
+                            <p>
+                                Терапевты
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список терапевтов</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-user-plus nav-icon"></i>
+                                    <p>Добавить терапевта</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% if request.user.is_superuser %}
+                    <!-- Reports Section -->
+                    <li class="nav-header">ОТЧЕТЫ И АНАЛИТИКА</li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            <p>Общая статистика</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-chart-line"></i>
+                            <p>Финансовые отчеты</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-user-md"></i>
+                            <p>Статистика терапевтов</p>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if request.user.is_superuser %}
+                    <!-- Administration Section -->
+                    <li class="nav-header">АДМИНИСТРИРОВАНИЕ</li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users-cog"></i>
+                            <p>Пользователи</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-cogs"></i>
+                            <p>Настройки</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin:index' %}" class="nav-link" target="_blank">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Django Admin</p>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <!-- /.sidebar-menu -->
+        </div>
+        <!-- /.sidebar -->
+    </aside>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        {% block content %}{% endblock %}
+    </div>
+    <!-- /.content-wrapper -->
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="float-right d-none d-sm-block">
+            <b>Версия</b> 1.0.0
+        </div>
+        <strong>Copyright &copy; 2023-{% now "Y" %} <a href="https://hayatmed.uz">Hayat Baby Massage Centre</a>.</strong>
+        Все права защищены.
+    </footer>
+
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- Control sidebar content goes here -->
+    </aside>
+    <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="{% static 'adminlte3_assets/plugins/jquery/jquery.min.js' %}"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="{% static 'adminlte3_assets/plugins/jquery-ui/jquery-ui.min.js' %}"></script>
+<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+<script>
+  $.widget.bridge('uibutton', $.ui.button)
+</script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- ChartJS -->
+<script src="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.js' %}"></script>
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- JQVMap -->
+<script src="{% static 'adminlte3_assets/plugins/jqvmap/jquery.vmap.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/jqvmap/maps/jquery.vmap.world.js' %}"></script>
+<!-- InputMask -->
+<script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/inputmask/jquery.inputmask.min.js' %}"></script>
+<!-- Date range picker -->
+<script src="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.js' %}"></script>
+<!-- Tempusdominus Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+<!-- SweetAlert2 -->
+<script src="{% static 'adminlte3_assets/plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+<!-- Toastr -->
+<script src="{% static 'adminlte3_assets/plugins/toastr/toastr.min.js' %}"></script>
+<!-- overlayScrollbars -->
+<script src="{% static 'adminlte3_assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'adminlte3_assets/dist/js/adminlte.js' %}"></script>
+
+<!-- Logus module specific JS -->
+<script src="{% static 'adminlte3_assets/dist/js/custom_js/logus-scripts.js' %}"></script>
+
+<script>
+  $(function () {
+    // Initialize Select2 Elements
+    $('.select2').select2({
+      theme: 'bootstrap4'
+    });
+
+    // Initialize Toastr
+    toastr.options = {
+      "closeButton": true,
+      "debug": false,
+      "newestOnTop": true,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "preventDuplicates": false,
+      "onclick": null,
+      "showDuration": "300",
+      "hideDuration": "1000",
+      "timeOut": "5000",
+      "extendedTimeOut": "1000",
+      "showEasing": "swing",
+      "hideEasing": "linear",
+      "showMethod": "fadeIn",
+      "hideMethod": "fadeOut"
+    };
+
+    // Display Django messages with Toastr
+    {% if messages %}
+      {% for message in messages %}
+        {% if message.tags == 'success' %}
+          toastr.success('{{ message }}');
+        {% elif message.tags == 'info' %}
+          toastr.info('{{ message }}');
+        {% elif message.tags == 'warning' %}
+          toastr.warning('{{ message }}');
+        {% elif message.tags == 'error' %}
+          toastr.error('{{ message }}');
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    // Format date inputs
+    $('.date').datetimepicker({
+      format: 'DD.MM.YYYY',
+      icons: {
+        time: "far fa-clock",
+        date: "far fa-calendar-alt",
+        up: "fas fa-arrow-up",
+        down: "fas fa-arrow-down"
+      }
+    });
+
+    // Format time inputs
+    $('.time').datetimepicker({
+      format: 'HH:mm',
+      icons: {
+        time: "far fa-clock",
+        date: "far fa-calendar-alt",
+        up: "fas fa-arrow-up",
+        down: "fas fa-arrow-down"
+      }
+    });
+
+    // Format datetime inputs
+    $('.datetime').datetimepicker({
+      format: 'DD.MM.YYYY HH:mm',
+      icons: {
+        time: "far fa-clock",
+        date: "far fa-calendar-alt",
+        up: "fas fa-arrow-up",
+        down: "fas fa-arrow-down"
+      }
+    });
+
+    // Initialize input masks
+    $('[data-mask]').inputmask();
+  });
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

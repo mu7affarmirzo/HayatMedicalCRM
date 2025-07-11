@@ -1,0 +1,605 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}Регистрация пациента - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <!-- BS Stepper -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/bs-stepper/css/bs-stepper.min.css' %}">
+    <style>
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+
+        .form-group.has-error .form-control {
+            border-color: #dc3545;
+        }
+
+        .form-group.has-error .help-block {
+            color: #dc3545;
+        }
+
+        .custom-file-input ~ .custom-file-label::after {
+            content: "Выбрать";
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Регистрация пациента</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="#">Пациенты</a></li>
+                        <li class="breadcrumb-item active">Регистрация пациента</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <h5>
+                            <i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}
+                        </h5>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Данные пациента</h3>
+                        </div>
+                        <!-- /.card-header -->
+
+                        <!-- form start -->
+                        <form id="patientForm" method="post" class="form-horizontal" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <!-- BS Stepper -->
+                                <div class="bs-stepper">
+                                    <div class="bs-stepper-header" role="tablist">
+                                        <!-- Steps -->
+                                        <div class="step" data-target="#personal-info-part">
+                                            <button type="button" class="step-trigger" role="tab"
+                                                    aria-controls="personal-info-part" id="personal-info-part-trigger">
+                                                <span class="bs-stepper-circle"><i class="fas fa-user"></i></span>
+                                                <span class="bs-stepper-label">Личная информация</span>
+                                            </button>
+                                        </div>
+                                        <div class="line"></div>
+                                        <div class="step" data-target="#contact-info-part">
+                                            <button type="button" class="step-trigger" role="tab"
+                                                    aria-controls="contact-info-part" id="contact-info-part-trigger">
+                                                <span class="bs-stepper-circle"><i
+                                                        class="fas fa-address-book"></i></span>
+                                                <span class="bs-stepper-label">Контактная информация</span>
+                                            </button>
+                                        </div>
+                                        <div class="line"></div>
+                                        <div class="step" data-target="#documents-part">
+                                            <button type="button" class="step-trigger" role="tab"
+                                                    aria-controls="documents-part" id="documents-part-trigger">
+                                                <span class="bs-stepper-circle"><i class="fas fa-file-alt"></i></span>
+                                                <span class="bs-stepper-label">Документы</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="bs-stepper-content">
+                                        <!-- Personal Information part -->
+                                        <div id="personal-info-part" class="content" role="tabpanel"
+                                             aria-labelledby="personal-info-part-trigger">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label class="required-field" for="l_name">Фамилия</label>
+                                                        <input type="text" class="form-control" id="l_name"
+                                                               name="l_name" required placeholder="Фамилия"
+                                                               {% if form.l_name.value %}value="{{ form.l_name.value }}"{% endif %}>
+                                                        {% if form.l_name.errors %}
+                                                            <span class="help-block">{{ form.l_name.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label class="required-field" for="f_name">Имя</label>
+                                                        <input type="text" class="form-control" id="f_name"
+                                                               name="f_name" required placeholder="Имя"
+                                                               {% if form.f_name.value %}value="{{ form.f_name.value }}"{% endif %}>
+                                                        {% if form.f_name.errors %}
+                                                            <span class="help-block">{{ form.f_name.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="mid_name">Отчество</label>
+                                                        <input type="text" class="form-control" id="mid_name"
+                                                               name="mid_name" placeholder="Отчество"
+                                                               {% if form.mid_name.value %}value="{{ form.mid_name.value }}"{% endif %}>
+                                                        {% if form.mid_name.errors %}
+                                                            <span class="help-block">{{ form.mid_name.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label class="required-field" for="date_of_birth">Дата
+                                                            рождения</label>
+                                                        <div class="input-group date" id="dateOfBirth"
+                                                             data-target-input="nearest">
+                                                            <input type="text" class="form-control datetimepicker-input"
+                                                                   data-target="#dateOfBirth"
+                                                                   id="date_of_birth" name="date_of_birth"
+                                                                   autocomplete="off" required
+                                                                   placeholder="ДД.ММ.ГГГГ"
+                                                                   {% if form.date_of_birth.value %}value="{{ form.date_of_birth.value|date:'d.m.Y' }}"{% endif %}>
+                                                            <div class="input-group-append" data-target="#dateOfBirth"
+                                                                 data-toggle="datetimepicker">
+                                                                <div class="input-group-text"><i
+                                                                        class="fas fa-calendar"></i></div>
+                                                            </div>
+                                                        </div>
+                                                        {% if form.date_of_birth.errors %}
+                                                            <span class="help-block">{{ form.date_of_birth.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label class="required-field" for="gender">Пол</label>
+                                                        <select class="form-control" id="gender" name="gender" required>
+                                                            <option value="">-- Выберите пол --</option>
+                                                            <option value="1"
+                                                                    {% if form.gender.value == True %}selected{% endif %}>
+                                                                Мужской
+                                                            </option>
+                                                            <option value="0"
+                                                                    {% if form.gender.value == False %}selected{% endif %}>
+                                                                Женский
+                                                            </option>
+                                                        </select>
+                                                        {% if form.gender.errors %}
+                                                            <span class="help-block">{{ form.gender.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label for="gestational_age">Гестационный возраст
+                                                            (недель)</label>
+                                                        <input type="number" class="form-control" id="gestational_age"
+                                                               name="gestational_age" placeholder="Недель" min="0"
+                                                               max="50"
+                                                               {% if form.gestational_age.value %}value="{{ form.gestational_age.value }}"{% endif %}>
+                                                        {% if form.gestational_age.errors %}
+                                                            <span class="help-block">{{ form.gestational_age.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary float-right"
+                                                    onclick="stepper.next()">Далее
+                                            </button>
+                                        </div>
+
+                                        <!-- Contact Information part -->
+                                        <div id="contact-info-part" class="content" role="tabpanel"
+                                             aria-labelledby="contact-info-part-trigger">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="mobile_phone_number">Мобильный телефон</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text"><i
+                                                                        class="fas fa-mobile-alt"></i></span>
+                                                            </div>
+                                                            <input type="text" class="form-control"
+                                                                   id="mobile_phone_number" name="mobile_phone_number"
+                                                                   placeholder="+998 ХХ ХХХ-ХХ-ХХ"
+                                                                   data-inputmask='"mask": "+\\9\\98 99 999-99-99"'
+                                                                   data-mask
+                                                                   {% if form.mobile_phone_number.value %}value="{{ form.mobile_phone_number.value }}"{% endif %}>
+                                                        </div>
+                                                        {% if form.mobile_phone_number.errors %}
+                                                            <span class="help-block">{{ form.mobile_phone_number.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="home_phone_number">Домашний телефон</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text"><i
+                                                                        class="fas fa-phone"></i></span>
+                                                            </div>
+                                                            <input type="text" class="form-control"
+                                                                   id="home_phone_number" name="home_phone_number"
+                                                                   placeholder="+998 ХХ ХХХ-ХХ-ХХ"
+                                                                   data-inputmask='"mask": "+\\9\\98 99 999-99-99"'
+                                                                   data-mask
+                                                                   {% if form.home_phone_number.value %}value="{{ form.home_phone_number.value }}"{% endif %}>
+                                                        </div>
+                                                        {% if form.home_phone_number.errors %}
+                                                            <span class="help-block">{{ form.home_phone_number.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="email">Email</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text"><i
+                                                                        class="fas fa-envelope"></i></span>
+                                                            </div>
+                                                            <input type="email" class="form-control" id="email"
+                                                                   name="email" placeholder="Email"
+                                                                   {% if form.email.value %}value="{{ form.email.value }}"{% endif %}>
+                                                        </div>
+                                                        {% if form.email.errors %}
+                                                            <span class="help-block">{{ form.email.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="country">Страна</label>
+                                                        <select class="form-control select2" id="country" name="country"
+                                                                style="width: 100%;">
+                                                            <option value="">-- Выберите страну --</option>
+                                                            <option value="Узбекистан"
+                                                                    {% if form.country.value == "Узбекистан" %}selected{% endif %}>
+                                                                Узбекистан
+                                                            </option>
+                                                            <option value="Казахстан"
+                                                                    {% if form.country.value == "Казахстан" %}selected{% endif %}>
+                                                                Казахстан
+                                                            </option>
+                                                            <option value="Кыргызстан"
+                                                                    {% if form.country.value == "Кыргызстан" %}selected{% endif %}>
+                                                                Кыргызстан
+                                                            </option>
+                                                            <option value="Таджикистан"
+                                                                    {% if form.country.value == "Таджикистан" %}selected{% endif %}>
+                                                                Таджикистан
+                                                            </option>
+                                                            <option value="Туркменистан"
+                                                                    {% if form.country.value == "Туркменистан" %}selected{% endif %}>
+                                                                Туркменистан
+                                                            </option>
+                                                            <option value="Россия"
+                                                                    {% if form.country.value == "Россия" %}selected{% endif %}>
+                                                                Россия
+                                                            </option>
+                                                            <!-- Add more countries as needed -->
+                                                        </select>
+                                                        {% if form.country.errors %}
+                                                            <span class="help-block">{{ form.country.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="region">Регион</label>
+                                                        <select class="form-control select2" id="region" name="region"
+                                                                style="width: 100%;">
+                                                            <option value="">-- Выберите регион --</option>
+                                                            {% for region in regions %}
+                                                                <option value="{{ region.id }}"
+                                                                        {% if form.region.value == region.id %}selected{% endif %}>{{ region.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        {% if form.region.errors %}
+                                                            <span class="help-block">{{ form.region.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="district">Район</label>
+                                                        <select class="form-control select2" id="district"
+                                                                name="district" style="width: 100%;"
+                                                                {% if not form.region.value %}disabled{% endif %}>
+                                                            <option value="">-- Сначала выберите регион --</option>
+                                                            {% if form.district.value %}
+                                                                <option value="{{ form.district.value.id }}"
+                                                                        selected>{{ form.district.value.name }}</option>
+                                                            {% endif %}
+                                                        </select>
+                                                        {% if form.district.errors %}
+                                                            <span class="help-block">{{ form.district.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="address">Адрес</label>
+                                                <textarea class="form-control" id="address" name="address" rows="3"
+                                                          placeholder="Полный адрес">{% if form.address.value %}
+                                                    {{ form.address.value }}{% endif %}</textarea>
+                                                {% if form.address.errors %}
+                                                    <span class="help-block">{{ form.address.errors }}</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary" onclick="stepper.previous()">
+                                                Назад
+                                            </button>
+                                            <button type="button" class="btn btn-primary float-right"
+                                                    onclick="stepper.next()">Далее
+                                            </button>
+                                        </div>
+
+                                        <!-- Documents part -->
+                                        <div id="documents-part" class="content" role="tabpanel"
+                                             aria-labelledby="documents-part-trigger">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="doc_type">Тип документа</label>
+                                                        <select class="form-control" id="doc_type" name="doc_type">
+                                                            <option value="">-- Выберите тип документа --</option>
+                                                            <option value="passport"
+                                                                    {% if form.doc_type.value == "passport" %}selected{% endif %}>
+                                                                Паспорт
+                                                            </option>
+                                                            <option value="id_card"
+                                                                    {% if form.doc_type.value == "id_card" %}selected{% endif %}>
+                                                                ID карта
+                                                            </option>
+                                                            <option value="birth_certificate"
+                                                                    {% if form.doc_type.value == "birth_certificate" %}selected{% endif %}>
+                                                                Свидетельство о рождении
+                                                            </option>
+                                                            <option value="other"
+                                                                    {% if form.doc_type.value == "other" %}selected{% endif %}>
+                                                                Другое
+                                                            </option>
+                                                        </select>
+                                                        {% if form.doc_type.errors %}
+                                                            <span class="help-block">{{ form.doc_type.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="doc_number">Номер документа</label>
+                                                        <input type="text" class="form-control" id="doc_number"
+                                                               name="doc_number" placeholder="Номер документа"
+                                                               {% if form.doc_number.value %}value="{{ form.doc_number.value }}"{% endif %}>
+                                                        {% if form.doc_number.errors %}
+                                                            <span class="help-block">{{ form.doc_number.errors }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="INN">ИНН</label>
+                                                <input type="text" class="form-control" id="INN" name="INN"
+                                                       placeholder="ИНН"
+                                                       {% if form.INN.value %}value="{{ form.INN.value }}"{% endif %}>
+                                                {% if form.INN.errors %}
+                                                    <span class="help-block">{{ form.INN.errors }}</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="additional_info">Дополнительная информация</label>
+                                                <textarea class="form-control" id="additional_info"
+                                                          name="additional_info" rows="3"
+                                                          placeholder="Дополнительная информация">{% if form.additional_info.value %}
+                                                    {{ form.additional_info.value|default_if_none:"" }}{% endif %}</textarea>
+                                                {% if form.additional_info.errors %}
+                                                    <span class="help-block">{{ form.additional_info.errors }}</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary" onclick="stepper.previous()">
+                                                Назад
+                                            </button>
+                                            <button type="submit" class="btn btn-success float-right">Сохранить</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /.card-body -->
+                        </form>
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Select2 -->
+    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    <!-- InputMask -->
+    <script src="{% static 'adminlte3_assets/plugins/inputmask/jquery.inputmask.min.js' %}"></script>
+    <!-- BS-Stepper -->
+    <script src="{% static 'adminlte3_assets/plugins/bs-stepper/js/bs-stepper.min.js' %}"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+
+
+    <script>
+        $(function () {
+            // Initialize Select2 Elements
+            $('.select2').select2({
+                theme: 'bootstrap4'
+            });
+
+            // Initialize BS-Stepper
+            window.stepper = new Stepper(document.querySelector('.bs-stepper'), {
+                linear: false,
+                animation: true
+            });
+
+            // Initialize InputMask
+            $('[data-mask]').inputmask();
+
+            // Initialize Datepicker
+            $('#dateOfBirth').datetimepicker({
+                format: 'DD.MM.YYYY',
+                icons: {
+                    time: 'far fa-clock'
+                },
+                maxDate: moment() // Can't select future dates
+            });
+
+            // Region-District dependency
+            $('#region').on('change', function () {
+                var regionId = $(this).val();
+                var districtSelect = $('#district');
+
+                // Clear and disable district select if no region selected
+                if (!regionId) {
+                    districtSelect.empty().append('<option value="">-- Сначала выберите регион --</option>');
+                    districtSelect.prop('disabled', true);
+                    districtSelect.val('').trigger('change');
+                    return;
+                }
+
+                // Enable district select and show loading message
+                districtSelect.prop('disabled', false);
+                districtSelect.empty().append('<option value="">Загрузка...</option>');
+                districtSelect.val('').trigger('change');
+
+                // Fetch districts for selected region
+                $.ajax({
+                    url: '{% url "logus:get_districts" %}',
+                    data: {
+                        'region_id': regionId
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        // Clear loading message
+                        districtSelect.empty();
+                        districtSelect.append('<option value="">-- Выберите район --</option>');
+
+                        // Add district options
+                        $.each(data, function (key, value) {
+                            districtSelect.append('<option value="' + value.id + '">' + value.name + '</option>');
+                        });
+
+                        // If the form has a previously selected district, select it again
+                        {% if form.district.value %}
+                            districtSelect.val('{{ form.district.value.id }}');
+                        {% endif %}
+
+                        districtSelect.trigger('change');
+                    },
+                    error: function () {
+                        districtSelect.empty().append('<option value="">-- Ошибка загрузки районов --</option>');
+                        districtSelect.prop('disabled', true);
+                    }
+                });
+            });
+
+            // Form validation before submit
+            $('#patientForm').on('submit', function (e) {
+                var isValid = true;
+
+                // Check required fields
+                $(this).find('[required]').each(function () {
+                    if ($(this).val() === '') {
+                        isValid = false;
+                        $(this).closest('.form-group').addClass('has-error');
+                    } else {
+                        $(this).closest('.form-group').removeClass('has-error');
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Пожалуйста, заполните все обязательные поля.');
+
+                    // Go to the first step with errors
+                    if ($('#personal-info-part').find('.has-error').length > 0) {
+                        stepper.to(1);
+                    } else if ($('#contact-info-part').find('.has-error').length > 0) {
+                        stepper.to(2);
+                    }
+                }
+            });
+
+            // Add has-error class on input validation
+            $('input, select').on('change', function () {
+                if ($(this).prop('required') && $(this).val() === '') {
+                    $(this).closest('.form-group').addClass('has-error');
+                } else {
+                    $(this).closest('.form-group').removeClass('has-error');
+                }
+            });
+        });
+    </script>
+
+    {{ block.super }}
+    <script>
+    $(document).ready(function() {
+        // Initialize date picker with proper options
+        $('#dateOfBirth').datetimepicker({
+            format: 'DD.MM.YYYY',
+            useCurrent: false,
+            maxDate: moment(),
+            icons: {
+                time: 'far fa-clock',
+                date: 'far fa-calendar-alt',
+                up: 'fas fa-arrow-up',
+                down: 'fas fa-arrow-down',
+                previous: 'fas fa-chevron-left',
+                next: 'fas fa-chevron-right'
+            }
+        });
+
+        // Ensure the icon click works
+        $('#dateOfBirth .input-group-append').on('click', function() {
+            $('#dateOfBirth').datetimepicker('toggle');
+        });
+
+        // Also show picker on input focus
+        $('#date_of_birth').on('focus', function() {
+            $('#dateOfBirth').datetimepicker('show');
+        });
+    });
+    </script>
+{% endblock %}

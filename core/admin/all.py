@@ -7,7 +7,7 @@ from core.models import (
     BookingDetail, Service, TariffService, Tariff,
     IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
     Warehouse, CompanyModel, MedicationModel, MedicationsInStockModel,
-    RolesModel, ProfessionModel
+    RolesModel, ProfessionModel, Region, District
 )
 
 from import_export.admin import ImportExportModelAdmin
@@ -37,6 +37,16 @@ class RolesModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 @admin.register(Account)
 class AccountAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = [field.name for field in Account._meta.fields]
+
+
+@admin.register(Region)
+class RegionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in Region._meta.fields]
+
+
+@admin.register(District)
+class DistrictAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in District._meta.fields]
 
 
 @admin.register(PatientModel)

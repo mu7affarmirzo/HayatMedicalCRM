@@ -1,0 +1,763 @@
+<!-- booking_form.html -->
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">Редактирование</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о бронировании</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.start_date.id_for_label }}">Дата и время заезда</label>
+                                        {{ form.start_date }}
+                                        {% if form.start_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.start_date.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.end_date.id_for_label }}">Дата и время выезда</label>
+                                        {{ form.end_date }}
+                                        {% if form.end_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.end_date.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.status.id_for_label }}">Статус</label>
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.status.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.notes.id_for_label }}">Примечания</label>
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.notes.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Additional JavaScript if needed
+    });
+</script>
+{% endblock %}
+
+<!-- booking_detail_form.html -->
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">{% if booking_detail %}Редактирование гостя{% else %}Добавление гостя{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{% if booking_detail %}Редактирование гостя{% else %}Добавление гостя{% endif %}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.client.id_for_label }}">Пациент</label>
+                                        {{ form.client }}
+                                        {% if form.client.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.client.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">
+                                            <a href="{% url 'patient_create' %}?next={{ request.path|urlencode }}" class="text-primary">
+                                                <i class="fas fa-plus-circle"></i> Добавить нового пациента
+                                            </a>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.room.id_for_label }}">Комната</label>
+                                        {{ form.room }}
+                                        {% if form.room.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.room.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.tariff.id_for_label }}">Тариф</label>
+                                        {{ form.tariff }}
+                                        {% if form.tariff.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.tariff.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.price.id_for_label }}">Цена</label>
+                                        {{ form.price }}
+                                        {% if form.price.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.price.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">
+                                            Оставьте пустым для автоматического расчета цены на основе тарифа и типа комнаты
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize select2
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Handle tariff and room changes to auto-calculate price
+        $('#{{ form.tariff.id_for_label }}, #{{ form.room.id_for_label }}').change(function() {
+            const tariffId = $('#{{ form.tariff.id_for_label }}').val();
+            const roomId = $('#{{ form.room.id_for_label }}').val();
+
+            if (tariffId && roomId) {
+                // Clear any previous price - this will trigger auto-calculation on submit
+                $('#{{ form.price.id_for_label }}').val('');
+
+                // You could also add AJAX to get the price immediately
+                // but that would require additional endpoint
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+<!-- service_usage_form.html -->
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">{% if service_usage %}Редактирование услуги{% else %}Добавление услуги{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{% if service_usage %}Редактирование услуги{% else %}Добавление услуги{% endif %}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            {% if booking_detail %}
+                            <div class="alert alert-info">
+                                <h5><i class="icon fas fa-info"></i> Информация о госте</h5>
+                                <p><strong>Пациент:</strong> {{ booking_detail.client.full_name }}</p>
+                                <p><strong>Комната:</strong> {{ booking_detail.room.name }} ({{ booking_detail.room.room_type.name }})</p>
+                                <p><strong>Тариф:</strong> {{ booking_detail.tariff.name }}</p>
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.service.id_for_label }}">Услуга</label>
+                                        {{ form.service }}
+                                        {% if form.service.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.service.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.quantity.id_for_label }}">Количество</label>
+                                        {{ form.quantity }}
+                                        {% if form.quantity.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.quantity.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.price.id_for_label }}">Цена</label>
+                                        {{ form.price }}
+                                        {% if form.price.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.price.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">
+                                            Оставьте пустым для автоматического расчета цены на основе базовой цены услуги и количества
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.date_used.id_for_label }}">Дата использования</label>
+                                        {{ form.date_used }}
+                                        {% if form.date_used.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.date_used.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.notes.id_for_label }}">Примечания</label>
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.notes.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize select2
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Handle service and quantity changes to auto-calculate price
+        $('#{{ form.service.id_for_label }}, #{{ form.quantity.id_for_label }}').change(function() {
+            const serviceId = $('#{{ form.service.id_for_label }}').val();
+            const quantity = $('#{{ form.quantity.id_for_label }}').val() || 1;
+
+            if (serviceId) {
+                // Clear any previous price - this will trigger auto-calculation on submit
+                $('#{{ form.price.id_for_label }}').val('');
+
+                // You could also add AJAX to get the price immediately
+                // but that would require additional endpoint
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+<!-- booking_detail_detail.html -->
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">Детали размещения</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+        <div class="row">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Уведомление</h5>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Guest Info Row -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="User profile picture">
+                        </div>
+
+                        <h3 class="profile-username text-center">{{ booking_detail.client.full_name }}</h3>
+
+                        <p class="text-muted text-center">
+                            {{ booking_detail.client.mobile_phone_number|default:"Нет телефона" }}
+                        </p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Возраст</b> <a class="float-right">{{ booking_detail.client.age }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Пол</b> <a class="float-right">{{ booking_detail.client.formatted_gender }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Email</b> <a class="float-right">{{ booking_detail.client.email|default:"Не указан" }}</a>
+                            </li>
+                        </ul>
+
+                        <a href="{% url 'patient_detail' booking_detail.client.id %}" class="btn btn-primary btn-block">
+                            <i class="fas fa-user"></i> Профиль пациента
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bed mr-1"></i> Информация о размещении
+                        </h3>
+                        {% if booking.status != 'cancelled' and booking.status != 'completed' %}
+                        <div class="card-tools">
+                            <a href="{% url 'booking_detail_edit' booking_detail.id %}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl>
+                                    <dt>Комната:</dt>
+                                    <dd>{{ booking_detail.room.name }}</dd>
+
+                                    <dt>Тип комнаты:</dt>
+                                    <dd>{{ booking_detail.room.room_type.name }}</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl>
+                                    <dt>Тариф:</dt>
+                                    <dd>{{ booking_detail.tariff.name }}</dd>
+
+                                    <dt>Цена:</dt>
+                                    <dd>{{ booking_detail.price }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <dl>
+                                    <dt>Период проживания:</dt>
+                                    <dd>{{ booking.start_date|date:"d.m.Y H:i" }} - {{ booking.end_date|date:"d.m.Y H:i" }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tariff Services Card -->
+                {% if tariff_services %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-list-alt mr-1"></i> Включенные в тариф услуги
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Услуга</th>
+                                        <th>Включено сеансов</th>
+                                        <th>Использовано</th>
+                                        <th>Осталось</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ts in tariff_services %}
+                                    <tr>
+                                        <td>{{ ts.service.name }}</td>
+                                        <td>{{ ts.sessions_included }}</td>
+                                        <td>{{ service_sessions|get_item:ts.id|get_item:'used' }}</td>
+                                        <td>{{ service_sessions|get_item:ts.id|get_item:'remaining' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Services Row -->
+        {% if service_usages %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-concierge-bell mr-1"></i> Дополнительные услуги
+                        </h3>
+                        {% if booking.status == 'checked_in' %}
+                        <div class="card-tools">
+                            <a href="{% url 'booking_add_service' booking_detail.id %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-plus"></i> Добавить услугу
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Услуга</th>
+                                        <th>Количество</th>
+                                        <th>Дата</th>
+                                        <th>Цена</th>
+                                        <th>Примечания</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for service in service_usages %}
+                                    <tr>
+                                        <td>{{ service.service.name }}</td>
+                                        <td>{{ service.quantity }}</td>
+                                        <td>{{ service.date_used|date:"d.m.Y H:i" }}</td>
+                                        <td>{{ service.price }}</td>
+                                        <td>{{ service.notes|default:"-" }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                {% if booking.status == 'checked_in' %}
+                                                <a href="{% url 'service_usage_edit' service.id %}" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteServiceModal{{ service.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Delete Service Modal -->
+                                            <div class="modal fade" id="deleteServiceModal{{ service.id }}">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h4 class="modal-title">Удаление услуги</h4>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Вы уверены, что хотите удалить услугу {{ service.service.name }}?</p>
+                                                        </div>
+                                                        <div class="modal-footer justify-content-between">
+                                                            <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                                                            <form method="post" action="{% url 'service_usage_delete' service.id %}">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger">Удалить</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-concierge-bell mr-1"></i> Дополнительные услуги
+                        </h3>
+                        {% if booking.status == 'checked_in' %}
+                        <div class="card-tools">
+                            <a href="{% url 'booking_add_service' booking_detail.id %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-plus"></i> Добавить услугу
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center text-muted">Дополнительные услуги не добавлены</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons Row -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-default">
+                            <i class="fas fa-arrow-left mr-1"></i> Назад к бронированию
+                        </a>
+                        {% if booking.status == 'checked_in' %}
+                        <a href="{% url 'booking_add_service' booking_detail.id %}" class="btn btn-success">
+                            <i class="fas fa-plus-circle mr-1"></i> Добавить услугу
+                        </a>
+                        {% endif %}
+                        <button type="button" class="btn btn-default" onclick="printDetail()">
+                            <i class="fas fa-print mr-1"></i> Печать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function printDetail() {
+        window.print();
+    }
+</script>
+{% endblock %}

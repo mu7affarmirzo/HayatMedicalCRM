@@ -1,0 +1,392 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}Информация о записи - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Информация о записи #{{ booking.booking_number }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">Записи</a></li>
+                    <li class="breadcrumb-item active">Информация о записи</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Success message -->
+        <div class="row">
+            <div class="col-md-12">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> {{ message }}</h5>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Booking info row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle mr-1"></i> Основная информация
+                        </h3>
+                        <div class="card-tools">
+                            <span class="badge badge-{% if booking.status == 'pending' %}warning
+                                    {% elif booking.status == 'confirmed' %}primary
+                                    {% elif booking.status == 'checked_in' %}info
+                                    {% elif booking.status == 'completed' %}success
+                                    {% elif booking.status == 'cancelled' %}danger{% endif %}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Номер бронирования:</label>
+                                    <p class="font-weight-bold">{{ booking.booking_number }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Сотрудник:</label>
+                                    <p>{{ booking.staff.full_name }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Дата заезда:</label>
+                                    <p>{{ booking.start_date|date:"d.m.Y H:i" }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Дата выезда:</label>
+                                    <p>{{ booking.end_date|date:"d.m.Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Примечания:</label>
+                                    <p>{{ booking.notes|default:"Нет примечаний" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-dollar-sign mr-1"></i> Финансовая информация
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Размещение</th>
+                                    <th class="text-right">Цена</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detail in booking.details.all %}
+                                <tr>
+                                    <td>{{ detail.room.name }} ({{ detail.room.room_type.name }})</td>
+                                    <td class="text-right">{{ detail.price }} сум</td>
+                                </tr>
+                                {% endfor %}
+                                
+                                {% if booking.additional_services.all %}
+                                <tr>
+                                    <th colspan="2">Дополнительные услуги</th>
+                                </tr>
+                                {% for service in booking.additional_services.all %}
+                                <tr>
+                                    <td>{{ service.service.name }}</td>
+                                    <td class="text-right">{{ service.price }} сум</td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Итого:</th>
+                                    <th class="text-right">{{ booking.total_price }} сум</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guests row -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-users mr-1"></i> Гости и размещение
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%">Пациент</th>
+                                    <th style="width: 30%">Комната</th>
+                                    <th style="width: 30%">Тариф</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detail in booking.details.all %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="img-circle img-size-32 mr-2" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Patient">
+                                            <div>
+                                                <strong>{{ detail.client.full_name }}</strong><br>
+                                                <small>{{ detail.client.phone }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ detail.room.name }} ({{ detail.room.room_type.name }})</td>
+                                    <td>{{ detail.tariff.name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <a href="#" class="btn btn-primary">
+                    <i class="fas fa-edit mr-1"></i> Редактировать
+                </a>
+                <a href="#" class="btn btn-info">
+                    <i class="fas fa-print mr-1"></i> Печать
+                </a>
+                <a href="{% url 'logus:booking_list' %}" class="btn btn-default">
+                    <i class="fas fa-arrow-left mr-1"></i> Назад к списку
+                </a>
+                
+                {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#cancel-booking-modal">
+                    <i class="fas fa-times mr-1"></i> Отменить бронирование
+                </button>
+                {% endif %}
+                
+                {% if booking.status == 'confirmed' %}
+                    <button type="button" class="btn btn-success float-right mr-2" data-toggle="modal" data-target="#checkin-modal">
+                        <i class="fas fa-check-circle mr-1"></i> Заселить
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Cancel Booking Modal -->
+<div class="modal fade" id="cancel-booking-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Отменить бронирование</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите отменить бронирование #{{ booking.booking_number }}?</p>
+                <p class="text-danger">Это действие нельзя отменить.</p>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancel">
+                    <button type="submit" class="btn btn-danger">Отменить бронирование</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Updated Check-in Modal -->
+<div class="modal fade" id="checkin-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h4 class="modal-title">
+                    <i class="fas fa-check-circle mr-2"></i>Заселение
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-door-open fa-3x text-success mb-3"></i>
+                    <h5>Подтвердите заселение</h5>
+                    <p>Бронирование #{{ booking.booking_number }}</p>
+                    <p class="text-muted">{{ booking.details.all|length }} гост{% if booking.details.all|length == 1 %}ь{% else %}ей{% endif %}</p>
+                </div>
+
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle mr-1"></i>Информация о заселении:</h6>
+                    <ul class="mb-0">
+                        <li>Дата заезда: {{ booking.start_date|date:"d.m.Y H:i" }}</li>
+                        <li>Дата выезда: {{ booking.end_date|date:"d.m.Y H:i" }}</li>
+                        <li>Статус изменится на "Заселен"</li>
+                    </ul>
+                </div>
+
+                <!-- Guest List -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Гости:</h6>
+                        {% for detail in booking.details.all %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ detail.client.full_name }}</strong><br>
+                                <small class="text-muted">{{ detail.room.name }} ({{ detail.room.room_type.name }})</small>
+                            </div>
+                            <span class="badge badge-primary">{{ detail.tariff.name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Отмена
+                </button>
+                <form method="post" action="{% url 'logus:booking_detail' booking.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="checkin">
+                    <button type="submit" class="btn btn-success" id="checkin-btn">
+                        <i class="fas fa-check-circle mr-1"></i>Подтвердить заселение
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Updated Cancel Booking Modal -->
+<div class="modal fade" id="cancel-booking-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h4 class="modal-title">
+                    <i class="fas fa-times-circle mr-2"></i>Отменить бронирование
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h5>Внимание!</h5>
+                    <p>Вы уверены, что хотите отменить бронирование #{{ booking.booking_number }}?</p>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle mr-1"></i>Последствия отмены:</h6>
+                    <ul class="mb-0">
+                        <li>Бронирование будет помечено как "Отменено"</li>
+                        <li>Комнаты станут доступными для других гостей</li>
+                        <li>Это действие нельзя отменить</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="cancel-reason">Причина отмены (необязательно):</label>
+                    <textarea class="form-control" id="cancel-reason" name="cancel_reason" rows="3"
+                              placeholder="Укажите причину отмены бронирования..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-arrow-left mr-1"></i>Назад
+                </button>
+                <form method="post" action="{% url 'logus:booking_detail' booking.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancel">
+                    <input type="hidden" name="cancel_reason" id="hidden-cancel-reason">
+                    <button type="submit" class="btn btn-danger" id="cancel-btn">
+                        <i class="fas fa-times mr-1"></i>Отменить бронирование
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    // Handle check-in confirmation
+    $('#checkin-btn').on('click', function(e) {
+        const btn = $(this);
+        const originalText = btn.html();
+
+        // Show loading state
+        btn.html('<i class="fas fa-spinner fa-spin mr-1"></i>Заселение...').prop('disabled', true);
+
+        // Re-enable after 3 seconds if form doesn't submit
+        setTimeout(() => {
+            btn.html(originalText).prop('disabled', false);
+        }, 3000);
+    });
+
+    // Handle cancel reason
+    $('#cancel-btn').on('click', function(e) {
+        const reason = $('#cancel-reason').val();
+        $('#hidden-cancel-reason').val(reason);
+
+        const btn = $(this);
+        const originalText = btn.html();
+
+        // Show loading state
+        btn.html('<i class="fas fa-spinner fa-spin mr-1"></i>Отмена...').prop('disabled', true);
+
+        // Re-enable after 3 seconds if form doesn't submit
+        setTimeout(() => {
+            btn.html(originalText).prop('disabled', false);
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}
+

@@ -9,6 +9,116 @@ from django.views.decorators.http import require_POST
 
 from core.models import Booking, BookingDetail, Room
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from core.models import Booking, BookingDetail
+
+
+@login_required
+def booking_detail_view(request, booking_id):
+    """
+    Display detailed information for a specific booking
+    """
+    # Get the booking or return 404 if not found
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    # Handle booking actions (if any)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'cancel':
+            booking.status = 'cancelled'
+            booking.modified_by = request.user
+            booking.save()
+            messages.success(request, f'Бронирование #{booking.booking_number} успешно отменено.')
+
+        elif action == 'checkin':
+            booking.status = 'checked_in'
+            booking.modified_by = request.user
+            booking.save()
+            messages.success(request, f'Заселение для бронирования #{booking.booking_number} выполнено успешно.')
+
+        elif action == 'complete':
+            booking.status = 'completed'
+            booking.modified_by = request.user
+            booking.save()
+            messages.success(request, f'Бронирование #{booking.booking_number} отмечено как завершенное.')
+
+        elif action == 'confirm':
+            booking.status = 'confirmed'
+            booking.modified_by = request.user
+            booking.save()
+            messages.success(request, f'Бронирование #{booking.booking_number} подтверждено.')
+
+        return redirect('booking_detail', booking_id=booking.id)
+
+    # Get all booking details with related data
+    booking_details = booking.details.all().select_related(
+        'client', 'room', 'room__room_type', 'tariff'
+    )
+
+    # Prefetch tariff services for all tariffs in the booking
+    from django.db.models import Prefetch
+    from core.models import TariffService
+
+    tariff_ids = [detail.tariff_id for detail in booking_details]
+    booking_details = booking_details.prefetch_related(
+        Prefetch(
+            'tariff__tariff_services',
+            queryset=TariffService.objects.select_related('service')
+        )
+    )
+
+    # Get additional services if any
+    additional_services = booking.additional_services.all().select_related('service', 'booking_detail')
+
+    # Calculate stay duration
+    stay_duration = (booking.end_date - booking.start_date).days
+    if stay_duration == 0:  # Handle same-day stays
+        stay_duration = 1
+
+    # Calculate financial data
+    booking_details_total = sum(detail.price for detail in booking_details)
+    additional_services_total = sum(service.price for service in additional_services)
+    total_price = booking_details_total + additional_services_total
+
+    # Available actions based on booking status
+    available_actions = []
+    if booking.status == 'pending':
+        available_actions = ['confirm', 'cancel']
+    elif booking.status == 'confirmed':
+        available_actions = ['checkin', 'cancel']
+    elif booking.status == 'checked_in':
+        available_actions = ['complete']
+
+    context = {
+        'booking': booking,
+        'booking_details': booking_details,
+        'additional_services': additional_services,
+        'stay_duration': stay_duration,
+        'booking_details_total': booking_details_total,
+        'additional_services_total': additional_services_total,
+        'total_price': total_price,
+        'available_actions': available_actions,
+        'status_badge_class': get_status_badge_class(booking.status),
+    }
+
+    return render(request, 'logus/booking/booking_detail.html', context)
+
+
+def get_status_badge_class(status):
+    """Helper function to determine the appropriate badge class for a status"""
+    status_classes = {
+        'pending': 'warning',
+        'confirmed': 'primary',
+        'checked_in': 'info',
+        'completed': 'success',
+        'cancelled': 'danger',
+    }
+    return status_classes.get(status, 'secondary')
+
 
 @login_required
 def booking_list(request):
@@ -106,69 +216,6 @@ def booking_list(request):
 
 
 @login_required
-def dashboard(request):
-    """
-    Dashboard/home page showing booking statistics and quick links
-    """
-    # Get booking stats
-    today = timezone.now().date()
-    tomorrow = today + timezone.timedelta(days=1)
-
-    # Count bookings by status
-    total_bookings = Booking.objects.count()
-    active_bookings = Booking.objects.filter(
-        status__in=['pending', 'confirmed', 'checked_in']
-    ).count()
-
-    # Today's check-ins and check-outs
-    today_checkins = Booking.objects.filter(
-        start_date__date=today,
-        status='confirmed'
-    ).select_related('staff').prefetch_related('details__client')
-
-    today_checkouts = Booking.objects.filter(
-        end_date__date=today,
-        status='checked_in'
-    ).select_related('staff').prefetch_related('details__client')
-
-    # Tomorrow's check-ins
-    tomorrow_checkins = Booking.objects.filter(
-        start_date__date=tomorrow,
-        status='confirmed'
-    ).count()
-
-    # Recent bookings
-    recent_bookings = Booking.objects.all().order_by('-created_at')[:5]
-
-    # Room availability stats
-    total_rooms = Room.objects.filter(is_active=True).count()
-    booked_rooms = BookingDetail.objects.filter(
-        booking__start_date__lte=today,
-        booking__end_date__gte=today,
-        booking__status__in=['confirmed', 'checked_in']
-    ).values('room').distinct().count()
-
-    available_rooms = total_rooms - booked_rooms
-    occupancy_rate = (booked_rooms / total_rooms * 100) if total_rooms > 0 else 0
-
-    context = {
-        'total_bookings': total_bookings,
-        'active_bookings': active_bookings,
-        'today_checkins': today_checkins,
-        'today_checkouts': today_checkouts,
-        'tomorrow_checkins': tomorrow_checkins,
-        'recent_bookings': recent_bookings,
-        'total_rooms': total_rooms,
-        'booked_rooms': booked_rooms,
-        'available_rooms': available_rooms,
-        'occupancy_rate': occupancy_rate,
-        'today': today,
-    }
-
-    return render(request, 'logus/booking/dashboard.html', context)
-
-
-@login_required
 @require_POST
 def update_booking_status(request, booking_id):
     """AJAX endpoint to update booking status"""
@@ -187,3 +234,5 @@ def update_booking_status(request, booking_id):
         return JsonResponse({'success': False, 'error': 'Booking not found'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+

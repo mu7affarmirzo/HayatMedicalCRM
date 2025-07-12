@@ -1,7 +1,11 @@
 from django.urls import path
 
 from application.logus.views import booking
-from application.logus.views.booking_list import update_booking_status, booking_list
+from application.logus.views.booking_detail import booking_edit_view, booking_detail_add_view, booking_detail_edit_view, \
+    booking_detail_delete_view
+from application.logus.views.booking_list import update_booking_status, booking_list, booking_detail_view
+from application.logus.views.booking_services import booking_detail_view_detail, booking_add_service_view, \
+    service_usage_edit_view, service_usage_delete_view
 
 urlpatterns = [
 
@@ -19,6 +23,19 @@ urlpatterns = [
 
 
     path('list/', booking_list, name='booking_list'),
-    path('<int:booking_id>/', booking.booking_detail, name='booking_detail'),
+    path('<int:booking_id>/', booking.booking_detail, name='booking_detail_old'),
+    path('detail/<int:booking_id>/', booking_detail_view, name='booking_detail'),
     path('status/<int:booking_id>/', update_booking_status, name='update_booking_status'),
+
+    # Booking views
+    path('<int:booking_id>/edit/', booking_edit_view, name='booking_edit'),
+    path('<int:booking_id>/add-guest/', booking_detail_add_view, name='booking_detail_add'),
+    path('booking-details/<int:detail_id>/', booking_detail_view_detail, name='booking_detail_view'),
+    path('booking-details/<int:detail_id>/edit/', booking_detail_edit_view, name='booking_detail_edit'),
+    path('booking-details/<int:detail_id>/delete/', booking_detail_delete_view, name='booking_detail_delete'),
+
+    # Service views
+    path('booking-details/<int:detail_id>/add-service/', booking_add_service_view, name='booking_add_service'),
+    path('services/<int:service_id>/edit/', service_usage_edit_view, name='service_usage_edit'),
+    path('services/<int:service_id>/delete/', service_usage_delete_view, name='service_usage_delete'),
 ]

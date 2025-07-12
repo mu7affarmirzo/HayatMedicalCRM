@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, UpdateView, ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -9,7 +10,7 @@ from django.utils.translation import gettext as _
 
 from django.db import models
 
-from application.logus.forms.patient_form import PatientRegistrationForm, SimplePatientForm
+from application.logus.forms.patient_form import PatientRegistrationForm, SimplePatientForm, PatientForm
 from core.models import PatientModel, Region, District
 
 
@@ -36,6 +37,41 @@ class PatientListView(LoginRequiredMixin, ListView):
             )
 
         return queryset
+
+
+@login_required
+def patient_create_view(request):
+    """
+    Function-based view for creating a new patient
+    """
+    next_url = request.GET.get('next', 'logus:patient_list')
+
+    if request.method == 'POST':
+        form = PatientForm(request.POST)
+        if form.is_valid():
+            # Set the created_by and modified_by fields to the current user
+            patient = form.save(commit=False)
+            patient.created_by = request.user
+            patient.modified_by = request.user
+            patient.save()
+
+            messages.success(request, f'Пациент "{patient.full_name}" успешно создан!')
+
+            # Redirect to the next URL if it's provided and is a safe URL
+            next_param = request.POST.get('next', next_url)
+            # You might want to validate the URL is safe here
+            return redirect(next_param)
+    else:
+        form = PatientForm()
+
+    context = {
+        'form': form,
+        'title': 'Новый пациент',
+        'action': 'Создать',
+        'next': next_url,  # Pass the next URL to the template
+    }
+
+    return render(request, 'logus/patients/patient_form.html', context)
 
 
 @csrf_exempt

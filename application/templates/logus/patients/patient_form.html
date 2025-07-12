@@ -1,0 +1,284 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:patient_list' %}">Пациенты</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о пациенте</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <!-- Hidden field to store the next URL -->
+                        <input type="hidden" name="next" value="{{ next }}">
+
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <!-- Personal Information -->
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-primary">
+                                            <h3 class="card-title">Личная информация</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group">
+                                                <label for="{{ form.l_name.id_for_label }}">Фамилия</label>
+                                                {{ form.l_name }}
+                                                {% if form.l_name.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.l_name.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.f_name.id_for_label }}">Имя</label>
+                                                {{ form.f_name }}
+                                                {% if form.f_name.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.f_name.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.mid_name.id_for_label }}">Отчество</label>
+                                                {{ form.mid_name }}
+                                                {% if form.mid_name.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.mid_name.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.date_of_birth.id_for_label }}">Дата рождения</label>
+                                                {{ form.date_of_birth }}
+                                                {% if form.date_of_birth.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.date_of_birth.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Пол</label>
+                                                <div class="d-flex">
+                                                    {% for radio in form.gender %}
+                                                    <div class="custom-control custom-radio mr-3">
+                                                        {{ radio.tag }}
+                                                        <label for="{{ radio.id_for_label }}" class="ml-1">{{ radio.choice_label }}</label>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                {% if form.gender.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.gender.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.gestational_age.id_for_label }}">Гестационный возраст</label>
+                                                {{ form.gestational_age }}
+                                                {% if form.gestational_age.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.gestational_age.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact Information -->
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-info">
+                                            <h3 class="card-title">Контактная информация</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group">
+                                                <label for="{{ form.email.id_for_label }}">Email</label>
+                                                {{ form.email }}
+                                                {% if form.email.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.email.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.mobile_phone_number.id_for_label }}">Мобильный телефон</label>
+                                                {{ form.mobile_phone_number }}
+                                                {% if form.mobile_phone_number.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.mobile_phone_number.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.home_phone_number.id_for_label }}">Домашний телефон</label>
+                                                {{ form.home_phone_number }}
+                                                {% if form.home_phone_number.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.home_phone_number.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.country.id_for_label }}">Страна</label>
+                                                {{ form.country }}
+                                                {% if form.country.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.country.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.address.id_for_label }}">Адрес</label>
+                                                {{ form.address }}
+                                                {% if form.address.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.address.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <!-- Document Information -->
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-warning">
+                                            <h3 class="card-title">Документы</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group">
+                                                <label for="{{ form.doc_type.id_for_label }}">Тип документа</label>
+                                                {{ form.doc_type }}
+                                                {% if form.doc_type.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.doc_type.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.doc_number.id_for_label }}">Номер документа</label>
+                                                {{ form.doc_number }}
+                                                {% if form.doc_number.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.doc_number.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="{{ form.INN.id_for_label }}">ИНН</label>
+                                                {{ form.INN }}
+                                                {% if form.INN.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.INN.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">{{ action }}</button>
+                            <a href="{{ next }}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Add phone mask
+        $('[name="mobile_phone_number"], [name="home_phone_number"]').inputmask('+999 (99) 999-99-99', { 'placeholder': '+___ (__) ___-__-__' });
+    });
+</script>
+{% endblock %}

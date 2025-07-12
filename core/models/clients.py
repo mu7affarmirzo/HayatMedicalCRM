@@ -92,17 +92,8 @@ class PatientModel(BaseAuditModel):
             mid_name = ''
 
         return f"{self.l_name} {self.f_name} {mid_name}"
-    #
-    # def clean(self):
-    #     # Validate that district belongs to the selected region
-    #     if self.district and self.region and self.district.region != self.region:
-    #         raise ValidationError({'district': 'Выбранный район не принадлежит выбранному региону.'})
-    #
-    #     super().clean()
-    #
-    # def save(self, *args, **kwargs):
-    #     self.full_clean()
-    #     super().save(*args, **kwargs)
 
     class Meta:
         ordering = ('-created_at',)
+
+

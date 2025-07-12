@@ -103,10 +103,9 @@
                                         <div class="form-group">
                                             <label>&nbsp;</label>
                                             <div>
-                                                <button type="button" class="btn btn-warning" data-toggle="modal"
-                                                        data-target="#modal-default">
+                                                <a href="{% url 'logus:patient_create' %}?next={{ request.path|urlencode }}" class="btn btn-warning">
                                                     <i class="fas fa-plus"></i> Добавить нового пациента
-                                                </button>
+                                                </a>
                                             </div>
                                         </div>
                                         <!-- /.form-group -->
@@ -253,7 +252,7 @@
                                         <div class="form-group">
                                             <label for="patient_phone">Телефон <span class="text-danger">*</span></label>
                                             <input name="mobile_phone_number" type="text" class="form-control"
-                                                   id="patient_phone" placeholder="+998901002030" required>
+                                                   id="patient_phone" placeholder="L998901002030" required>
                                         </div>
                                     </div>
                                 </div>

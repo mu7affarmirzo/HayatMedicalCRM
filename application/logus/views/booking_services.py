@@ -141,4 +141,4 @@ def booking_detail_view_detail(request, detail_id):
         'title': f'Детали размещения - {booking_detail.client.full_name}',
     }
 
-    return render(request, 'logus/booking/booking_detail.html', context)
+    return render(request, 'logus/booking/booking_detail_detail.html', context)

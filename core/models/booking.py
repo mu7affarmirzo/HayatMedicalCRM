@@ -1,5 +1,10 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 from core.models import BaseAuditModel
 from core.models.clients import PatientModel
 from core.models.rooms import Room
@@ -94,3 +99,39 @@ class ServiceSessionTracking(BaseAuditModel):
     @property
     def sessions_remaining(self):
         return max(0, self.tariff_service.sessions_included - self.sessions_used)
+
+
+@receiver(post_save, sender=Booking)
+def create_illness_history(sender, instance, created, **kwargs):
+    """
+    Signal handler to create illness histories when a booking status
+    is changed to 'checked_in'
+    """
+    from core.models import IllnessHistory
+
+    # Skip if this is a new booking (we only want to react to status changes)
+    if created:
+        return
+
+    # Check if status is 'checked_in'
+    if instance.status == 'checked_in':
+        # Get all booking details to find patients
+        for detail in instance.details.all():
+            patient = detail.client
+
+            # Check if an illness history already exists for this booking and patient
+            existing_history = IllnessHistory.objects.filter(
+                booking=instance,
+                patient=patient
+            ).exists()
+
+            if not existing_history:
+                # Create a new illness history
+                IllnessHistory.objects.create(
+                    series_number=f"IH-{uuid.uuid4().hex[:8]}",
+                    patient=patient,
+                    booking=instance,
+                    type='stationary',  # Default type
+                    state='registration',  # Default initial state
+                    # Other fields will use their default values
+                )

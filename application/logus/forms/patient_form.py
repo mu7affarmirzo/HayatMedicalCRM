@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 import datetime
 
-from core.models import PatientModel
+from core.models import PatientModel, Region, District
 
 
 class SimplePatientForm(forms.ModelForm):
@@ -42,8 +42,9 @@ class PatientForm(forms.ModelForm):
         fields = [
             'l_name', 'f_name', 'mid_name', 'email', 'date_of_birth',
             'home_phone_number', 'mobile_phone_number', 'address',
-            'is_active', 'doc_type', 'doc_number',
-            'INN', 'country', 'gender', 'gestational_age'
+            'doc_type', 'doc_number',
+            'INN', 'country', 'gender', 'gestational_age',
+            'region', 'district'
         ]
         widgets = {
             'l_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -60,9 +61,31 @@ class PatientForm(forms.ModelForm):
             'country': forms.TextInput(attrs={'class': 'form-control'}),
             'gender': forms.RadioSelect(choices=((True, 'Мужской'), (False, 'Женский'))),
             'gestational_age': forms.NumberInput(attrs={'class': 'form-control'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'custom-control-input'}),
+            'region': forms.Select(attrs={'class': 'form-control'}),
+            'district': forms.Select(attrs={'class': 'form-control'}),
         }
 
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Set queryset for regions - only active ones
+            self.fields['region'].queryset = Region.objects.filter(is_active=True)
+
+            # Set empty queryset for districts initially
+            self.fields['district'].queryset = District.objects.none()
+
+            # If form is bound and has a region value, or if instance has a region
+            if self.is_bound and 'region' in self.data and self.data['region']:
+                try:
+                    region_id = int(self.data['region'])
+                    self.fields['district'].queryset = District.objects.filter(
+                        region_id=region_id, is_active=True
+                    )
+                except (ValueError, TypeError):
+                    pass
+            elif self.instance and self.instance.pk and self.instance.region:
+                self.fields['district'].queryset = District.objects.filter(
+                    region=self.instance.region, is_active=True
+                )
 
 class PatientQuickForm(forms.ModelForm):
     """Simplified form for quick patient registration during booking"""

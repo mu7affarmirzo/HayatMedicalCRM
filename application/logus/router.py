@@ -5,7 +5,6 @@ from application.logus.views.rooms import available_room_view, reception_dashboa
 app_name = 'logus'
 
 urlpatterns = [
-    path('', include('application.logus.urls.booking_list')),
     path('booking/', include('application.logus.urls.booking')),
     path('patients/', include('application.logus.urls.patients')),
 

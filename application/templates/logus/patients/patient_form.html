@@ -193,6 +193,32 @@
                                                 {% endif %}
                                             </div>
 
+                                            <!-- Region field -->
+                                            <div class="form-group">
+                                                <label for="{{ form.region.id_for_label }}">Регион</label>
+                                                {{ form.region }}
+                                                {% if form.region.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.region.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- District field -->
+                                            <div class="form-group">
+                                                <label for="{{ form.district.id_for_label }}">Район</label>
+                                                {{ form.district }}
+                                                {% if form.district.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.district.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
                                             <div class="form-group">
                                                 <label for="{{ form.address.id_for_label }}">Адрес</label>
                                                 {{ form.address }}
@@ -255,7 +281,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                         <!-- /.card-body -->
@@ -279,6 +304,46 @@
     $(function() {
         // Add phone mask
         $('[name="mobile_phone_number"], [name="home_phone_number"]').inputmask('+999 (99) 999-99-99', { 'placeholder': '+___ (__) ___-__-__' });
+
+        // Handle region change to load districts
+        $('#{{ form.region.id_for_label }}').on('change', function() {
+            var regionId = $(this).val();
+            var districtSelect = $('#{{ form.district.id_for_label }}');
+
+            // Clear current options
+            districtSelect.empty().append('<option value="">-- Выберите район --</option>');
+
+            // If a region is selected, fetch districts
+            if (regionId) {
+                $.ajax({
+                    url: '{% url "logus:get_districts" %}',
+                    data: {
+                        'region_id': regionId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.length > 0) {
+                            // Add districts to select
+                            $.each(data, function(index, district) {
+                                districtSelect.append(
+                                    $('<option></option>').val(district.id).text(district.name)
+                                );
+                            });
+
+                            // If there's a district selected in the form data, set it
+                            {% if form.district.value %}
+                            districtSelect.val('{{ form.district.value }}');
+                            {% endif %}
+                        }
+                    }
+                });
+            }
+        });
+
+        // Trigger the change event on page load if a region is selected
+        {% if form.region.value %}
+        $('#{{ form.region.id_for_label }}').trigger('change');
+        {% endif %}
     });
 </script>
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.urls import path
 
 from application.logus.views import booking
+from application.logus.views.booking_list import update_booking_status, booking_list
 
 urlpatterns = [
 
@@ -17,4 +18,7 @@ urlpatterns = [
     path('patient-registration/', booking.patient_registration, name='patient_registration'),
     path('get-districts/', booking.get_districts, name='get_districts'),
 
+
+    path('list/', booking_list, name='booking_list'),
+    path('status/<int:booking_id>/', update_booking_status, name='update_booking_status'),
 ]

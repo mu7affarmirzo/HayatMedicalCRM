@@ -9,7 +9,6 @@ urlpatterns = [
     path('start/', booking.booking_start, name='booking_start'),
     path('select-rooms/', booking.booking_select_rooms, name='booking_select_rooms'),
     path('confirm/', booking.booking_confirm, name='booking_confirm'),
-    path('<int:booking_id>/', booking.booking_detail, name='booking_detail'),
 
     # AJAX endpoints
     path('check-availability/', booking.check_room_availability_ajax, name='check_room_availability'),
@@ -20,5 +19,6 @@ urlpatterns = [
 
 
     path('list/', booking_list, name='booking_list'),
+    path('<int:booking_id>/', booking.booking_detail, name='booking_detail'),
     path('status/<int:booking_id>/', update_booking_status, name='update_booking_status'),
 ]

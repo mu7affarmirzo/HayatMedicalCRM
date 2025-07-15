@@ -1,0 +1,359 @@
+{% extends 'logus/snippets/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">Истории болезней</a></li>
+                    <li class="breadcrumb-item active">Редактирование</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Patient Info Card -->
+            <div class="col-md-4">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user mr-1"></i> Информация о пациенте
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <img class="profile-user-img img-fluid img-circle"
+                                 src="{% static 'adminlte3_assets/dist/img/avatar.png' %}"
+                                 alt="Patient profile picture">
+                        </div>
+                        <h3 class="profile-username text-center">{{ patient.full_name }}</h3>
+                        <p class="text-muted text-center">{{ patient.formatted_gender }}, {{ patient.age }} лет</p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Дата рождения</b>
+                                <span class="float-right">{{ patient.date_of_birth|date:"d.m.Y" }}</span>
+                            </li>
+                            {% if patient.mobile_phone_number %}
+                            <li class="list-group-item">
+                                <b>Телефон</b>
+                                <span class="float-right">{{ patient.mobile_phone_number }}</span>
+                            </li>
+                            {% endif %}
+                            {% if patient.email %}
+                            <li class="list-group-item">
+                                <b>Email</b>
+                                <span class="float-right">{{ patient.email }}</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Booking Info Card -->
+                <div class="card card-info card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-alt mr-1"></i> Информация о бронировании
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Номер бронирования</b>
+                                <span class="float-right">{{ booking.booking_number }}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Дата заезда</b>
+                                <span class="float-right">{{ booking.start_date|date:"d.m.Y H:i" }}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Дата выезда</b>
+                                <span class="float-right">{{ booking.end_date|date:"d.m.Y H:i" }}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Статус</b>
+                                <span class="float-right">
+                                    <span class="badge badge-{% if booking.status == 'pending' %}warning
+                                            {% elif booking.status == 'confirmed' %}primary
+                                            {% elif booking.status == 'checked_in' %}info
+                                            {% elif booking.status == 'completed' %}success
+                                            {% elif booking.status == 'cancelled' %}danger{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="col-md-8">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-edit mr-1"></i> Редактирование истории болезни
+                        </h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Series Number and Type Row -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.series_number.id_for_label }}">
+                                            <i class="fas fa-barcode mr-1"></i> Номер серии <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.series_number }}
+                                        {% if form.series_number.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.series_number.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.type.id_for_label }}">
+                                            <i class="fas fa-clipboard-list mr-1"></i> Тип
+                                        </label>
+                                        {{ form.type }}
+                                        {% if form.type.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.type.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Booking and State Row -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.booking.id_for_label }}">
+                                            <i class="fas fa-calendar-check mr-1"></i> Бронирование <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.booking }}
+                                        {% if form.booking.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.booking.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.state.id_for_label }}">
+                                            <i class="fas fa-flag mr-1"></i> Состояние
+                                        </label>
+                                        {{ form.state }}
+                                        {% if form.state.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.state.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sick Leave Checkbox -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            {{ form.is_sick_leave }}
+                                            <label class="form-check-label" for="{{ form.is_sick_leave.id_for_label }}">
+                                                <i class="fas fa-notes-medical mr-1"></i> Больничный лист
+                                            </label>
+                                        </div>
+                                        {% if form.is_sick_leave.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.is_sick_leave.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diagnosis -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.at_arrival_diagnosis.id_for_label }}">
+                                            <i class="fas fa-stethoscope mr-1"></i> Диагноз при поступлении
+                                        </label>
+                                        {{ form.at_arrival_diagnosis }}
+                                        {% if form.at_arrival_diagnosis.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.at_arrival_diagnosis.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Doctor and Nurses Row -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.doctor.id_for_label }}">
+                                            <i class="fas fa-user-md mr-1"></i> Лечащий врач
+                                        </label>
+                                        {{ form.doctor }}
+                                        {% if form.doctor.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.doctor.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.nurses.id_for_label }}">
+                                            <i class="fas fa-user-nurse mr-1"></i> Медицинские сестры
+                                        </label>
+                                        {{ form.nurses }}
+                                        {% if form.nurses.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.nurses.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">
+                                            Удерживайте Ctrl для выбора нескольких сестер
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.notes.id_for_label }}">
+                                            <i class="fas fa-sticky-note mr-1"></i> Примечания
+                                        </label>
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.notes.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-1"></i> Сохранить изменения
+                            </button>
+                            <a href="#" class="btn btn-default ml-2">
+                                <i class="fas fa-times mr-1"></i> Отмена
+                            </a>
+                            <button type="button" class="btn btn-info float-right" onclick="window.print()">
+                                <i class="fas fa-print mr-1"></i> Печать
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+
+<script>
+$(function () {
+    // Initialize Select2 Elements
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Initialize Select2 Elements with search
+    $('.select2bs4').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Custom validation styling
+    $('form').on('submit', function() {
+        $('.is-invalid').removeClass('is-invalid');
+        
+        // Add loading state to submit button
+        var submitBtn = $(this).find('button[type="submit"]');
+        var originalText = submitBtn.html();
+        submitBtn.html('<i class="fas fa-spinner fa-spin mr-1"></i> Сохранение...').prop('disabled', true);
+        
+        // Re-enable button after 3 seconds (in case of validation errors)
+        setTimeout(function() {
+            submitBtn.html(originalText).prop('disabled', false);
+        }, 3000);
+    });
+
+    // Add validation styling to fields with errors
+    {% if form.errors %}
+    {% for field_name, errors in form.errors.items %}
+    $('#id_{{ field_name }}').addClass('is-invalid');
+    {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

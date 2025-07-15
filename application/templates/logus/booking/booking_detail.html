@@ -371,7 +371,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if history.state != 'closed' %}
-                                <a href="#" class="btn btn-warning btn-sm">
+                                <a href="{% url 'logus:illness_history_edit' history.id %}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 {% endif %}

@@ -7,6 +7,7 @@ app_name = 'logus'
 urlpatterns = [
     path('booking/', include('application.logus.urls.booking')),
     path('patients/', include('application.logus.urls.patients')),
+    path('illness-histories/', include('application.logus.urls.illness_histories')),
 
 
     path('availability/', available_room_view, name='check_availability'),

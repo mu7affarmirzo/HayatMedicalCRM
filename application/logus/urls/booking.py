@@ -21,7 +21,6 @@ urlpatterns = [
     path('patient-registration/', booking.patient_registration, name='patient_registration'),
     path('get-districts/', booking.get_districts, name='get_districts'),
 
-
     path('list/', booking_list, name='booking_list'),
     path('<int:booking_id>/', booking.booking_detail, name='booking_detail_old'),
     path('detail/<int:booking_id>/', booking_detail_view, name='booking_detail'),
@@ -30,6 +29,7 @@ urlpatterns = [
     # Booking views
     path('<int:booking_id>/edit/', booking_edit_view, name='booking_edit'),
     path('<int:booking_id>/add-guest/', booking_detail_add_view, name='booking_detail_add'),
+
     path('booking-details/<int:detail_id>/', booking_detail_view_detail, name='booking_detail_view'),
     path('booking-details/<int:detail_id>/edit/', booking_detail_edit_view, name='booking_detail_edit'),
     path('booking-details/<int:detail_id>/delete/', booking_detail_delete_view, name='booking_detail_delete'),

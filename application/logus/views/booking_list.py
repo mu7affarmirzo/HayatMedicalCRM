@@ -61,7 +61,7 @@ def booking_detail_view(request, booking_id):
 
     # Prefetch tariff services for all tariffs in the booking
     from django.db.models import Prefetch
-    from core.models import TariffService
+    from core.models import TariffService, IllnessHistory
 
     tariff_ids = [detail.tariff_id for detail in booking_details]
     booking_details = booking_details.prefetch_related(
@@ -73,6 +73,14 @@ def booking_detail_view(request, booking_id):
 
     # Get additional services if any
     additional_services = booking.additional_services.all().select_related('service', 'booking_detail')
+
+    # Get illness histories associated with this booking
+    illness_histories = IllnessHistory.objects.filter(booking=booking).select_related(
+        'patient', 'doctor', 'initial_diagnosis', 'at_arrival_diagnosis', 'diagnosis', 'profession'
+    ).prefetch_related('toxic_factors', 'nurses')
+
+    # We'll just pass the illness_histories directly to the template
+    # No need for a mapping dictionary since we'll loop through the histories in the template
 
     # Calculate stay duration
     stay_duration = (booking.end_date - booking.start_date).days
@@ -97,6 +105,7 @@ def booking_detail_view(request, booking_id):
         'booking': booking,
         'booking_details': booking_details,
         'additional_services': additional_services,
+        'illness_histories': illness_histories,
         'stay_duration': stay_duration,
         'booking_details_total': booking_details_total,
         'additional_services_total': additional_services_total,
@@ -109,7 +118,7 @@ def booking_detail_view(request, booking_id):
 
 
 def get_status_badge_class(status):
-    """Helper function to determine the appropriate badge class for a status"""
+    """Helper function to determine the CSS class for status badges"""
     status_classes = {
         'pending': 'warning',
         'confirmed': 'primary',

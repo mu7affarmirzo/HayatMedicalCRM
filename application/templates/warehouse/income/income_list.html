@@ -160,7 +160,7 @@
                             <td>{{ income.created_at|date:"d.m.Y H:i" }}</td>
                             <td>{{ income.delivery_company.name|default:"-" }}</td>
                             <td>{{ income.receiver.name }}</td>
-                            <td>{{ income.overall_sum }} сум</td>
+                            <td>{{ income.overall_sum|intcomma }} сум</td>
                             <td>
                                 {% if income.state == 'в ожидании' %}
                                     <span class="badge badge-pending">{{ income.state }}</span>

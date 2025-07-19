@@ -243,19 +243,31 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <div class="form-group">
                     <label>Количество <span class="text-danger">*</span></label>
                     <input type="number" class="form-control item-quantity" name="quantity" min="1" required>
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <div class="form-group">
-                    <label>Цена за единицу</label>
-                    <input type="number" class="form-control item-price" name="unit_price" min="0" step="0.01">
+                    <label>Кол-во в упак.</label>
+                    <input type="number" class="form-control item-unit-quantity" name="unit_quantity" min="0" placeholder="0">
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
+                <div class="form-group">
+                    <label>Общая цена</label>
+                    <input type="number" class="form-control item-total-price" name="price" min="0" step="0.01">
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="form-group">
+                    <label>Цена за ед.</label>
+                    <input type="number" class="form-control item-unit-price" name="unit_price" min="0" step="0.01">
+                </div>
+            </div>
+            <div class="col-md-1">
                 <div class="form-group">
                     <label>НДС (%)</label>
                     <input type="number" class="form-control item-nds" name="nds" min="0" max="100" value="0">
@@ -279,9 +291,15 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-8">
+                <small class="text-muted">
+                    <i class="fas fa-calculator mr-1"></i>
+                    Общая стоимость = (Общая цена + НДС) или (Количество × Цена за ед. + НДС)
+                </small>
+            </div>
+            <div class="col-md-4">
                 <div class="item-total text-right">
-                    Итого: <span class="item-total-amount">0 сум</span>
+                    Итого с НДС: <span class="item-total-amount">0 сум</span>
                 </div>
             </div>
         </div>
@@ -336,14 +354,50 @@ $(document).ready(function() {
     });
 
     // Calculate item total when inputs change
-    $(document).on('input', '.item-quantity, .item-price, .item-nds', function() {
+    $(document).on('input', '.item-quantity, .item-unit-quantity, .item-total-price, .item-unit-price, .item-nds', function() {
         const itemRow = $(this).closest('.item-row');
         calculateItemTotal(itemRow);
         updateTotals();
     });
 
+    // Auto-calculate unit price when total price is entered
+    $(document).on('input', '.item-total-price', function() {
+        const itemRow = $(this).closest('.item-row');
+        const totalPrice = parseFloat($(this).val()) || 0;
+        const quantity = parseFloat(itemRow.find('.item-quantity').val()) || 1;
+
+        if (totalPrice > 0 && quantity > 0) {
+            const unitPrice = totalPrice / quantity;
+            itemRow.find('.item-unit-price').val(unitPrice.toFixed(2));
+        }
+    });
+
+    // Auto-calculate total price when unit price is entered
+    $(document).on('input', '.item-unit-price', function() {
+        const itemRow = $(this).closest('.item-row');
+        const unitPrice = parseFloat($(this).val()) || 0;
+        const quantity = parseFloat(itemRow.find('.item-quantity').val()) || 1;
+
+        if (unitPrice > 0 && quantity > 0) {
+            const totalPrice = unitPrice * quantity;
+            itemRow.find('.item-total-price').val(totalPrice.toFixed(2));
+        }
+    });
+
+    // Auto-calculate when quantity changes
+    $(document).on('input', '.item-quantity', function() {
+        const itemRow = $(this).closest('.item-row');
+        const quantity = parseFloat($(this).val()) || 1;
+        const unitPrice = parseFloat(itemRow.find('.item-unit-price').val()) || 0;
+
+        if (unitPrice > 0 && quantity > 0) {
+            const totalPrice = unitPrice * quantity;
+            itemRow.find('.item-total-price').val(totalPrice.toFixed(2));
+        }
+    });
+
     // Update items data when item changes
-    $(document).on('change', '.item-select, .item-quantity, .item-price, .item-nds, .item-expire', function() {
+    $(document).on('change', '.item-select, .item-quantity, .item-unit-quantity, .item-total-price, .item-unit-price, .item-nds, .item-expire', function() {
         const itemRow = $(this).closest('.item-row');
         updateItemData(itemRow);
     });
@@ -357,6 +411,9 @@ $(document).ready(function() {
     $('#income-form').submit(function(e) {
         e.preventDefault();
 
+        console.log('Form submission started');
+        console.log('Items data:', itemsData);
+
         if (itemsData.length === 0) {
             Swal.fire({
                 icon: 'error',
@@ -366,10 +423,60 @@ $(document).ready(function() {
             return;
         }
 
+        // Validate required fields
+        const receiver = $('#receiver').val();
+        if (!receiver) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Ошибка',
+                text: 'Выберите склад получатель'
+            });
+            return;
+        }
+
+        // Validate items
+        let hasErrors = false;
+        itemsData.forEach((item, index) => {
+            if (!item.item_id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ошибка',
+                    text: `Выберите товар для позиции ${index + 1}`
+                });
+                hasErrors = true;
+                return;
+            }
+            if (!item.quantity || item.quantity <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ошибка',
+                    text: `Укажите количество для позиции ${index + 1}`
+                });
+                hasErrors = true;
+                return;
+            }
+        });
+
+        if (hasErrors) return;
+
         // Update hidden input with items data
-        $('#items_data').val(JSON.stringify(itemsData));
+        const itemsDataJson = JSON.stringify(itemsData);
+        console.log('Items data JSON:', itemsDataJson);
+        $('#items_data').val(itemsDataJson);
+
+        // Show loading
+        Swal.fire({
+            title: 'Создание реестра...',
+            text: 'Пожалуйста, подождите',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         // Submit form
+        console.log('Submitting form...');
         this.submit();
     });
 
@@ -383,7 +490,10 @@ $(document).ready(function() {
         if (itemData) {
             newItem.find('.item-select').val(itemData.id);
             newItem.find('.item-quantity').val(itemData.quantity || 1);
-            newItem.find('.item-price').val(itemData.price || 0);
+            newItem.find('.item-unit-price').val(itemData.price || 0);
+            if (itemData.price && itemData.quantity) {
+                newItem.find('.item-total-price').val((itemData.price * (itemData.quantity || 1)).toFixed(2));
+            }
         }
 
         $('#items-container').append(newItem);
@@ -398,6 +508,8 @@ $(document).ready(function() {
             index: itemIndex,
             item_id: itemData ? itemData.id : '',
             quantity: itemData ? (itemData.quantity || 1) : 1,
+            unit_quantity: 0,
+            price: itemData ? ((itemData.price || 0) * (itemData.quantity || 1)) : 0,
             unit_price: itemData ? (itemData.price || 0) : 0,
             nds: 0,
             expire_date: '',
@@ -422,26 +534,37 @@ $(document).ready(function() {
         const itemDataIndex = itemsData.findIndex(item => item.index === index);
 
         if (itemDataIndex !== -1) {
-            itemsData[itemDataIndex] = {
+            const newData = {
                 ...itemsData[itemDataIndex],
                 item_id: itemRow.find('.item-select').val(),
                 quantity: parseInt(itemRow.find('.item-quantity').val()) || 0,
-                unit_price: parseFloat(itemRow.find('.item-price').val()) || 0,
+                unit_quantity: parseInt(itemRow.find('.item-unit-quantity').val()) || 0,
+                price: parseFloat(itemRow.find('.item-total-price').val()) || 0,
+                unit_price: parseFloat(itemRow.find('.item-unit-price').val()) || 0,
                 nds: parseFloat(itemRow.find('.item-nds').val()) || 0,
                 expire_date: itemRow.find('.item-expire').val(),
                 overall_price: calculateOverallPrice(itemRow)
             };
+
+            itemsData[itemDataIndex] = newData;
+            console.log('Updated item data:', newData);
         }
     }
 
     function calculateItemTotal(itemRow) {
         const quantity = parseFloat(itemRow.find('.item-quantity').val()) || 0;
-        const price = parseFloat(itemRow.find('.item-price').val()) || 0;
+        const totalPrice = parseFloat(itemRow.find('.item-total-price').val()) || 0;
+        const unitPrice = parseFloat(itemRow.find('.item-unit-price').val()) || 0;
         const nds = parseFloat(itemRow.find('.item-nds').val()) || 0;
 
-        const subtotal = quantity * price;
-        const ndsAmount = subtotal * (nds / 100);
-        const total = subtotal + ndsAmount;
+        // Use total price if available, otherwise calculate from unit price
+        let basePrice = totalPrice;
+        if (basePrice === 0 && unitPrice > 0) {
+            basePrice = quantity * unitPrice;
+        }
+
+        const ndsAmount = basePrice * (nds / 100);
+        const total = basePrice + ndsAmount;
 
         itemRow.find('.item-total-amount').text(total.toFixed(2) + ' сум');
 
@@ -450,12 +573,18 @@ $(document).ready(function() {
 
     function calculateOverallPrice(itemRow) {
         const quantity = parseFloat(itemRow.find('.item-quantity').val()) || 0;
-        const price = parseFloat(itemRow.find('.item-price').val()) || 0;
+        const totalPrice = parseFloat(itemRow.find('.item-total-price').val()) || 0;
+        const unitPrice = parseFloat(itemRow.find('.item-unit-price').val()) || 0;
         const nds = parseFloat(itemRow.find('.item-nds').val()) || 0;
 
-        const subtotal = quantity * price;
-        const ndsAmount = subtotal * (nds / 100);
-        return subtotal + ndsAmount;
+        // Use total price if available, otherwise calculate from unit price
+        let basePrice = totalPrice;
+        if (basePrice === 0 && unitPrice > 0) {
+            basePrice = quantity * unitPrice;
+        }
+
+        const ndsAmount = basePrice * (nds / 100);
+        return basePrice + ndsAmount;
     }
 
     function updateTotals() {
@@ -562,6 +691,17 @@ $(document).ready(function() {
 
     // Add first item by default
     addNewItem();
+
+    // Debug function (you can call this in browser console)
+    window.debugIncomeForm = function() {
+        console.log('Current items data:', itemsData);
+        console.log('Form values:', {
+            delivery_company: $('#delivery_company').val(),
+            receiver: $('#receiver').val(),
+            bill_amount: $('#bill_amount').val(),
+            state: $('#state').val()
+        });
+    };
 });
 </script>
 {% endblock %}

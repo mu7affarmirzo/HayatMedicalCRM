@@ -1,0 +1,486 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Прогноз расходов медикаментов - Склад{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/daterangepicker/daterangepicker.css' %}">
+<style>
+    .stats-card {
+        transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .medication-item {
+        border-left: 4px solid #007bff;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 0 5px 5px 0;
+    }
+    
+    .shortage-warning {
+        border-left-color: #dc3545;
+    }
+    
+    .cost-high {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .cost-medium {
+        color: #ffc107;
+        font-weight: bold;
+    }
+    
+    .cost-low {
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .daily-chart {
+        height: 300px;
+    }
+    
+    .filter-section {
+        background: #f4f6f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .patient-medication {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Прогноз расходов медикаментов</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">Склад</a></li>
+                    <li class="breadcrumb-item active">Прогноз расходов</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        
+        <!-- Filters -->
+        <div class="filter-section">
+            <form method="get" class="row">
+                <div class="col-md-3">
+                    <label>Период (дней):</label>
+                    <select name="period" class="form-control">
+                        <option value="7" {% if period_days == 7 %}selected{% endif %}>7 дней</option>
+                        <option value="14" {% if period_days == 14 %}selected{% endif %}>14 дней</option>
+                        <option value="30" {% if period_days == 30 %}selected{% endif %}>30 дней</option>
+                        <option value="60" {% if period_days == 60 %}selected{% endif %}>60 дней</option>
+                        <option value="90" {% if period_days == 90 %}selected{% endif %}>90 дней</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Статус назначений:</label>
+                    <select name="status" class="form-control">
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Только активные</option>
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Все назначения</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="form-control btn btn-primary">
+                        <i class="fas fa-search"></i> Применить
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <label>&nbsp;</label>
+                    <a href="#" class="form-control btn btn-success" id="exportBtn">
+                        <i class="fas fa-download"></i> Экспорт
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info stats-card">
+                    <div class="inner">
+                        <h3>{{ total_expected_cost|floatformat:0 }} ₸</h3>
+                        <p>Ожидаемые расходы</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-ruble-sign"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success stats-card">
+                    <div class="inner">
+                        <h3>{{ total_sessions }}</h3>
+                        <p>Всего сеансов</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning stats-card">
+                    <div class="inner">
+                        <h3>{{ total_medications }}</h3>
+                        <p>Препаратов в использовании</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-prescription-bottle-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger stats-card">
+                    <div class="inner">
+                        <h3>{{ total_patients }}</h3>
+                        <p>Пациентов с назначениями</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ежедневные расходы ({{ start_date|date:"d.m.Y" }} - {{ end_date|date:"d.m.Y" }})</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dailyExpensesChart" class="daily-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Топ препараты по стоимости</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="topMedicationsChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Tables Row -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Детальный анализ по препаратам</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-striped" id="medicationTable">
+                            <thead>
+                                <tr>
+                                    <th>Препарат</th>
+                                    <th>На складе</th>
+                                    <th>Потребность</th>
+                                    <th>Дефицит</th>
+                                    <th>Стоимость за единицу</th>
+                                    <th>Общая стоимость</th>
+                                    <th>Назначения</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for med_id, med_data in medication_expenses.items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ med_data.medication_name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{% if med_data.current_stock > med_data.total_sessions %}success{% else %}warning{% endif %}">
+                                            {{ med_data.current_stock }}
+                                        </span>
+                                    </td>
+                                    <td>{{ med_data.total_sessions }}</td>
+                                    <td>
+                                        {% if med_data.expected_shortage > 0 %}
+                                            <span class="badge badge-danger">{{ med_data.expected_shortage }}</span>
+                                        {% else %}
+                                            <span class="badge badge-success">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ med_data.unit_cost|floatformat:2 }} ₸</td>
+                                    <td>
+                                        <span class="{% if med_data.total_cost > 10000 %}cost-high{% elif med_data.total_cost > 5000 %}cost-medium{% else %}cost-low{% endif %}">
+                                            {{ med_data.total_cost|floatformat:2 }} ₸
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" type="button" data-toggle="collapse" 
+                                                data-target="#prescriptions-{{ med_id }}" aria-expanded="false">
+                                            <i class="fas fa-eye"></i> {{ med_data.prescriptions|length }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="collapse" id="prescriptions-{{ med_id }}">
+                                    <td colspan="7">
+                                        <div class="p-3">
+                                            <h6>Назначения:</h6>
+                                            {% for prescription in med_data.prescriptions %}
+                                            <div class="medication-item {% if med_data.expected_shortage > 0 %}shortage-warning{% endif %}">
+                                                <strong>{{ prescription.patient_name }}</strong><br>
+                                                <small>
+                                                    Дозировка: {{ prescription.dosage }} | 
+                                                    Частота: {{ prescription.frequency }} |
+                                                    Сеансов: {{ prescription.sessions_count }}
+                                                </small>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Пациенты с назначениями</h3>
+                    </div>
+                    <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                        {% for patient_id, patient_data in patient_summary.items %}
+                        <div class="medication-item">
+                            <strong>{{ patient_data.patient_name }}</strong>
+                            <br>
+                            <small>Препаратов: {{ patient_data.total_medications }}</small>
+                            <div class="patient-medication mt-2">
+                                {% for medication in patient_data.medications %}
+                                <div>
+                                    <i class="fas fa-pills"></i> {{ medication.name }} 
+                                    ({{ medication.dosage }}, {{ medication.frequency }})
+                                    <span class="badge badge-sm badge-{% if medication.status == 'active' %}success{% else %}secondary{% endif %}">
+                                        {{ medication.status }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Sessions -->
+        {% if pending_sessions %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-clock"></i> Ожидающие выдачи сеансы
+                        </h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Дата и время</th>
+                                    <th>Пациент</th>
+                                    <th>Препарат</th>
+                                    <th>Дозировка</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in pending_sessions %}
+                                <tr>
+                                    <td>{{ session.session_datetime|date:"d.m.Y H:i" }}</td>
+                                    <td>{{ session.prescribed_medication.illness_history.patient.full_name }}</td>
+                                    <td>{{ session.prescribed_medication.medication.item.name }}</td>
+                                    <td>{{ session.prescribed_medication.dosage }}</td>
+                                    <td>
+                                        <span class="badge badge-warning">{{ session.get_status_display }}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Выдать
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'adminlte3_assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.js' %}"></script>
+
+<script>
+$(function () {
+    // Initialize DataTable
+    $('#medicationTable').DataTable({
+        responsive: true,
+        lengthChange: false,
+        autoWidth: false,
+        pageLength: 10,
+        order: [[5, 'desc']], // Order by total cost desc
+    });
+
+    // Daily Expenses Chart
+    const dailyExpensesCtx = document.getElementById('dailyExpensesChart');
+    const dailyData = {
+        {% for date, data in daily_breakdown.items %}
+        '{{ date|date:"Y-m-d" }}': {
+            'cost': {{ data.total_cost|default:0 }},
+            'sessions': {{ data.total_sessions|default:0 }}
+        },
+        {% endfor %}
+    };
+
+    const dates = Object.keys(dailyData).sort();
+    const costs = dates.map(date => dailyData[date].cost);
+    const sessions = dates.map(date => dailyData[date].sessions);
+
+    new Chart(dailyExpensesCtx, {
+        type: 'line',
+        data: {
+            labels: dates.map(date => new Date(date).toLocaleDateString('ru-RU')),
+            datasets: [{
+                label: 'Стоимость (₸)',
+                data: costs,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y'
+            }, {
+                label: 'Количество сеансов',
+                data: sessions,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Стоимость (₸)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Количество сеансов'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+
+    // Top Medications Chart
+    const topMedications = [
+        {% for med_id, med_data in top_medications|slice:":5" %}
+        {
+            name: '{{ med_data.medication_name|truncatechars:20 }}',
+            cost: {{ med_data.total_cost }}
+        },
+        {% endfor %}
+    ];
+
+    const topMedicationsCtx = document.getElementById('topMedicationsChart');
+    new Chart(topMedicationsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: topMedications.map(med => med.name),
+            datasets: [{
+                data: topMedications.map(med => med.cost),
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed.toLocaleString('ru-RU') + ' ₸';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Export functionality
+    $('#exportBtn').on('click', function(e) {
+        e.preventDefault();
+        // Add export logic here
+        alert('Функция экспорта будет добавлена');
+    });
+});
+</script>
+{% endblock %}

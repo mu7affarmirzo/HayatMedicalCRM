@@ -188,6 +188,12 @@
                                     <p>Истекающий срок</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:medication_expenses_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
+                                    <i class="fas fa-chart-line nav-icon"></i>
+                                    <p>Прогноз расходов</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -222,7 +228,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a href="#" class="nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                        <a href="#" class="nav-link {% if 'report' in request.resolver_match.url_name or request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
                             <i class="nav-icon fas fa-chart-bar"></i>
                             <p>
                                 Отчеты
@@ -246,6 +252,12 @@
                                 <a href="{% url 'warehouse:income_report' %}" class="nav-link {% if request.resolver_match.url_name == 'income_report' %}active{% endif %}">
                                     <i class="fas fa-file-invoice nav-icon"></i>
                                     <p>Отчет по поступлениям</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:medication_expenses_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
+                                    <i class="fas fa-pills nav-icon text-warning"></i>
+                                    <p>Прогноз расходов лекарств</p>
                                 </a>
                             </li>
                         </ul>

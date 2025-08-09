@@ -2,6 +2,7 @@
 from django.urls import path
 
 from application.sanatorium.views.doctors_viewset.prescriptions import medications as views
+from application.sanatorium.views.doctors_viewset.prescriptions import medication_sessions as sessions
 
 urlpatterns = [
     # PrescribedMedication URLs
@@ -30,4 +31,20 @@ urlpatterns = [
          name='medication_administration_update'),
     path('administrations/<int:pk>/delete/', views.MedicationSessionDeleteView.as_view(),
          name='medication_administration_delete'),
+
+    # Sessions
+    path('sessions/<int:med_id>', sessions.medication_sessions_list, name='medication_sessions_list'),
+    path('sessions/today/', sessions.today_sessions, name='today_sessions'),
+    path('sessions/<int:session_id>/', sessions.session_detail, name='session_detail'),
+    path('sessions/<int:session_id>/update/', sessions.update_session_status, name='update_session_status'),
+
+    # Patient medications
+    path('patients/<int:patient_id>/', sessions.patient_medications, name='patient_medications'),
+
+    # Statistics
+    path('statistics/', sessions.medication_statistics, name='medication_statistics'),
+
+    # Create session
+    path('prescribed/<int:prescribed_medication_id>/create-session/',
+         sessions.create_medication_session, name='create_medication_session'),
 ]

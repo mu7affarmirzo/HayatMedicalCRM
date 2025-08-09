@@ -1,0 +1,455 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Today's Medication Sessions - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    .session-card {
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+    .session-card.pending {
+        border-left-color: #ffc107;
+    }
+    .session-card.administered {
+        border-left-color: #28a745;
+    }
+    .session-card.missed {
+        border-left-color: #dc3545;
+    }
+    .quick-action-btn {
+        border-radius: 20px;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.75rem;
+    }
+    .time-slot {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 0.5rem;
+        text-align: center;
+        min-width: 80px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-calendar-day"></i> Today's Medication Sessions
+                    <small class="text-muted">{{ today|date:"l, F d, Y" }}</small>
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'medication_sessions_list' %}">Medications</a></li>
+                    <li class="breadcrumb-item active">Today's Sessions</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-6">
+                <div class="card stat-card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon mr-3">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title mb-0">{{ pending_sessions.count }}</h3>
+                                <p class="card-text">Pending Sessions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon mr-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title mb-0">{{ administered_sessions.count }}</h3>
+                                <p class="card-text">Administered</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <div class="card stat-card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon mr-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title mb-0">{{ missed_sessions.count }}</h3>
+                                <p class="card-text">Missed Sessions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-6">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon mr-3">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title mb-0">{{ total_sessions }}</h3>
+                                <p class="card-text">Total Sessions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Sessions -->
+        {% if pending_sessions %}
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h3 class="card-title text-white">
+                    <i class="fas fa-clock"></i> Pending Sessions ({{ pending_sessions.count }})
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for session in pending_sessions %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card session-card pending">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="time-slot">
+                                        <strong>{{ session.session_datetime|time:"H:i" }}</strong>
+                                    </div>
+                                    <span class="badge badge-warning">Pending</span>
+                                </div>
+                                
+                                <h6 class="font-weight-bold mb-1">
+                                    {{ session.prescribed_medication.illness_history.patient.full_name }}
+                                </h6>
+                                
+                                <p class="text-muted mb-2">
+                                    <strong>{{ session.prescribed_medication.medication.item.name }}</strong><br>
+                                    {{ session.prescribed_medication.dosage }} - {{ session.prescribed_medication.get_frequency_display }}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-success btn-sm quick-action-btn administer-btn" 
+                                            data-session-id="{{ session.id }}">
+                                        <i class="fas fa-check"></i> Administer
+                                    </button>
+                                    <button class="btn btn-warning btn-sm quick-action-btn missed-btn" 
+                                            data-session-id="{{ session.id }}">
+                                        <i class="fas fa-times"></i> Missed
+                                    </button>
+                                    <a href="{% url 'session_detail' session.id %}" 
+                                       class="btn btn-info btn-sm quick-action-btn">
+                                        <i class="fas fa-eye"></i> Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Administered Sessions -->
+        {% if administered_sessions %}
+        <div class="card mb-4">
+            <div class="card-header bg-success">
+                <h3 class="card-title text-white">
+                    <i class="fas fa-check-circle"></i> Administered Sessions ({{ administered_sessions.count }})
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Medication</th>
+                                <th>Dosage</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in administered_sessions %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-success">
+                                        {{ session.session_datetime|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td>{{ session.prescribed_medication.illness_history.patient.full_name }}</td>
+                                <td>{{ session.prescribed_medication.medication.item.name }}</td>
+                                <td>{{ session.prescribed_medication.dosage }}</td>
+                                <td>
+                                    <a href="{% url 'session_detail' session.id %}" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Missed Sessions -->
+        {% if missed_sessions %}
+        <div class="card mb-4">
+            <div class="card-header bg-danger">
+                <h3 class="card-title text-white">
+                    <i class="fas fa-exclamation-triangle"></i> Missed Sessions ({{ missed_sessions.count }})
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Medication</th>
+                                <th>Dosage</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in missed_sessions %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-danger">
+                                        {{ session.session_datetime|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td>{{ session.prescribed_medication.illness_history.patient.full_name }}</td>
+                                <td>{{ session.prescribed_medication.medication.item.name }}</td>
+                                <td>{{ session.prescribed_medication.dosage }}</td>
+                                <td>
+                                    <a href="{% url 'session_detail' session.id %}" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-success reschedule-btn" 
+                                            data-session-id="{{ session.id }}">
+                                        <i class="fas fa-redo"></i> Reschedule
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- No Sessions Message -->
+        {% if total_sessions == 0 %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-calendar-check fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No medication sessions scheduled for today</h4>
+                <p class="text-muted">All medication sessions have been completed or there are no scheduled sessions.</p>
+                <a href="{% url 'medication_sessions_list' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> View All Sessions
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt"></i> Quick Actions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="{% url 'medication_sessions_list' %}" class="btn btn-outline-primary btn-block">
+                                    <i class="fas fa-list"></i> All Sessions
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'medication_statistics' %}" class="btn btn-outline-info btn-block">
+                                    <i class="fas fa-chart-line"></i> Statistics
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-success btn-block" onclick="window.print()">
+                                    <i class="fas fa-print"></i> Print Report
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-warning btn-block" onclick="refreshPage()">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusUpdateModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Session Status</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="status-update-form">
+                    <div class="form-group">
+                        <label for="session-notes">Notes (optional):</label>
+                        <textarea id="session-notes" class="form-control" rows="3" 
+                                  placeholder="Add any relevant notes..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-status-update">
+                    Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let currentSessionId = null;
+    let currentAction = null;
+    
+    // Quick action buttons
+    $('.administer-btn').click(function() {
+        const sessionId = $(this).data('session-id');
+        updateSessionStatus(sessionId, 'administered');
+    });
+    
+    $('.missed-btn').click(function() {
+        const sessionId = $(this).data('session-id');
+        currentSessionId = sessionId;
+        currentAction = 'missed';
+        $('#statusUpdateModal').modal('show');
+    });
+    
+    $('.reschedule-btn').click(function() {
+        const sessionId = $(this).data('session-id');
+        // Implementation for rescheduling would go here
+        alert('Reschedule functionality to be implemented');
+    });
+    
+    // Status update confirmation
+    $('#confirm-status-update').click(function() {
+        const notes = $('#session-notes').val();
+        updateSessionStatus(currentSessionId, currentAction, notes);
+    });
+    
+    function updateSessionStatus(sessionId, status, notes = '') {
+        $.ajax({
+            url: `/application/logus/medications/sessions/${sessionId}/update/`,
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify({
+                status: status,
+                notes: notes
+            }),
+            success: function(response) {
+                // Show success message
+                toastr.success(response.message);
+                
+                // Close modal
+                $('#statusUpdateModal').modal('hide');
+                $('#session-notes').val('');
+                
+                // Refresh the page to update the display
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred';
+                toastr.error(error);
+            }
+        });
+    }
+    
+    // Auto-refresh every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+});
+
+function refreshPage() {
+    location.reload();
+}
+
+// Print styles
+const printStyles = `
+<style media="print">
+    .card-header { background-color: #333 !important; color: white !important; }
+    .btn { display: none !important; }
+    .stat-card { border: 1px solid #ddd !important; }
+    @page { margin: 1in; }
+</style>
+`;
+document.head.insertAdjacentHTML('beforeend', printStyles);
+</script>
+{% endblock %}

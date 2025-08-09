@@ -1,0 +1,384 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Session Details - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .status-badge-large {
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+    }
+    .info-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 1.1rem;
+        color: #212529;
+    }
+    .patient-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .medication-icon {
+        font-size: 3rem;
+        color: #007bff;
+        opacity: 0.7;
+    }
+    .timeline-item {
+        padding: 15px;
+        border-left: 3px solid #007bff;
+        margin-left: 20px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-eye"></i> Session Details
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'medication_sessions_list' %}">Sessions</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Session Overview -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card detail-card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title">
+                            <i class="fas fa-pills"></i> Medication Session Overview
+                        </h3>
+                        <div class="card-tools">
+                            <span class="badge status-badge-large
+                                {% if session.status == 'pending' %}badge-warning
+                                {% elif session.status == 'administered' %}badge-success
+                                {% elif session.status == 'missed' %}badge-danger
+                                {% elif session.status == 'refused' %}badge-secondary
+                                {% elif session.status == 'canceled' %}badge-dark{% endif %}">
+                                {{ session.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="medication-icon mb-3">
+                                    <i class="fas fa-pills"></i>
+                                </div>
+                                <h5>{{ session.prescribed_medication.medication.item.name }}</h5>
+                                <p class="text-muted">{{ session.prescribed_medication.dosage }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-section">
+                                    <div class="info-label">Scheduled Date & Time</div>
+                                    <div class="info-value">
+                                        {{ session.session_datetime|date:"F d, Y" }}<br>
+                                        <strong>{{ session.session_datetime|time:"H:i" }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-section">
+                                    <div class="info-label">Session ID</div>
+                                    <div class="info-value">#{{ session.id }}</div>
+                                    <div class="info-label mt-2">Created</div>
+                                    <div class="info-value">{{ session.created_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Information -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card detail-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user"></i> Patient Information
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <img src="{% static 'adminlte3_assets/dist/img/avatar.png' %}"
+                                     alt="Patient Avatar" class="patient-avatar mb-3">
+                            </div>
+                            <div class="col-md-8">
+                                <div class="info-section">
+                                    <div class="info-label">Full Name</div>
+                                    <div class="info-value">{{ session.prescribed_medication.illness_history.patient.full_name }}</div>
+
+                                    <div class="info-label mt-3">Date of Birth</div>
+                                    <div class="info-value">{{ session.prescribed_medication.illness_history.patient.date_of_birth|date:"F d, Y" }}</div>
+
+                                    <div class="info-label mt-3">Contact</div>
+                                    <div class="info-value">
+                                        {% if session.prescribed_medication.illness_history.patient.mobile_phone_number %}
+                                            <i class="fas fa-phone"></i> {{ session.prescribed_medication.illness_history.patient.mobile_phone_number }}<br>
+                                        {% endif %}
+                                        {% if session.prescribed_medication.illness_history.patient.email %}
+                                            <i class="fas fa-envelope"></i> {{ session.prescribed_medication.illness_history.patient.email }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescription Details -->
+            <div class="col-md-6">
+                <div class="card detail-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-prescription-bottle"></i> Prescription Details
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-label">Dosage</div>
+                                    <div class="info-value">{{ session.prescribed_medication.dosage }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-label">Frequency</div>
+                                    <div class="info-value">{{ session.prescribed_medication.get_frequency_display }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="info-label">Route</div>
+                                    <div class="info-value">{{ session.prescribed_medication.route|default:"N/A" }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-label">Status</div>
+                                    <div class="info-value">
+                                        <span class="badge badge-info">{{ session.prescribed_medication.get_status_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if session.prescribed_medication.instructions %}
+                            <div class="mt-3">
+                                <div class="info-label">Special Instructions</div>
+                                <div class="info-value">{{ session.prescribed_medication.instructions }}</div>
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-3">
+                                <div class="info-label">Prescribed By</div>
+                                <div class="info-value">
+                                    {% if session.prescribed_medication.prescribed_by %}
+                                        {{ session.prescribed_medication.prescribed_by.full_name }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Notes -->
+        {% if session.notes %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card detail-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-sticky-note"></i> Session Notes
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-section">
+                            {{ session.notes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card detail-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-tools"></i> Actions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% if session.status == 'pending' %}
+                                <button class="btn btn-success btn-lg mr-2 mb-2"
+                                        onclick="updateStatus('administered')">
+                                    <i class="fas fa-check"></i> Mark as Administered
+                                </button>
+                                <button class="btn btn-warning btn-lg mr-2 mb-2"
+                                        onclick="updateStatus('missed')">
+                                    <i class="fas fa-times"></i> Mark as Missed
+                                </button>
+                                <button class="btn btn-secondary btn-lg mb-2"
+                                        onclick="updateStatus('refused')">
+                                    <i class="fas fa-ban"></i> Mark as Refused
+                                </button>
+                                {% endif %}
+
+                                <button class="btn btn-info btn-lg mr-2 mb-2" onclick="printSession()">
+                                    <i class="fas fa-print"></i> Print Details
+                                </button>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <a href="{% url 'medication_sessions_list' %}" class="btn btn-outline-primary btn-lg mb-2">
+                                    <i class="fas fa-arrow-left"></i> Back to Sessions
+                                </a>
+                                <a href="{% url 'patient_medications' session.prescribed_medication.illness_history.patient.id %}"
+                                   class="btn btn-outline-info btn-lg mb-2">
+                                    <i class="fas fa-user"></i> Patient Medications
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusUpdateModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Session Status</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="status-update-form">
+                    <div class="form-group">
+                        <label for="session-notes">Notes (optional):</label>
+                        <textarea id="session-notes" class="form-control" rows="4"
+                                  placeholder="Add any relevant notes about this session..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-status-update">
+                    Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentAction = null;
+
+function updateStatus(status) {
+    currentAction = status;
+    $('#statusUpdateModal').modal('show');
+}
+
+$(document).ready(function() {
+    $('#confirm-status-update').click(function() {
+        const notes = $('#session-notes').val();
+
+        $.ajax({
+            url: `/application/logus/medications/sessions/{{ session.id }}/update/`,
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify({
+                status: currentAction,
+                notes: notes
+            }),
+            success: function(response) {
+                // Show success message
+                toastr.success(response.message);
+
+                // Close modal
+                $('#statusUpdateModal').modal('hide');
+                $('#session-notes').val('');
+
+                // Refresh the page to update the display
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred';
+                toastr.error(error);
+            }
+        });
+    });
+});
+
+function printSession() {
+    window.print();
+}
+
+// Print styles
+const printStyles = `
+<style media="print">
+    .btn { display: none !important; }
+    .card-tools { display: none !important; }
+    .breadcrumb { display: none !important; }
+    .detail-card { border: 1px solid #ddd !important; box-shadow: none !important; }
+    @page { margin: 0.5in; }
+</style>
+`;
+document.head.insertAdjacentHTML('beforeend', printStyles);
+</script>
+{% endblock %}

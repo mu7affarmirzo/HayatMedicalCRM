@@ -127,8 +127,8 @@ class MedicationSession(BaseAuditModel):
     def administer(self, nurse):
         """Mark session as administered"""
         self.status = 'administered'
-        self.administered_by = nurse
-        self.administered_at = timezone.now()
+        self.modified_by = nurse
+        self.modified_at = timezone.now()
         self.save()
 
     def mark_missed(self):

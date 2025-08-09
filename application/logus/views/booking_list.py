@@ -52,7 +52,7 @@ def booking_detail_view(request, booking_id):
             booking.save()
             messages.success(request, f'Бронирование #{booking.booking_number} подтверждено.')
 
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     # Get all booking details with related data
     booking_details = booking.details.all().select_related(

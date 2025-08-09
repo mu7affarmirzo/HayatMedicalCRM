@@ -17,7 +17,7 @@ def booking_add_service_view(request, detail_id):
     # Check if booking is in the right status
     if booking.status != 'checked_in':
         messages.error(request, f'Услуги можно добавлять только для бронирований в статусе "Заселен"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         form = ServiceUsageForm(request.POST)
@@ -31,7 +31,7 @@ def booking_add_service_view(request, detail_id):
             service_usage.save()
 
             messages.success(request, f'Услуга "{service_usage.service.name}" успешно добавлена.')
-            return redirect('booking_detail', booking_id=booking.id)
+            return redirect('logus:booking_detail', booking_id=booking.id)
     else:
         form = ServiceUsageForm()
 
@@ -56,7 +56,7 @@ def service_usage_edit_view(request, service_id):
     # Check if booking is in the right status
     if booking.status != 'checked_in':
         messages.error(request, f'Услуги можно редактировать только для бронирований в статусе "Заселен"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         form = ServiceUsageForm(request.POST, instance=service_usage)
@@ -67,7 +67,7 @@ def service_usage_edit_view(request, service_id):
             service_usage.save()
 
             messages.success(request, f'Услуга "{service_usage.service.name}" успешно обновлена.')
-            return redirect('booking_detail', booking_id=booking.id)
+            return redirect('logus:booking_detail', booking_id=booking.id)
     else:
         form = ServiceUsageForm(instance=service_usage)
 
@@ -92,15 +92,15 @@ def service_usage_delete_view(request, service_id):
     # Check if booking is in the right status
     if booking.status != 'checked_in':
         messages.error(request, f'Услуги можно удалять только для бронирований в статусе "Заселен"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         service_name = service_usage.service.name
         service_usage.delete()
         messages.success(request, f'Услуга "{service_name}" успешно удалена.')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
-    return redirect('booking_detail', booking_id=booking.id)
+    return redirect('logus:booking_detail', booking_id=booking.id)
 
 
 @login_required

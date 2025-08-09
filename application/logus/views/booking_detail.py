@@ -39,7 +39,7 @@ def booking_edit_view(request, booking_id):
     if booking.status in ['cancelled', 'completed']:
         messages.error(request,
                        f'Бронирование #{booking.booking_number} нельзя редактировать в статусе "{booking.get_status_display()}"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         form = BookingForm(request.POST, instance=booking)
@@ -50,7 +50,7 @@ def booking_edit_view(request, booking_id):
             booking.save()
 
             messages.success(request, f'Бронирование #{booking.booking_number} успешно обновлено.')
-            return redirect('booking_detail', booking_id=booking.id)
+            return redirect('logus:booking_detail', booking_id=booking.id)
     else:
         form = BookingForm(instance=booking)
 
@@ -142,7 +142,7 @@ def booking_detail_edit_view(request, detail_id):
     if booking.status in ['cancelled', 'completed']:
         messages.error(request,
                        f'Бронирование #{booking.booking_number} нельзя редактировать в статусе "{booking.get_status_display()}"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         form = BookingDetailForm(request.POST, instance=booking_detail, booking=booking)
@@ -153,7 +153,7 @@ def booking_detail_edit_view(request, detail_id):
             booking_detail.save()
 
             messages.success(request, f'Данные о размещении для {booking_detail.client.full_name} успешно обновлены.')
-            return redirect('booking_detail', booking_id=booking.id)
+            return redirect('logus:booking_detail', booking_id=booking.id)
     else:
         form = BookingDetailForm(instance=booking_detail, booking=booking)
 
@@ -178,7 +178,7 @@ def booking_detail_add_view(request, booking_id):
     if booking.status in ['cancelled', 'completed']:
         messages.error(request,
                        f'Нельзя добавить гостя к бронированию #{booking.booking_number} в статусе "{booking.get_status_display()}"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         form = BookingDetailForm(request.POST, booking=booking)
@@ -191,7 +191,7 @@ def booking_detail_add_view(request, booking_id):
             booking_detail.save()
 
             messages.success(request, f'Гость {booking_detail.client.full_name} успешно добавлен к бронированию.')
-            return redirect('booking_detail', booking_id=booking.id)
+            return redirect('logus:booking_detail', booking_id=booking.id)
     else:
         form = BookingDetailForm(booking=booking)
 
@@ -216,17 +216,17 @@ def booking_detail_delete_view(request, detail_id):
     if booking.status in ['cancelled', 'completed']:
         messages.error(request,
                        f'Нельзя удалить гостя из бронирования #{booking.booking_number} в статусе "{booking.get_status_display()}"')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     # Prevent deleting if it's the only guest
     if booking.details.count() <= 1:
         messages.error(request, f'Нельзя удалить единственного гостя из бронирования. Удалите бронирование полностью.')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
         client_name = booking_detail.client.full_name
         booking_detail.delete()
         messages.success(request, f'Гость {client_name} успешно удален из бронирования.')
-        return redirect('booking_detail', booking_id=booking.id)
+        return redirect('logus:booking_detail', booking_id=booking.id)
 
-    return redirect('booking_detail', booking_id=booking.id)
+    return redirect('logus:booking_detail', booking_id=booking.id)

@@ -134,6 +134,14 @@ class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, Up
     def get_success_url(self):
         return reverse_lazy('prescribed_medication_detail', kwargs={'pk': self.object.id})
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add illness_history to context for the base template
+        if self.object and self.object.illness_history:
+            context['illness_history'] = self.object.illness_history
+            context['history'] = self.object.illness_history
+        return context
+
 
 class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = PrescribedMedication

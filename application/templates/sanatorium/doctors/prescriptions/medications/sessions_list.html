@@ -33,7 +33,17 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">Medication Sessions</h1>
+                <h1 class="m-0">
+                    Medication Sessions
+                    {% if medication %}
+                    - {{ medication.medication.item.name }}
+                    {% endif %}
+                </h1>
+                {% if medication %}
+                <small class="text-muted">
+                    Patient: {{ medication.illness_history.patient.full_name }}
+                </small>
+                {% endif %}
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -48,6 +58,56 @@
 <!-- Main content -->
 <section class="content">
     <div class="container-fluid">
+
+        <!-- Statistics Cards (if available) -->
+        {% if stats %}
+        <div class="row mb-3">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ stats.total_sessions }}</h3>
+                        <p>Total Sessions</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ stats.administered_count }}</h3>
+                        <p>Administered</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ stats.pending_count }}</h3>
+                        <p>Pending</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ stats.missed_count }}</h3>
+                        <p>Missed</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Filter Card -->
         <div class="card filter-card mb-3">
@@ -69,29 +129,23 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="date">Date:</label>
+                                <label for="date">Specific Date:</label>
                                 <input type="date" name="date" id="date" class="form-control"
                                        value="{{ current_filters.date }}">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="patient">Patient:</label>
-                                <select name="patient" id="patient" class="form-control">
-                                    <option value="">All Patients</option>
-                                    {% for patient in patients %}
-                                    <option value="{{ patient.id }}" {% if current_filters.patient == patient.id|stringformat:"s" %}selected{% endif %}>
-                                        {{ patient.full_name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                                <label for="date_from">From Date:</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control"
+                                       value="{{ current_filters.date_from }}">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="search">Search:</label>
                                 <input type="text" name="search" id="search" class="form-control"
-                                       placeholder="Patient name or medication..."
+                                       placeholder="Search in notes or staff..."
                                        value="{{ current_filters.search }}">
                             </div>
                         </div>
@@ -101,11 +155,8 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-filter"></i> Filter
                             </button>
-                            <a href="#" class="btn btn-secondary">
+                            <a href="?" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Clear
-                            </a>
-                            <a href="{% url 'today_sessions' %}" class="btn btn-info float-right">
-                                <i class="fas fa-calendar-day"></i> Today's Sessions
                             </a>
                         </div>
                     </div>
@@ -132,6 +183,7 @@
                                 <th>Dosage</th>
                                 <th>Scheduled Time</th>
                                 <th>Status</th>
+                                <th>Administered By</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -175,11 +227,15 @@
                                     </span>
                                 </td>
                                 <td>
+                                    {% if session.administered_by %}
+                                        {{ session.administered_by.full_name }}<br>
+                                        <small class="text-muted">{{ session.administered_at|date:"d.m.Y H:i" }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     <div class="btn-group">
-                                        <a href="{% url 'session_detail' session.id %}"
-                                           class="btn btn-sm btn-info" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
                                         {% if session.status == 'pending' %}
                                         <button class="btn btn-sm btn-success administer-btn"
                                                 data-session-id="{{ session.id }}" title="Mark as Administered">
@@ -188,6 +244,17 @@
                                         <button class="btn btn-sm btn-warning missed-btn"
                                                 data-session-id="{{ session.id }}" title="Mark as Missed">
                                             <i class="fas fa-times"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary more-actions-btn"
+                                                data-session-id="{{ session.id }}" title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-info view-notes-btn"
+                                                data-session-id="{{ session.id }}"
+                                                data-notes="{{ session.notes }}"
+                                                title="View Notes">
+                                            <i class="fas fa-sticky-note"></i>
                                         </button>
                                         {% endif %}
                                     </div>
@@ -205,7 +272,7 @@
                         <ul class="pagination justify-content-center mb-0">
                             {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                     Previous
                                 </a>
                             </li>
@@ -214,7 +281,7 @@
                             {% for page_num in page_obj.paginator.page_range %}
                             {% if page_num %}
                             <li class="page-item {% if page_num == page_obj.number %}active{% endif %}">
-                                <a class="page-link" href="?page={{ page_num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                     {{ page_num }}
                                 </a>
                             </li>
@@ -223,7 +290,7 @@
 
                             {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.patient %}&patient={{ request.GET.patient }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                     Next
                                 </a>
                             </li>
@@ -256,6 +323,7 @@
             </div>
             <div class="modal-body">
                 <form id="status-update-form">
+                    {% csrf_token %}
                     <div class="form-group">
                         <label for="new-status">New Status:</label>
                         <select id="new-status" class="form-control" required>
@@ -282,6 +350,26 @@
     </div>
 </div>
 
+<!-- Notes Modal -->
+<div class="modal fade" id="notesModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Session Notes</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="session-notes-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -302,6 +390,20 @@ $(document).ready(function() {
         $('#statusUpdateModal').modal('show');
     });
 
+    $('.more-actions-btn').click(function() {
+        const sessionId = $(this).data('session-id');
+        currentSessionId = sessionId;
+        $('#new-status').val('');
+        $('#session-notes').val('');
+        $('#statusUpdateModal').modal('show');
+    });
+
+    $('.view-notes-btn').click(function() {
+        const notes = $(this).data('notes');
+        $('#session-notes-content').html(notes || '<em>No notes available</em>');
+        $('#notesModal').modal('show');
+    });
+
     // Status update confirmation
     $('#confirm-status-update').click(function() {
         const newStatus = $('#new-status').val();
@@ -316,8 +418,11 @@ $(document).ready(function() {
     });
 
     function updateSessionStatus(sessionId, status, notes = '') {
+        // Show loading state
+        $('#confirm-status-update').html('<i class="fas fa-spinner fa-spin"></i> Updating...').prop('disabled', true);
+
         $.ajax({
-            url: `/application/logus/medications/sessions/${sessionId}/update/`,
+            url: `{% url 'update_session_status' 0 %}`.replace('0', sessionId),
             method: 'POST',
             headers: {
                 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
@@ -346,13 +451,27 @@ $(document).ready(function() {
                 statusBadge.addClass(badgeClass);
                 statusBadge.text(response.status_display);
 
-                // Hide action buttons if no longer pending
+                // Update administered by column if status is administered
+                if (status === 'administered') {
+                    const adminByCell = row.find('td:nth-child(6)');
+                    adminByCell.html(`{{ request.user.full_name }}<br><small class="text-muted">${new Date().toLocaleString()}</small>`);
+                }
+
+                // Hide action buttons if no longer pending and show view notes button
                 if (status !== 'pending') {
-                    row.find('.administer-btn, .missed-btn').hide();
+                    const actionsCell = row.find('td:last-child .btn-group');
+                    actionsCell.html(`
+                        <button class="btn btn-sm btn-info view-notes-btn"
+                                data-session-id="${sessionId}"
+                                data-notes="${notes}"
+                                title="View Notes">
+                            <i class="fas fa-sticky-note"></i>
+                        </button>
+                    `);
                 }
 
                 // Show success message
-                toastr.success(response.message);
+                showAlert('success', response.message);
 
                 // Close modal
                 $('#statusUpdateModal').modal('hide');
@@ -360,13 +479,35 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 const error = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred';
-                toastr.error(error);
+                showAlert('danger', error);
+            },
+            complete: function() {
+                // Reset button state
+                $('#confirm-status-update').html('Update Status').prop('disabled', false);
             }
         });
     }
 
+    // Simple alert function (since toastr might not be available)
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        $('body').append(alertHtml);
+
+        // Auto dismiss after 5 seconds
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+
     // Auto-submit form on filter change
-    $('#status, #date, #patient').change(function() {
+    $('#status, #date, #date_from').change(function() {
         $('#filter-form').submit();
     });
 });

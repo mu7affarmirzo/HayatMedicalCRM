@@ -186,6 +186,7 @@ def session_detail(request, session_id):
     context = {
         'session': session,
         'status_choices': MedicationSession.STATUS_CHOICES,
+        'history': session.prescribed_medication.illness_history
     }
 
     return render(request, 'sanatorium/doctors/prescriptions/medications/session_detail.html', context)

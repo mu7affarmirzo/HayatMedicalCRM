@@ -39,6 +39,8 @@ def medication_expenses_dashboard(request):
         'prescribed_by'
     )
 
+    print(base_prescriptions)
+
     # Apply status filter
     if status_filter == 'active':
         base_prescriptions = base_prescriptions.filter(
@@ -57,6 +59,8 @@ def medication_expenses_dashboard(request):
     medication_expenses = calculate_medication_expenses(
         base_prescriptions, start_date, end_date
     )
+
+    print('----', medication_expenses)
 
     # Get pending sessions for the period
     pending_sessions = get_pending_sessions(start_date, end_date)

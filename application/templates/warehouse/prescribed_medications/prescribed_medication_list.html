@@ -1,0 +1,211 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Назначенные препараты{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Назначенные препараты</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">Склад</a></li>
+                    <li class="breadcrumb-item active">Назначенные препараты</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Search and Filter Card -->
+        <div class="card collapsed-card">
+            <div class="card-header">
+                <h3 class="card-title">Поиск и фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" class="form-inline">
+                    <div class="form-group mr-3">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Поиск по препарату, пациенту, врачу..." 
+                               value="{{ search_query }}">
+                    </div>
+                    <div class="form-group mr-3">
+                        <select name="status" class="form-control">
+                            <option value="">Все статусы</option>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary mr-2">
+                        <i class="fas fa-search"></i> Поиск
+                    </button>
+                    <a href="{% url 'warehouse:prescribed_list' %}" class="btn btn-default">
+                        <i class="fas fa-times"></i> Сбросить
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Data Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Список назначенных препаратов</h3>
+                <div class="card-tools">
+                    <span class="badge badge-secondary">{{ page_obj.paginator.count }} записей</span>
+                </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Препарат</th>
+                            <th>Пациент</th>
+                            <th>Дозировка</th>
+                            <th>Частота</th>
+                            <th>Статус</th>
+                            <th>Назначил</th>
+                            <th>Дата назначения</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prescription in prescribed_medications %}
+                        <tr>
+                            <td>
+                                <strong>{{ prescription.medication.item.name }}</strong>
+                                {% if prescription.medication.item.manufacturer %}
+                                <br><small class="text-muted">{{ prescription.medication.item.manufacturer }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="#" class="text-decoration-none">
+                                    {{ prescription.illness_history.patient.full_name }}
+                                </a>
+                                <br><small class="text-muted">{{ prescription.illness_history.patient.date_of_birth|date:"d.m.Y" }}</small>
+                            </td>
+                            <td>{{ prescription.dosage }}</td>
+                            <td>{{ prescription.get_frequency_display }}</td>
+                            <td>
+                                {% if prescription.status == 'recommended' %}
+                                    <span class="badge bg-info">{{ prescription.get_status_display }}</span>
+                                {% elif prescription.status == 'prescribed' %}
+                                    <span class="badge bg-warning">{{ prescription.get_status_display }}</span>
+                                {% elif prescription.status == 'active' %}
+                                    <span class="badge bg-success">{{ prescription.get_status_display }}</span>
+                                {% elif prescription.status == 'completed' %}
+                                    <span class="badge bg-secondary">{{ prescription.get_status_display }}</span>
+                                {% elif prescription.status == 'discontinued' %}
+                                    <span class="badge bg-danger">{{ prescription.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if prescription.prescribed_by %}
+                                    {{ prescription.prescribed_by.full_name }}
+                                {% else %}
+                                    <span class="text-muted">Не указан</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ prescription.prescribed_at|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'warehouse:prescribed_detail' prescription.pk %}"
+                                   class="btn btn-info btn-sm" title="Просмотр">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="my-3">
+                                    <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Назначенные препараты не найдены</p>
+                                    {% if search_query or status_filter %}
+                                        <a href="{% url 'warehouse:prescribed_list' %}" class="btn btn-default">
+                                            Показать все препараты
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.card-body -->
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="card-footer clearfix">
+                <ul class="pagination pagination-sm m-0 float-right">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="float-left">
+                    <small class="text-muted">
+                        Показаны записи {{ page_obj.start_index }}-{{ page_obj.end_index }} из {{ page_obj.paginator.count }}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <!-- /.card -->
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+    // Auto-submit form on status change
+    $('select[name="status"]').on('change', function() {
+        $(this).closest('form').submit();
+    });
+    
+    // Initialize collapsed card state based on filters
+    {% if search_query or status_filter %}
+        $('.collapsed-card').removeClass('collapsed-card');
+        $('.card-tools button i').removeClass('fa-plus').addClass('fa-minus');
+    {% endif %}
+});
+</script>
+{% endblock %}

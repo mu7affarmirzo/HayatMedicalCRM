@@ -189,7 +189,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'warehouse:medication_expenses_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
+                                <a href="{% url 'warehouse:prescribed_list' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
                                     <i class="fas fa-chart-line nav-icon"></i>
                                     <p>Прогноз расходов</p>
                                 </a>
@@ -255,7 +255,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'warehouse:medication_expenses_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
+                                <a href="{% url 'warehouse:prescribed_list' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
                                     <i class="fas fa-pills nav-icon text-warning"></i>
                                     <p>Прогноз расходов лекарств</p>
                                 </a>

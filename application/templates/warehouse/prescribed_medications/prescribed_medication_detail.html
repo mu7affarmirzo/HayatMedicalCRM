@@ -1,0 +1,292 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+
+{% block title %}{{ prescribed_medication.medication.item.name }} - Детали назначения{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Детали назначения</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">Склад</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'warehouse:prescribed_list' %}">Назначенные препараты</a>
+                    </li>
+                    <li class="breadcrumb-item active">Детали назначения</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Main Information Row -->
+        <div class="row">
+            <!-- Medication Information -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-pills mr-1"></i> Информация о препарате
+                        </h3>
+                        <div class="card-tools">
+                            {% if prescribed_medication.status == 'recommended' %}
+                                <span class="badge bg-info">{{ prescribed_medication.get_status_display }}</span>
+                            {% elif prescribed_medication.status == 'prescribed' %}
+                                <span class="badge bg-warning">{{ prescribed_medication.get_status_display }}</span>
+                            {% elif prescribed_medication.status == 'active' %}
+                                <span class="badge bg-success">{{ prescribed_medication.get_status_display }}</span>
+                            {% elif prescribed_medication.status == 'completed' %}
+                                <span class="badge bg-secondary">{{ prescribed_medication.get_status_display }}</span>
+                            {% elif prescribed_medication.status == 'discontinued' %}
+                                <span class="badge bg-danger">{{ prescribed_medication.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Название:</dt>
+                            <dd class="col-sm-8">
+                                <strong>{{ prescribed_medication.medication.item.name }}</strong>
+                            </dd>
+
+                            {% if prescribed_medication.medication.item.manufacturer %}
+                            <dt class="col-sm-4">Производитель:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.medication.item.manufacturer }}</dd>
+                            {% endif %}
+
+                            <dt class="col-sm-4">Дозировка:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.dosage }}</dd>
+
+                            <dt class="col-sm-4">Частота приема:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.get_frequency_display }}</dd>
+
+                            {% if prescribed_medication.route %}
+                            <dt class="col-sm-4">Способ введения:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.route }}</dd>
+                            {% endif %}
+
+                            <dt class="col-sm-4">По необходимости:</dt>
+                            <dd class="col-sm-8">
+                                {% if prescribed_medication.is_prn %}
+                                    <span class="badge bg-info">Да</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Нет</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient and Prescription Info -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user mr-1"></i> Информация о пациенте и назначении
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Пациент:</dt>
+                            <dd class="col-sm-8">
+                                <strong>{{ prescribed_medication.illness_history.patient.full_name }}</strong>
+                            </dd>
+
+                            <dt class="col-sm-4">Дата рождения:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.illness_history.patient.date_of_birth|date:"d.m.Y" }}</dd>
+
+                            <dt class="col-sm-4">Назначил:</dt>
+                            <dd class="col-sm-8">
+                                {% if prescribed_medication.prescribed_by %}
+                                    {{ prescribed_medication.prescribed_by.full_name }}
+                                {% else %}
+                                    <span class="text-muted">Не указан</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Дата назначения:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.prescribed_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Дата начала:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.start_date|date:"d.m.Y" }}</dd>
+
+                            {% if prescribed_medication.end_date %}
+                            <dt class="col-sm-4">Дата окончания:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.end_date|date:"d.m.Y" }}</dd>
+                            {% endif %}
+
+                            {% if prescribed_medication.duration_days %}
+                            <dt class="col-sm-4">Продолжительность:</dt>
+                            <dd class="col-sm-8">{{ prescribed_medication.duration_days }} дней</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions and Reason -->
+        {% if prescribed_medication.instructions or prescribed_medication.reason %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-file-medical mr-1"></i> Дополнительная информация
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {% if prescribed_medication.reason %}
+                        <div class="mb-3">
+                            <h5>Причина назначения:</h5>
+                            <p class="text-muted">{{ prescribed_medication.reason }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if prescribed_medication.instructions %}
+                        <div class="mb-3">
+                            <h5>Особые указания:</h5>
+                            <p class="text-muted">{{ prescribed_medication.instructions }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Medication Sessions -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-check mr-1"></i> История выдач
+                        </h3>
+                        <div class="card-tools">
+                            <span class="badge badge-secondary">{{ prescribed_medication.sessions.count }} сессий</span>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        {% if prescribed_medication.sessions.exists %}
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Дата и время</th>
+                                    <th>Статус</th>
+                                    <th>Примечания</th>
+                                    <th>Изменил</th>
+                                    <th>Дата изменения</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in prescribed_medication.sessions.all %}
+                                <tr>
+                                    <td>{{ session.session_datetime|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        {% if session.status == 'pending' %}
+                                            <span class="badge bg-warning">{{ session.get_status_display }}</span>
+                                        {% elif session.status == 'administered' %}
+                                            <span class="badge bg-success">{{ session.get_status_display }}</span>
+                                        {% elif session.status == 'missed' %}
+                                            <span class="badge bg-danger">{{ session.get_status_display }}</span>
+                                        {% elif session.status == 'refused' %}
+                                            <span class="badge bg-secondary">{{ session.get_status_display }}</span>
+                                        {% elif session.status == 'canceled' %}
+                                            <span class="badge bg-dark">{{ session.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if session.notes %}
+                                            {{ session.notes|truncatechars:50 }}
+                                        {% else %}
+                                            <span class="text-muted">Нет примечаний</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if session.modified_by %}
+                                            {{ session.modified_by.full_name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ session.modified_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Нет записей о выдачах</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <a href="{% url 'warehouse:prescribed_list' %}" class="btn btn-default">
+                            <i class="fas fa-arrow-left mr-1"></i> Назад к списку
+                        </a>
+
+                        <button type="button" class="btn btn-info" onclick="window.print()">
+                            <i class="fas fa-print mr-1"></i> Печать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .content-header, .main-sidebar, .main-header, .main-footer {
+        display: none !important;
+    }
+
+    .content-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+
+    .badge {
+        border: 1px solid #000 !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+    // Add any specific JavaScript functionality here
+    console.log('Prescribed Medication Detail View Loaded');
+});
+</script>
+{% endblock %}

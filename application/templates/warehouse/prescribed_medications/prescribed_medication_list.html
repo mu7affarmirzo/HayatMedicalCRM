@@ -26,6 +26,46 @@
 <!-- Main content -->
 <section class="content">
     <div class="container-fluid">
+        <!-- Progress Summary Cards -->
+        <div class="row mb-3">
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-chart-line"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Активные назначения</span>
+                        <span class="info-box-number">{{ statistics.active_count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-pills"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Высокий прогресс</span>
+                        <span class="info-box-number">{{ statistics.excellent_progress }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Требуют внимания</span>
+                        <span class="info-box-number">{{ statistics.needs_attention }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger"><i class="fas fa-clock"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Просроченные</span>
+                        <span class="info-box-number">{{ statistics.overdue_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Search and Filter Card -->
         <div class="card collapsed-card">
             <div class="card-header">
@@ -39,8 +79,8 @@
             <div class="card-body">
                 <form method="get" class="form-inline">
                     <div class="form-group mr-3">
-                        <input type="text" name="search" class="form-control" 
-                               placeholder="Поиск по препарату, пациенту, врачу..." 
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Поиск по препарату, пациенту, врачу..."
                                value="{{ search_query }}">
                     </div>
                     <div class="form-group mr-3">
@@ -51,6 +91,16 @@
                                     {{ label }}
                                 </option>
                             {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mr-3">
+                        <select name="progress" class="form-control" id="progressFilter">
+                            <option value="">Весь прогресс</option>
+                            <option value="excellent" {% if request.GET.progress == 'excellent' %}selected{% endif %}>Отличный прогресс (90%+)</option>
+                            <option value="good" {% if request.GET.progress == 'good' %}selected{% endif %}>Хороший прогресс (70-89%)</option>
+                            <option value="fair" {% if request.GET.progress == 'fair' %}selected{% endif %}>Средний прогресс (50-69%)</option>
+                            <option value="poor" {% if request.GET.progress == 'poor' %}selected{% endif %}>Слабый прогресс (менее 50%)</option>
+                            <option value="overdue" {% if request.GET.progress == 'overdue' %}selected{% endif %}>Просроченные</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary mr-2">
@@ -137,7 +187,7 @@
                                 <div class="my-3">
                                     <i class="fas fa-pills fa-3x text-muted mb-3"></i>
                                     <p class="text-muted">Назначенные препараты не найдены</p>
-                                    {% if search_query or status_filter %}
+                                    {% if search_query or status_filter or request.GET.progress %}
                                         <a href="{% url 'warehouse:prescribed_list' %}" class="btn btn-default">
                                             Показать все препараты
                                         </a>
@@ -150,17 +200,17 @@
                 </table>
             </div>
             <!-- /.card-body -->
-            
+
             <!-- Pagination -->
             {% if is_paginated %}
             <div class="card-footer clearfix">
                 <ul class="pagination pagination-sm m-0 float-right">
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a>
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if request.GET.progress %}progress={{ request.GET.progress }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a>
                         </li>
                     {% endif %}
-                    
+
                     {% for num in page_obj.paginator.page_range %}
                         {% if page_obj.number == num %}
                             <li class="page-item active">
@@ -168,14 +218,14 @@
                             </li>
                         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                             <li class="page-item">
-                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if request.GET.progress %}progress={{ request.GET.progress }}&{% endif %}page={{ num }}">{{ num }}</a>
                             </li>
                         {% endif %}
                     {% endfor %}
-                    
+
                     {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if request.GET.progress %}progress={{ request.GET.progress }}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -193,19 +243,199 @@
 <!-- /.content -->
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+
+    .progress {
+        border-radius: 10px;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: bold;
+        line-height: 15px;
+        transition: width 0.6s ease;
+    }
+
+    .table-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .table-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .table-success {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .badge {
+        font-size: 10px;
+        padding: 0.25em 0.5em;
+    }
+
+    .info-box {
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+        border-radius: .25rem;
+        background-color: #fff;
+        display: flex;
+        margin-bottom: 1rem;
+        min-height: 80px;
+        padding: .5rem;
+        position: relative;
+        width: 100%;
+    }
+
+    .info-box .info-box-icon {
+        border-radius: .25rem;
+        align-items: center;
+        display: flex;
+        font-size: 1.875rem;
+        justify-content: center;
+        text-align: center;
+        width: 70px;
+        color: rgba(255,255,255,.8);
+        text-shadow: 0 1px 1px rgba(0,0,0,.3);
+    }
+
+    .info-box .info-box-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.8;
+        margin-left: .5rem;
+        padding: 0 .5rem;
+    }
+
+    .info-box-text {
+        display: block;
+        font-size: .875rem;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .info-box-number {
+        display: block;
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin-top: .25rem;
+    }
+
+    .text-decoration-none {
+        text-decoration: none !important;
+    }
+
+    .badge-outline-secondary {
+        color: #6c757d;
+        border: 1px solid #6c757d;
+        background: transparent;
+    }
+
+    /* Progress status colors */
+    .fas.fa-circle {
+        font-size: 8px;
+        margin-right: 4px;
+    }
+
+    /* Tooltip enhancements */
+    [title] {
+        cursor: help;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .table-responsive table {
+            font-size: 12px;
+        }
+
+        .progress {
+            height: 12px !important;
+        }
+
+        .badge {
+            font-size: 9px;
+        }
+
+        .info-box {
+            min-height: 60px;
+        }
+
+        .info-box .info-box-icon {
+            width: 50px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 $(function() {
-    // Auto-submit form on status change
-    $('select[name="status"]').on('change', function() {
+    // Auto-submit form on status or progress change
+    $('select[name="status"], select[name="progress"]').on('change', function () {
         $(this).closest('form').submit();
     });
-    
+
     // Initialize collapsed card state based on filters
-    {% if search_query or status_filter %}
+    {% if search_query or status_filter or request.GET.progress %}
         $('.collapsed-card').removeClass('collapsed-card');
         $('.card-tools button i').removeClass('fa-plus').addClass('fa-minus');
     {% endif %}
-});
+
+    // Initialize tooltips for progress bars
+    $('[data-toggle="tooltip"], [title]').tooltip({
+        placement: 'top',
+        trigger: 'hover'
+    });
+
+    // Add hover effects for progress bars
+    $('.progress').hover(
+        function () {
+            $(this).find('.progress-bar').addClass('progress-bar-striped progress-bar-animated');
+        },
+        function () {
+            $(this).find('.progress-bar').removeClass('progress-bar-striped progress-bar-animated');
+        }
+    );
+
+    // Highlight overdue prescriptions
+    $('tr').each(function () {
+        var $row = $(this);
+        if ($row.hasClass('table-danger')) {
+            $row.find('.progress-bar').addClass('progress-bar-striped');
+        }
+    });
+
+    // Add progress status indicators
+    $('.progress-bar').each(function () {
+        var percentage = parseFloat($(this).css('width').replace('%', ''));
+        var $bar = $(this);
+
+        // Add icons based on progress
+        if (percentage >= 90) {
+            $bar.prepend('<i class="fas fa-check-circle mr-1"></i>');
+        } else if (percentage <= 25) {
+            $bar.prepend('<i class="fas fa-exclamation-triangle mr-1"></i>');
+        }
+    });
+
+    // Auto-refresh data every 5 minutes for real-time updates
+    setInterval(function () {
+        if (document.visibilityState === 'visible') {
+            // Only refresh if the page is visible to user
+            console.log('Auto-refreshing medication progress data...');
+            // Uncomment the line below to enable auto-refresh
+            // location.reload();
+        }
+    }, 300000); // 5 minutes
+})
 </script>
 {% endblock %}

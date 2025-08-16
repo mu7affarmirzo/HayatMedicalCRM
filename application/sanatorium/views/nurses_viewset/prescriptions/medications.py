@@ -246,6 +246,12 @@ class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, Updat
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
     context_object_name = 'administration'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        medication_session = self.get_object()
+        context['history'] = medication_session.prescribed_medication.illness_history
+        return context
+
     def form_valid(self, form):
         # Set the modified_by field to the current user
         form.instance.modified_by = self.request.user

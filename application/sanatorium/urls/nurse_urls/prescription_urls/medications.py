@@ -16,7 +16,7 @@ urlpatterns = [
     path('<int:pk>/delete/', views.PrescribedMedicationDeleteView.as_view(),
          name='medications_delete'),
 
-    path('medication-sessions/<int:session_id>/update-status/', views.update_session_status, name='update_session_status'),
+    path('medication-sessions/<int:session_id>/update-status/', views.update_session_status, name='update_medication_session_status'),
     path('medication-sessions/<int:session_id>/administer/', views.administer_medication, name='administer_medication'),
 
     path('api/search/', views.api_medications_search, name='api_medications_search'),

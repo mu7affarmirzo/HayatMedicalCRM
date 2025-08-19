@@ -23,9 +23,7 @@
                     <td>{{ forloop.counter }}</td>
                     <td>
                         <strong>{{ med.medication.item }}</strong>
-                        {% if med.is_overdue %}
-                            <span class="badge badge-danger badge-sm ml-1">Просрочено</span>
-                        {% endif %}
+
                         {% if med.sessions_today %}
                             <br><small class="text-muted">
                                 Сегодня: {{ med.sessions_completed_today }}/{{ med.sessions_total_today }} приемов
@@ -66,21 +64,21 @@
                     <td>
                         {% if med.end_date %}
                             {{ med.end_date|date:"d.m.Y" }}
-                            <br><small class="text-muted">{{ med.sessions_remaining }} сессий ожидают</small>
+                            <br><small class="text-muted">{{ med.days_remaining }} дн. осталось</small>
                         {% else %}
                             <span class="text-muted">Не указано</span>
                         {% endif %}
                     </td>
                     <td style="min-width: 120px;">
-                        <!-- Sessions Progress -->
+                        <!-- Treatment Progress -->
                         <div class="progress progress-sm mb-1" style="height: 12px;">
                             <div class="progress-bar {{ med.progress_color }}"
                                  style="width: {{ med.progress_percent }}%"
                                  data-toggle="tooltip"
-                                 title="{{ med.non_pending_sessions }} из {{ med.total_sessions }} сессий выполнено ({{ med.progress_percent|floatformat:0 }}%)">
+                                 title="День {{ med.days_elapsed }} из {{ med.total_days }} дней курса ({{ med.progress_percent|floatformat:0 }}%)">
                             </div>
                         </div>
-                        <small class="text-muted">{{ med.non_pending_sessions }}/{{ med.total_sessions }} сессий</small>
+                        <small class="text-muted">{{ med.progress_percent|floatformat:0 }}% курса</small>
 
                         <!-- Daily Progress (if has sessions today) -->
                         {% if med.sessions_today %}

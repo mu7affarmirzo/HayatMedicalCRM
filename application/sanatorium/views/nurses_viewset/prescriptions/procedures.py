@@ -12,7 +12,7 @@ from core.models import (
     IndividualProcedureSessionModel,
     Service, ServiceTypeModel
 )
-
+# some comment to check if the code is working
 
 @login_required
 def procedure_detail(request, procedure_id):

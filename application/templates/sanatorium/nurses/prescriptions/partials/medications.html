@@ -1,3 +1,5 @@
+{% load static %}
+
 {% if medications %}
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
@@ -10,90 +12,259 @@
                 <th>Способ применения</th>
                 <th>Начало</th>
                 <th>Окончание</th>
+                <th>Прогресс</th>
                 <th>Статус</th>
                 <th>Действия</th>
             </tr>
             </thead>
             <tbody>
             {% for med in medications %}
-                <tr>
+                <tr class="{% if med.is_overdue %}table-warning{% endif %}">
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ med.medication.item }}</td>
+                    <td>
+                        <strong>{{ med.medication.item }}</strong>
+                        {% if med.is_overdue %}
+                            <span class="badge badge-danger badge-sm ml-1">Просрочено</span>
+                        {% endif %}
+                        {% if med.sessions_today %}
+                            <br><small class="text-muted">
+                                Сегодня: {{ med.sessions_completed_today }}/{{ med.sessions_total_today }} приемов
+                            </small>
+                        {% endif %}
+                    </td>
                     <td>{{ med.dosage }}</td>
-                    <td>{{ med.get_frequency_display }}</td>
+                    <td>
+                        {{ med.get_frequency_display }}
+                        {% if med.is_prn %}
+                            <br><small class="text-info">По необходимости</small>
+                        {% endif %}
+                    </td>
                     <td>
                         <span class="route-icon">
                             {% if med.route == 'oral' %}
-                                <i class="fas fa-pills text-primary mr-1"> Перорально </i>
+                                <i class="fas fa-pills text-primary mr-1"></i> Перорально
                             {% elif med.route == 'injection' %}
-                                <i class="fas fa-syringe text-danger mr-1"> Инъекция </i>
+                                <i class="fas fa-syringe text-danger mr-1"></i> Инъекция
                             {% elif med.route == 'topical' %}
-                                <i class="fas fa-hand-paper text-info mr-1"> Наружно </i>
+                                <i class="fas fa-hand-paper text-info mr-1"></i> Наружно
                             {% elif med.route == 'inhalation' %}
-                                <i class="fas fa-wind text-success mr-1"> Ингаляция </i>
+                                <i class="fas fa-wind text-success mr-1"></i> Ингаляция
                             {% elif med.route == 'rectal' %}
-                                <i class="fas fa-capsules text-warning mr-1"> Ректально </i>
+                                <i class="fas fa-capsules text-warning mr-1"></i> Ректально
                             {% else %}
-                                <i class="fas fa-ellipsis-h text-secondary mr-1"> {{ med.route }}</i>
+                                <i class="fas fa-ellipsis-h text-secondary mr-1"></i> {{ med.route|default:"Не указан" }}
                             {% endif %}
                         </span>
-                        {{ med.get_route_display }}
                     </td>
-                    <td>{{ med.start_date|date:"d.m.Y" }}</td>
-                    <td>{{ med.end_date|date:"d.m.Y" }}</td>
                     <td>
-                    <span class="badge status-{{ med.status }}">
-                        {{ med.get_status_display }}
-                    </span>
+                        {{ med.start_date|date:"d.m.Y" }}
+                        {% now "Y-m-d" as current_date %}
+                        {% if med.start_date|date:"Y-m-d" > current_date %}
+                            <br><small class="text-info">Запланировано</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if med.end_date %}
+                            {{ med.end_date|date:"d.m.Y" }}
+                            <br><small class="text-muted">{{ med.sessions_remaining }} сессий ожидают</small>
+                        {% else %}
+                            <span class="text-muted">Не указано</span>
+                        {% endif %}
+                    </td>
+                    <td style="min-width: 120px;">
+                        <!-- Sessions Progress -->
+                        <div class="progress progress-sm mb-1" style="height: 12px;">
+                            <div class="progress-bar {{ med.progress_color }}"
+                                 style="width: {{ med.progress_percent }}%"
+                                 data-toggle="tooltip"
+                                 title="{{ med.non_pending_sessions }} из {{ med.total_sessions }} сессий выполнено ({{ med.progress_percent|floatformat:0 }}%)">
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ med.non_pending_sessions }}/{{ med.total_sessions }} сессий</small>
+
+                        <!-- Daily Progress (if has sessions today) -->
+                        {% if med.sessions_today %}
+                            <div class="progress progress-xs mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-info"
+                                     style="width: {{ med.daily_progress_percent }}%"
+                                     data-toggle="tooltip"
+                                     title="Сегодня: {{ med.sessions_completed_today }}/{{ med.sessions_total_today }} приемов">
+                                </div>
+                            </div>
+                            <small class="text-info">{{ med.daily_progress_percent|floatformat:0 }}% сегодня</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if med.status == 'active' %}badge-success
+                            {% elif med.status == 'prescribed' %}badge-primary
+                            {% elif med.status == 'completed' %}badge-info
+                            {% elif med.status == 'discontinued' %}badge-danger
+                            {% elif med.status == 'recommended' %}badge-warning
+                            {% else %}badge-secondary{% endif %}">
+                            {{ med.get_status_display }}
+                        </span>
+
+                        <!-- Next session info -->
+                        {% if med.next_session %}
+                            <br><small class="text-muted">
+                                Следующий: {{ med.next_session.session_datetime|date:"H:i" }}
+                            </small>
+                        {% endif %}
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
-                            <a href="{% url 'nurses:medications_detail' med.id %}" class="btn btn-info">
+                            <a href="{% url 'nurses:medications_detail' med.id %}"
+                               class="btn btn-info"
+                               data-toggle="tooltip"
+                               title="Подробности">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="#" class="btn btn-warning">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="#" class="btn btn-danger">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="8" class="p-0">
-                        {% now "Y-m-d" as current_date %}
-                        {% with start=med.start_date|date:"Y-m-d" end=med.end_date|date:"Y-m-d" %}
-                            {% if med.state == 'assigned' or med.state == 'recommended' %}
-                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                    <div class="progress-bar bg-warning" style="width: {{ med.progress_percent }}%"
-                                         data-toggle="tooltip"
-                                         title="День {{ med.days_elapsed }} из {{ med.total_days }} дней курса">
-                                    </div>
-                                </div>
-                            {% elif med.state == 'completed' %}
-                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                    <div class="progress-bar bg-success" style="width: 100%"></div>
-                                </div>
-                            {% elif med.state == 'cancelled' %}
-                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                    <div class="progress-bar bg-danger" style="width: 100%"></div>
-                                </div>
-                            {% elif med.state == 'stopped' %}
-                                <div class="progress progress-xs m-0" style="height: 5px; border-radius: 0;">
-                                    <div class="progress-bar bg-warning progress-bar-striped" style="width: 100%"></div>
-                                </div>
+                            {% if med.status != 'completed' and med.status != 'discontinued' %}
+                                <a href="#"
+                                   class="btn btn-warning"
+                                   data-toggle="tooltip"
+                                   title="Редактировать">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-danger"
+                                        data-toggle="modal"
+                                        data-target="#discontinueModal"
+                                        data-medication-id="{{ med.id }}"
+                                        data-medication-name="{{ med.medication.item }}"
+                                        title="Прекратить прием">
+                                    <i class="fas fa-stop"></i>
+                                </button>
                             {% endif %}
-                        {% endwith %}
+                        </div>
                     </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Discontinue Medication Modal -->
+    <div class="modal fade" id="discontinueModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Прекратить прием препарата</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-exclamation-triangle text-warning fa-3x mr-3"></i>
+                        <div>
+                            <h6 class="mb-1">Вы уверены, что хотите прекратить прием препарата?</h6>
+                            <p class="mb-0 text-muted">Препарат: <span id="medicationName" class="font-weight-bold"></span></p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="discontinueReason">Причина прекращения:</label>
+                        <textarea class="form-control" id="discontinueReason" rows="3"
+                                  placeholder="Укажите причину прекращения приема препарата..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="confirmDiscontinue">Прекратить прием</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% else %}
     <div class="alert alert-info">
         <i class="fas fa-info-circle mr-2"></i>
         Нет назначенных медикаментов
     </div>
 {% endif %}
+
+<style>
+.progress-sm {
+    height: 12px;
+}
+
+.progress-xs {
+    height: 6px;
+}
+
+.badge-sm {
+    font-size: 0.75em;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.route-icon i {
+    width: 16px;
+    text-align: center;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.775rem;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Handle discontinue modal
+    $('#discontinueModal').on('show.bs.modal', function(event) {
+        const button = $(event.relatedTarget);
+        const medicationId = button.data('medication-id');
+        const medicationName = button.data('medication-name');
+
+        $('#medicationName').text(medicationName);
+        $(this).data('medication-id', medicationId);
+    });
+
+    // Handle discontinue confirmation
+    $('#confirmDiscontinue').click(function() {
+        const modal = $('#discontinueModal');
+        const medicationId = modal.data('medication-id');
+        const reason = $('#discontinueReason').val().trim();
+
+        if (!reason) {
+            alert('Пожалуйста, укажите причину прекращения приема препарата');
+            return;
+        }
+
+        // Here you would make an AJAX call to discontinue the medication
+        $.ajax({
+            url: `/api/medications/${medicationId}/discontinue/`,
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                reason: reason
+            }),
+            success: function(response) {
+                if (response.success) {
+                    modal.modal('hide');
+                    location.reload(); // Refresh the page to show updated status
+                } else {
+                    alert('Ошибка: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при прекращении приема препарата');
+            }
+        });
+    });
+
+    // Clear form when modal is hidden
+    $('#discontinueModal').on('hidden.bs.modal', function() {
+        $('#discontinueReason').val('');
+    });
+});
+</script>

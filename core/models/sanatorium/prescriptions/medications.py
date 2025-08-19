@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, date
 
 from core.models import BaseAuditModel
 
@@ -92,6 +92,131 @@ class PrescribedMedication(BaseAuditModel):
         if not self.end_date and self.duration_days:
             self.end_date = self.start_date + timezone.timedelta(days=self.duration_days)
         super().save(*args, **kwargs)
+
+    @property
+    def total_days(self):
+        """Calculate total days in treatment period"""
+        if self.end_date and self.start_date:
+            return (self.end_date - self.start_date).days + 1
+        elif self.duration_days:
+            return self.duration_days
+        return 0
+
+    @property
+    def days_elapsed(self):
+        """Calculate days elapsed since start of treatment"""
+        if not self.start_date:
+            return 0
+
+        today = date.today()
+        start_date = self.start_date
+
+        if today < start_date:
+            return 0  # Treatment hasn't started yet
+
+        return (today - start_date).days + 1
+
+    @property
+    def progress_percent(self):
+        """Calculate progress percentage"""
+        if self.total_days == 0:
+            return 0
+
+        if self.status == 'completed':
+            return 100
+        elif self.status == 'discontinued':
+            return 0
+
+        # Calculate based on days elapsed
+        progress = min((self.days_elapsed / self.total_days) * 100, 100)
+        return max(progress, 0)
+
+    @property
+    def days_remaining(self):
+        """Calculate remaining days in treatment"""
+        return max(self.total_days - self.days_elapsed, 0)
+
+    @property
+    def is_overdue(self):
+        """Check if treatment period has passed"""
+        if not self.end_date:
+            return False
+        return date.today() > self.end_date and self.status in ['prescribed', 'active']
+
+    @property
+    def treatment_status(self):
+        """Get human-readable treatment status"""
+        today = date.today()
+
+        if self.status == 'completed':
+            return 'completed'
+        elif self.status == 'discontinued':
+            return 'cancelled'
+        elif not self.start_date or today < self.start_date:
+            return 'scheduled'
+        elif self.is_overdue:
+            return 'overdue'
+        elif self.status == 'active':
+            return 'assigned'
+        else:
+            return 'recommended'
+
+    @property
+    def progress_color(self):
+        """Get color class for progress bar"""
+        status = self.treatment_status
+        if status == 'completed':
+            return 'bg-success'
+        elif status == 'cancelled':
+            return 'bg-danger'
+        elif status == 'overdue':
+            return 'bg-danger'
+        elif status == 'assigned':
+            return 'bg-primary'
+        else:
+            return 'bg-warning'
+
+    @property
+    def sessions_today(self):
+        """Get today's medication sessions"""
+        today = timezone.now().date()
+        return self.sessions.filter(
+            session_datetime__date=today
+        ).order_by('session_datetime')
+
+    @property
+    def next_session(self):
+        """Get next upcoming session"""
+        now = timezone.now()
+        return self.sessions.filter(
+            session_datetime__gt=now,
+            status='pending'
+        ).order_by('session_datetime').first()
+
+    @property
+    def sessions_completed_today(self):
+        """Count completed sessions today"""
+        today = timezone.now().date()
+        return self.sessions.filter(
+            session_datetime__date=today,
+            status='administered'
+        ).count()
+
+    @property
+    def sessions_total_today(self):
+        """Count total sessions scheduled for today"""
+        today = timezone.now().date()
+        return self.sessions.filter(
+            session_datetime__date=today
+        ).count()
+
+    @property
+    def daily_progress_percent(self):
+        """Calculate daily progress percentage"""
+        total = self.sessions_total_today
+        if total == 0:
+            return 0
+        return (self.sessions_completed_today / total) * 100
 
 
 class MedicationSession(BaseAuditModel):

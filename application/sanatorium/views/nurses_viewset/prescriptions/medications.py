@@ -61,6 +61,7 @@ class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Add administrations to context
+        print('hi')
         context['sessions'] = self.object.sessions.all().order_by('-created_at')
         context['illness_history'] = self.object.illness_history
         context['history'] = self.object.illness_history

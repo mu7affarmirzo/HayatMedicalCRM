@@ -1,7 +1,11 @@
 # urls.py
 from django.urls import path
+from django.urls.conf import include
 
+from application.sanatorium.urls.nurse_urls.prescription_urls import medication_sessions_url
 from application.sanatorium.views.nurses_viewset.prescriptions import medications as views
+from application.sanatorium.views.nurses_viewset.prescriptions.medication_sessions import \
+    MedicationSessionUpdateNotesView, MedicationSessionUpdateStatusView
 
 urlpatterns = [
     # PrescribedMedication URLs
@@ -15,9 +19,6 @@ urlpatterns = [
          name='medications_update'),
     path('<int:pk>/delete/', views.PrescribedMedicationDeleteView.as_view(),
          name='medications_delete'),
-
-    path('medication-sessions/<int:session_id>/update-status/', views.update_session_status, name='update_medication_session_status'),
-    path('medication-sessions/<int:session_id>/administer/', views.administer_medication, name='administer_medication'),
 
     path('api/search/', views.api_medications_search, name='api_medications_search'),
     path('api/details/', views.api_medication_details, name='api_medication_details'),
@@ -33,4 +34,6 @@ urlpatterns = [
          name='medication_administration_update'),
     path('administrations/<int:pk>/delete/', views.MedicationSessionDeleteView.as_view(),
          name='medication_administration_delete'),
+
+    path('', include(medication_sessions_url))
 ]

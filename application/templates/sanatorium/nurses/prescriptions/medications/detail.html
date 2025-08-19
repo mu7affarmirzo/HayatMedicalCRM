@@ -365,6 +365,38 @@
     </div>
 </section>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение действия</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-question-circle text-warning fa-3x mr-3"></i>
+                    <div>
+                        <h6 class="mb-1">Вы уверены, что хотите изменить статус?</h6>
+                        <p class="mb-0 text-muted">Текущий статус: <span id="currentStatus" class="font-weight-bold"></span></p>
+                        <p class="mb-0 text-muted">Новый статус: <span id="newStatus" class="font-weight-bold"></span></p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmNotes">Примечание (необязательно):</label>
+                    <textarea class="form-control" id="confirmNotes" rows="2" placeholder="Добавьте комментарий к изменению..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmAction">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Notes Modal -->
 <div class="modal fade" id="notesModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -404,6 +436,16 @@
 <script>
 $(document).ready(function() {
     let currentSessionId = null;
+    let pendingStatusUpdate = null; // Store pending status update info
+
+    // Status display mapping
+    const statusDisplayMap = {
+        'pending': 'Ожидает выдачи',
+        'administered': 'Выдано',
+        'missed': 'Пропущено',
+        'refused': 'Отказано',
+        'canceled': 'Отменено'
+    };
 
     // CSRF token for Django
     function getCSRFToken() {
@@ -584,16 +626,48 @@ $(document).ready(function() {
     // Handle status update button clicks
     $(document).on('click', '.update-status', function() {
         const sessionId = $(this).data('session-id');
-        const status = $(this).data('status');
+        const newStatus = $(this).data('status');
+        const currentStatusBadge = $(this).closest('tr').find('.status-badge');
+        const currentStatus = currentStatusBadge.text().trim();
 
-        // Confirm action for certain statuses
-        if (status === 'canceled' || status === 'refused') {
-            if (!confirm(`Вы уверены, что хотите изменить статус на "${$(this).text().trim()}"?`)) {
-                return;
-            }
+        // Store pending update info
+        pendingStatusUpdate = {
+            sessionId: sessionId,
+            newStatus: newStatus
+        };
+
+        // Update confirmation modal
+        $('#currentStatus').text(currentStatus);
+        $('#newStatus').text(statusDisplayMap[newStatus] || newStatus);
+        $('#confirmNotes').val('');
+
+        // Show confirmation modal
+        $('#confirmModal').modal('show');
+    });
+
+    // Handle confirmation action
+    $('#confirmAction').click(function() {
+        if (pendingStatusUpdate) {
+            const notes = $('#confirmNotes').val().trim();
+
+            updateSessionStatus(
+                pendingStatusUpdate.sessionId,
+                pendingStatusUpdate.newStatus,
+                notes
+            );
+
+            // Clear pending update
+            pendingStatusUpdate = null;
+
+            // Hide modal
+            $('#confirmModal').modal('hide');
         }
+    });
 
-        updateSessionStatus(sessionId, status);
+    // Clear pending update when modal is hidden
+    $('#confirmModal').on('hidden.bs.modal', function() {
+        pendingStatusUpdate = null;
+        $('#confirmNotes').val('');
     });
 
     // Handle notes modal

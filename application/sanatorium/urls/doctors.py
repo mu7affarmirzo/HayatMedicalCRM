@@ -16,5 +16,7 @@ urlpatterns = [
     path('patients/', include('application.sanatorium.urls.doctor_urls.patients')),
     path('prescription/', include('application.sanatorium.urls.doctor_urls.prescriptions')),
     path('documents/', include('application.sanatorium.urls.doctor_urls.documents')),
+    path('diet/', include('application.sanatorium.urls.doctor_urls.diet')),
+    path('final-appointments/', include('application.sanatorium.urls.doctor_urls.final_appointment_enhanced')),
 
 ]

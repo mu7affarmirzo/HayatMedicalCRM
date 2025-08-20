@@ -1,0 +1,922 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Редактировать{% else %}Создать{% endif %} заключительный прием - {{ patient.full_name }}{% endblock %}
+
+{% block extra_css %}
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <style>
+        .form-group label {
+            font-weight: bold;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #007bff;
+        }
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .bmi-calculator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .bmi-result {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        .pressure-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        .pressure-normal { background-color: #d4edda; color: #155724; }
+        .pressure-high { background-color: #f8d7da; color: #721c24; }
+        .pressure-low { background-color: #d1ecf1; color: #0c5460; }
+        .diagnosis-selector {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .template-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid #007bff;
+            background: white;
+            color: #007bff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .template-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+        .progress-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #007bff;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+            z-index: 9999;
+        }
+        .character-count {
+            font-size: 0.875rem;
+            color: #6c757d;
+            text-align: right;
+        }
+        .auto-save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            background: #28a745;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .treatment-summary-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Progress Indicator -->
+    <div class="progress-indicator" id="progressIndicator"></div>
+    
+    <!-- Auto-save Indicator -->
+    <div class="auto-save-indicator" id="autoSaveIndicator">
+        <i class="fas fa-check mr-1"></i>Автосохранение
+    </div>
+
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-{% if is_update %}edit{% else %}plus{% endif %} text-{% if is_update %}warning{% else %}primary{% endif %} mr-2"></i>
+                        {% if is_update %}Редактировать{% else %}Создать{% endif %} заключительный прием
+                    </h1>
+                    <p class="text-muted">{{ patient.full_name }} - {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item active">{% if is_update %}Редактировать{% else %}Создать{% endif %} заключительный прием</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div class="row">
+                    <div class="col-md-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h5>
+                                    <i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> 
+                                    {{ message }}
+                                </h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Patient Information -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <h5><i class="icon fas fa-info"></i> Информация о пациенте</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p><strong>ФИО:</strong> {{ patient.full_name }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Дата рождения:</strong> {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Возраст:</strong> {{ patient.age }} лет</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Палата:</strong> {{ history.room|default:"Не назначена" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Treatment Summary Sidebar -->
+                <div class="col-md-4">
+                    <div class="treatment-summary-card">
+                        <h5 class="mb-3">
+                            <i class="fas fa-chart-line mr-2"></i>Сводка лечения
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <h6>Консультации:</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="fas fa-heart text-danger mr-1"></i> Кардиолог: {{ consultations.cardiologist|length }}</li>
+                                <li><i class="fas fa-brain text-purple mr-1"></i> Невролог: {{ consultations.neurologist|length }}</li>
+                                <li><i class="fas fa-redo text-info mr-1"></i> Повторные: {{ consultations.repeated|length }}</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Продолжительность лечения:</h6>
+                            <p class="h4 text-primary mb-0">{{ treatment_duration|default:"0" }} дней</p>
+                        </div>
+                    </div>
+
+                    <!-- BMI Calculator -->
+                    <div class="card">
+                        <div class="card-body bmi-calculator">
+                            <h6>Калькулятор ИМТ</h6>
+                            <div class="bmi-result" id="bmiResult">--</div>
+                            <div id="bmiCategory">Введите рост и вес</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Summary Templates -->
+                    <div class="card card-secondary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-clipboard-list mr-2"></i>Шаблоны заключений
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="template-buttons">
+                                <button type="button" class="template-btn" onclick="applyTemplate('improvement')">
+                                    Улучшение
+                                </button>
+                                <button type="button" class="template-btn" onclick="applyTemplate('recovery')">
+                                    Выздоровление
+                                </button>
+                                <button type="button" class="template-btn" onclick="applyTemplate('stable')">
+                                    Стабилизация
+                                </button>
+                                <button type="button" class="template-btn" onclick="applyTemplate('discharge')">
+                                    Готов к выписке
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Form -->
+                <div class="col-md-8">
+                    <form method="post" enctype="multipart/form-data" id="finalAppointmentForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-info-circle mr-2"></i>Основная информация
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.state.id_for_label }}" class="required-field">{{ form.state.label }}</label>
+                                        {{ form.state }}
+                                        {% if form.state.errors %}
+                                            <div class="text-danger">{{ form.state.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.treatment_results.id_for_label }}" class="required-field">{{ form.treatment_results.label }}</label>
+                                        {{ form.treatment_results }}
+                                        {% if form.treatment_results.errors %}
+                                            <div class="text-danger">{{ form.treatment_results.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.treatment_effectiveness.id_for_label }}">{{ form.treatment_effectiveness.label }}</label>
+                                        {{ form.treatment_effectiveness }}
+                                        {% if form.treatment_effectiveness.errors %}
+                                            <div class="text-danger">{{ form.treatment_effectiveness.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.file.id_for_label }}">{{ form.file.label }}</label>
+                                        {{ form.file }}
+                                        {% if form.file.errors %}
+                                            <div class="text-danger">{{ form.file.errors }}</div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Поддерживаемые форматы: PDF, DOC, DOCX, JPG, PNG</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vital Signs -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-heartbeat mr-2"></i>Жизненные показатели
+                            </h5>
+                            
+                            <div class="vitals-grid">
+                                <div class="form-group">
+                                    <label for="{{ form.height.id_for_label }}">{{ form.height.label }}</label>
+                                    {{ form.height }}
+                                    {% if form.height.errors %}
+                                        <div class="text-danger">{{ form.height.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.height.help_text }}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.weight.id_for_label }}">{{ form.weight.label }}</label>
+                                    {{ form.weight }}
+                                    {% if form.weight.errors %}
+                                        <div class="text-danger">{{ form.weight.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.weight.help_text }}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.heart_beat.id_for_label }}">{{ form.heart_beat.label }}</label>
+                                    {{ form.heart_beat }}
+                                    {% if form.heart_beat.errors %}
+                                        <div class="text-danger">{{ form.heart_beat.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.heart_beat.help_text }}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Артериальное давление</label>
+                                    <div class="input-group">
+                                        {{ form.arterial_high }}
+                                        <div class="input-group-text">/</div>
+                                        {{ form.arterial_low }}
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">мм рт.ст.</span>
+                                        </div>
+                                    </div>
+                                    <div id="pressureIndicator" class="mt-2"></div>
+                                    {% if form.arterial_high.errors %}
+                                        <div class="text-danger">{{ form.arterial_high.errors }}</div>
+                                    {% endif %}
+                                    {% if form.arterial_low.errors %}
+                                        <div class="text-danger">{{ form.arterial_low.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diagnosis -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-diagnosis mr-2"></i>Клинические диагнозы
+                            </h5>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.diagnosis.id_for_label }}" class="required-field">{{ form.diagnosis.label }}</label>
+                                <div class="diagnosis-selector">
+                                    {{ form.diagnosis }}
+                                </div>
+                                {% if form.diagnosis.errors %}
+                                    <div class="text-danger">{{ form.diagnosis.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">{{ form.diagnosis.help_text }}</small>
+                            </div>
+                        </div>
+
+                        <!-- Objective Status -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-stethoscope mr-2"></i>Объективный статус пациента
+                            </h5>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.objective_status.id_for_label }}">{{ form.objective_status.label }}</label>
+                                {{ form.objective_status }}
+                                <div class="character-count">
+                                    <span id="objectiveStatusCount">0</span> / 2000 символов
+                                </div>
+                                {% if form.objective_status.errors %}
+                                    <div class="text-danger">{{ form.objective_status.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Doctor's Summary -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-file-medical-alt mr-2"></i>Заключение лечащего врача
+                            </h5>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.summary.id_for_label }}" class="required-field">{{ form.summary.label }}</label>
+                                {{ form.summary }}
+                                <div class="character-count">
+                                    <span id="summaryCount">0</span> / 3000 символов
+                                </div>
+                                {% if form.summary.errors %}
+                                    <div class="text-danger">{{ form.summary.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">{{ form.summary.help_text }}</small>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations and Follow-up -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-lightbulb mr-2"></i>Рекомендации и дальнейшее ведение
+                            </h5>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.recommendations.id_for_label }}">{{ form.recommendations.label }}</label>
+                                {{ form.recommendations }}
+                                <div class="character-count">
+                                    <span id="recommendationsCount">0</span> / 1500 символов
+                                </div>
+                                {% if form.recommendations.errors %}
+                                    <div class="text-danger">{{ form.recommendations.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <div class="custom-control custom-checkbox">
+                                            {{ form.follow_up_required }}
+                                            <label class="custom-control-label" for="{{ form.follow_up_required.id_for_label }}">
+                                                {{ form.follow_up_required.label }}
+                                            </label>
+                                        </div>
+                                        {% if form.follow_up_required.errors %}
+                                            <div class="text-danger">{{ form.follow_up_required.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group" id="followUpDateGroup" style="display: none;">
+                                        <label for="{{ form.follow_up_date.id_for_label }}">{{ form.follow_up_date.label }}</label>
+                                        {{ form.follow_up_date }}
+                                        {% if form.follow_up_date.errors %}
+                                            <div class="text-danger">{{ form.follow_up_date.errors }}</div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">{{ form.follow_up_date.help_text }}</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    {{ form.discharge_ready }}
+                                    <label class="custom-control-label" for="{{ form.discharge_ready.id_for_label }}">
+                                        {{ form.discharge_ready.label }}
+                                    </label>
+                                </div>
+                                {% if form.discharge_ready.errors %}
+                                    <div class="text-danger">{{ form.discharge_ready.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <button type="submit" class="btn btn-{% if is_update %}warning{% else %}primary{% endif %} btn-lg">
+                                            <i class="fas fa-save mr-2"></i>{% if is_update %}Сохранить изменения{% else %}Создать заключительный прием{% endif %}
+                                        </button>
+                                        <button type="button" class="btn btn-info btn-lg ml-2" onclick="saveAsDraft()">
+                                            <i class="fas fa-clipboard mr-2"></i>Сохранить как черновик
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-lg ml-2" onclick="previewDocument()">
+                                            <i class="fas fa-eye mr-2"></i>Предпросмотр
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4 text-right">
+                                        <a href="{% if is_update %}{% url 'final_appointment_enhanced_detail' form.instance.pk %}{% else %}{% url 'illness_history_detail' history.id %}{% endif %}" class="btn btn-outline-secondary btn-lg">
+                                            <i class="fas fa-arrow-left mr-2"></i>Назад
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title">
+                        <i class="fas fa-eye mr-2"></i>Предпросмотр заключительного приема
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="previewContent">
+                    <!-- Preview content will be generated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" onclick="submitForm()">
+                        <i class="fas fa-save mr-1"></i>Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Select2 -->
+    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    <!-- Moment.js -->
+    <script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+    <script src="{% static 'adminlte3_assets/plugins/moment/locale/ru.js' %}"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+    
+    <script>
+        $(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%'
+            });
+
+            // Initialize character counters
+            initCharacterCounters();
+
+            // Initialize BMI calculator
+            initBMICalculator();
+
+            // Initialize blood pressure indicator
+            initBloodPressureIndicator();
+
+            // Initialize follow-up date toggle
+            initFollowUpToggle();
+
+            // Initialize auto-save (every 60 seconds)
+            setInterval(autoSave, 60000);
+
+            // Initialize form progress indicator
+            initFormProgress();
+
+            // Form validation
+            $('#finalAppointmentForm').on('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+
+        function initCharacterCounters() {
+            const fields = [
+                { field: '#id_objective_status', counter: '#objectiveStatusCount', max: 2000 },
+                { field: '#id_summary', counter: '#summaryCount', max: 3000 },
+                { field: '#id_recommendations', counter: '#recommendationsCount', max: 1500 }
+            ];
+
+            fields.forEach(item => {
+                const field = $(item.field);
+                const counter = $(item.counter);
+                
+                if (field.length && counter.length) {
+                    // Initial count
+                    counter.text(field.val().length);
+                    
+                    // Update on input
+                    field.on('input', function() {
+                        const length = $(this).val().length;
+                        counter.text(length);
+                        
+                        if (length > item.max) {
+                            counter.parent().addClass('text-danger');
+                        } else {
+                            counter.parent().removeClass('text-danger');
+                        }
+                    });
+                }
+            });
+        }
+
+        function initBMICalculator() {
+            $('#id_height, #id_weight').on('input', function() {
+                const height = parseFloat($('#id_height').val());
+                const weight = parseFloat($('#id_weight').val());
+                
+                if (height && weight && height > 0 && weight > 0) {
+                    const heightM = height / 100;
+                    const bmi = weight / (heightM * heightM);
+                    
+                    $('#bmiResult').text(bmi.toFixed(1));
+                    
+                    let category = '';
+                    let className = '';
+                    
+                    if (bmi < 18.5) {
+                        category = 'Недостаточный вес';
+                        className = 'text-info';
+                    } else if (bmi < 25) {
+                        category = 'Нормальный вес';
+                        className = 'text-success';
+                    } else if (bmi < 30) {
+                        category = 'Избыточный вес';
+                        className = 'text-warning';
+                    } else {
+                        category = 'Ожирение';
+                        className = 'text-danger';
+                    }
+                    
+                    $('#bmiCategory').text(category).attr('class', className);
+                } else {
+                    $('#bmiResult').text('--');
+                    $('#bmiCategory').text('Введите рост и вес').attr('class', '');
+                }
+            });
+        }
+
+        function initBloodPressureIndicator() {
+            $('#id_arterial_high, #id_arterial_low').on('input', function() {
+                const systolic = parseInt($('#id_arterial_high').val());
+                const diastolic = parseInt($('#id_arterial_low').val());
+                
+                if (systolic && diastolic) {
+                    let category = '';
+                    let className = '';
+                    
+                    if (systolic < 90 || diastolic < 60) {
+                        category = 'Низкое давление';
+                        className = 'pressure-low';
+                    } else if (systolic <= 120 && diastolic <= 80) {
+                        category = 'Нормальное давление';
+                        className = 'pressure-normal';
+                    } else if (systolic <= 139 || diastolic <= 89) {
+                        category = 'Повышенное давление';
+                        className = 'pressure-high';
+                    } else {
+                        category = 'Высокое давление';
+                        className = 'pressure-high';
+                    }
+                    
+                    $('#pressureIndicator').html(`<span class="pressure-indicator ${className}">${category}</span>`);
+                } else {
+                    $('#pressureIndicator').empty();
+                }
+            });
+        }
+
+        function initFollowUpToggle() {
+            $('#id_follow_up_required').on('change', function() {
+                if ($(this).prop('checked')) {
+                    $('#followUpDateGroup').show();
+                } else {
+                    $('#followUpDateGroup').hide();
+                    $('#id_follow_up_date').val('');
+                }
+            });
+            
+            // Initial state
+            if ($('#id_follow_up_required').prop('checked')) {
+                $('#followUpDateGroup').show();
+            }
+        }
+
+        function initFormProgress() {
+            const form = $('#finalAppointmentForm');
+            const progressBar = $('#progressIndicator');
+            
+            form.on('input change', function() {
+                const totalFields = form.find('input, select, textarea').length;
+                const filledFields = form.find('input, select, textarea').filter(function() {
+                    return $(this).val() !== '';
+                }).length;
+                
+                const progress = (filledFields / totalFields) * 100;
+                progressBar.css('transform', `scaleX(${progress / 100})`);
+            });
+        }
+
+        function applyTemplate(templateType) {
+            const templates = {
+                'improvement': {
+                    summary: `Пациент {{ patient.full_name }} находился на санаторно-курортном лечении с {{ history.created_at|date:"d.m.Y" }}.\n\nПРОВЕДЕННОЕ ЛЕЧЕНИЕ:\nВ процессе лечения проводилась комплексная терапия, включающая медикаментозное лечение, физиотерапевтические процедуры, лечебную физкультуру.\n\nДИНАМИКА СОСТОЯНИЯ:\nЗа период лечения отмечается положительная динамика в состоянии пациента. Улучшилось общее самочувствие, уменьшились жалобы.\n\nЗАКЛЮЧЕНИЕ:\nЛечение эффективно. Рекомендуется продолжение амбулаторного наблюдения.`,
+                    recommendations: 'Соблюдение режима труда и отдыха. Регулярный прием назначенных медикаментов. Контрольный осмотр через 1 месяц.',
+                    treatment_results: 'Улучение'
+                },
+                'recovery': {
+                    summary: `Пациент {{ patient.full_name }} успешно завершил курс санаторно-курортного лечения.\n\nРЕЗУЛЬТАТЫ ЛЕЧЕНИЯ:\nДостигнуто значительное улучшение состояния. Основные жалобы купированы. Объективные показатели в пределах нормы.\n\nЗАКЛЮЧЕНИЕ:\nЦель лечения достигнута. Пациент готов к выписке в удовлетворительном состоянии.`,
+                    recommendations: 'Соблюдение здорового образа жизни. Профилактические осмотры согласно плану диспансеризации.',
+                    treatment_results: 'Улучение'
+                },
+                'stable': {
+                    summary: `За период лечения состояние пациента стабилизировалось.\n\nДИНАМИКА:\nБез существенной отрицательной динамики. Состояние стабильное.\n\nЗАКЛЮЧЕНИЕ:\nТребуется продолжение лечения в амбулаторных условиях.`,
+                    recommendations: 'Продолжение назначенной терапии. Динамическое наблюдение специалистов.',
+                    treatment_results: 'Без изменения'
+                },
+                'discharge': {
+                    summary: `Курс санаторно-курортного лечения завершен.\n\nСОСТОЯНИЕ ПРИ ВЫПИСКЕ:\nОбщее состояние удовлетворительное. Жизненные показатели в пределах нормы.\n\nЗАКЛЮЧЕНИЕ:\nПациент готов к выписке. Рекомендовано амбулаторное наблюдение.`,
+                    recommendations: 'Соблюдение рекомендаций лечащего врача. Здоровый образ жизни. Регулярные профилактические осмотры.',
+                    treatment_results: 'Улучение',
+                    discharge_ready: true
+                }
+            };
+
+            const template = templates[templateType];
+            if (template) {
+                if (template.summary) {
+                    $('#id_summary').val(template.summary);
+                    $('#summaryCount').text(template.summary.length);
+                }
+                if (template.recommendations) {
+                    $('#id_recommendations').val(template.recommendations);
+                    $('#recommendationsCount').text(template.recommendations.length);
+                }
+                if (template.treatment_results) {
+                    $('#id_treatment_results').val(template.treatment_results).trigger('change');
+                }
+                if (template.discharge_ready) {
+                    $('#id_discharge_ready').prop('checked', true);
+                }
+            }
+        }
+
+        function autoSave() {
+            if (!$('#finalAppointmentForm')[0].checkValidity()) {
+                return; // Don't auto-save invalid forms
+            }
+
+            const formData = new FormData($('#finalAppointmentForm')[0]);
+            formData.append('auto_save', 'true');
+
+            $.ajax({
+                url: $('#finalAppointmentForm').attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function() {
+                    showAutoSaveIndicator();
+                },
+                error: function() {
+                    // Silent fail for auto-save
+                }
+            });
+        }
+
+        function showAutoSaveIndicator() {
+            $('#autoSaveIndicator').css('opacity', 1);
+            setTimeout(() => {
+                $('#autoSaveIndicator').css('opacity', 0);
+            }, 2000);
+        }
+
+        function validateForm() {
+            let isValid = true;
+            
+            // Validate required fields
+            const requiredFields = ['#id_state', '#id_treatment_results'];
+            requiredFields.forEach(fieldId => {
+                const field = $(fieldId);
+                if (!field.val()) {
+                    field.addClass('is-invalid');
+                    isValid = false;
+                } else {
+                    field.removeClass('is-invalid');
+                }
+            });
+
+            // Validate completed appointment requirements
+            if ($('#id_state').val() === 'Приём завершён') {
+                if (!$('#id_diagnosis').val() || $('#id_diagnosis').val().length === 0) {
+                    alert('Для завершенного приема необходимо указать диагноз');
+                    isValid = false;
+                }
+                if (!$('#id_summary').val().trim()) {
+                    alert('Для завершенного приема необходимо написать заключение');
+                    $('#id_summary').focus();
+                    isValid = false;
+                }
+            }
+
+            // Validate follow-up date
+            if ($('#id_follow_up_required').prop('checked') && !$('#id_follow_up_date').val()) {
+                alert('Если требуется повторный осмотр, необходимо указать дату');
+                $('#id_follow_up_date').focus();
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function saveAsDraft() {
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'save_as_draft',
+                value: 'true'
+            }).appendTo('#finalAppointmentForm');
+            
+            $('#finalAppointmentForm').submit();
+        }
+
+        function previewDocument() {
+            const formData = new FormData($('#finalAppointmentForm')[0]);
+            
+            // Generate preview content
+            const previewHTML = generatePreviewHTML();
+            $('#previewContent').html(previewHTML);
+            $('#previewModal').modal('show');
+        }
+
+        function generatePreviewHTML() {
+            const patientName = '{{ patient.full_name }}';
+            const doctorName = '{{ request.user.full_name }}';
+            const date = new Date().toLocaleDateString('ru-RU');
+            
+            const state = $('#id_state option:selected').text();
+            const treatmentResults = $('#id_treatment_results option:selected').text();
+            const diagnosis = $('#id_diagnosis option:selected').map(function() {
+                return $(this).text();
+            }).get().join(', ');
+            const objectiveStatus = $('#id_objective_status').val();
+            const summary = $('#id_summary').val();
+            const recommendations = $('#id_recommendations').val();
+            
+            const height = $('#id_height').val();
+            const weight = $('#id_weight').val();
+            const heartBeat = $('#id_heart_beat').val();
+            const arterialHigh = $('#id_arterial_high').val();
+            const arterialLow = $('#id_arterial_low').val();
+            
+            return `
+                <div class="preview-document">
+                    <div class="text-center mb-4">
+                        <h3>HAYAT MEDICAL CENTER</h3>
+                        <h4>Заключительный прием лечащего врача</h4>
+                        <hr>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Пациент:</strong> ${patientName}<br>
+                            <strong>Дата:</strong> ${date}
+                        </div>
+                        <div class="col-6">
+                            <strong>Врач:</strong> ${doctorName}<br>
+                            <strong>Статус:</strong> ${state}
+                        </div>
+                    </div>
+                    
+                    ${height || weight || heartBeat || arterialHigh ? `
+                    <div class="mb-3">
+                        <h6>Жизненные показатели:</h6>
+                        ${height ? `<p>Рост: ${height} см</p>` : ''}
+                        ${weight ? `<p>Вес: ${weight} кг</p>` : ''}
+                        ${heartBeat ? `<p>ЧСС: ${heartBeat} уд/мин</p>` : ''}
+                        ${arterialHigh && arterialLow ? `<p>АД: ${arterialHigh}/${arterialLow} мм рт.ст.</p>` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    ${diagnosis ? `
+                    <div class="mb-3">
+                        <h6>Диагнозы:</h6>
+                        <p>${diagnosis}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${objectiveStatus ? `
+                    <div class="mb-3">
+                        <h6>Объективный статус:</h6>
+                        <p>${objectiveStatus.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${summary ? `
+                    <div class="mb-3">
+                        <h6>Заключение врача:</h6>
+                        <p>${summary.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${recommendations ? `
+                    <div class="mb-3">
+                        <h6>Рекомендации:</h6>
+                        <p>${recommendations.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="mb-3">
+                        <h6>Результат лечения:</h6>
+                        <p><strong>${treatmentResults}</strong></p>
+                    </div>
+                    
+                    <div class="mt-5">
+                        <p>Врач: _________________ ${doctorName}</p>
+                        <p>Дата: ${date}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitForm() {
+            $('#previewModal').modal('hide');
+            $('#finalAppointmentForm').submit();
+        }
+    </script>
+{% endblock %}

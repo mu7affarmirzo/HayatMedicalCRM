@@ -1,0 +1,17 @@
+# Additional requirements for Final Appointment Enhanced functionality
+
+# PDF generation
+reportlab==4.0.4
+
+# Word document generation  
+python-docx==1.1.0
+
+# Image processing (if needed for future enhancements)
+Pillow==10.1.0
+
+# Excel export (if needed for future enhancements)
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Chart generation (if needed for future enhancements)
+matplotlib==3.8.2

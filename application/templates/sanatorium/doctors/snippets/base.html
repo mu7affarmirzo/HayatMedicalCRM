@@ -272,7 +272,7 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'final_appointment_create' history.id %}" class="nav-link {{ active_page.ekg_appointment }}">
+                        <a href="#" class="nav-link {{ active_page.final_appointment }}">
                             <i class="far fa-circle nav-icon"></i>
                             <p>
                                 Заключительный прием
@@ -280,15 +280,22 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <div class="dropdown-divider"></div>
-
-                                <li class="nav-item">
-                                    <a href="{% url 'final_appointment_create' history.id %}" class="nav-link">
-                                        <i class="far"></i>
-                                        <p>Заключительный прием | {{ final_appointment.created_at }}</p>
-                                    </a>
-                                </li>
-
+                            <li class="nav-item">
+                                <a href="{% url 'final_appointment_enhanced_create_or_update' history.id %}" class="nav-link {{ active_page.final_appointment_create }}">
+                                    <i class="fas fa-plus nav-icon text-success"></i>
+                                    <p>Создать/Редактировать</p>
+                                </a>
+                            </li>
+                            {% if history.final_appointment.exists %}
+                                {% for appointment in history.final_appointment.all %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'final_appointment_enhanced_detail' appointment.id %}" class="nav-link {{ active_page.final_appointment_detail }}">
+                                            <i class="fas fa-file-medical nav-icon text-primary"></i>
+                                            <p>Прием от {{ appointment.created_at|date:"d.m.Y" }}</p>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
                         </ul>
                     </li>
                 </ul>
@@ -343,7 +350,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link {{ active_page.diet_page }}">
+                    <a href="{% url 'diet_list' history.id %}" class="nav-link {{ active_page.diet_page }}">
                         <i class="nav-icon fas fa-utensils"></i>
                         <p>
                             Питание

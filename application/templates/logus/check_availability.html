@@ -51,7 +51,7 @@
                 <div class="alert alert-danger">{{ error }}</div>
                 {% endif %}
 
-                <form id="availability-form" method="post" action="{% url 'check_availability' %}">
+                <form id="availability-form" method="post" action="{% url 'logus:check_availability' %}">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6 mx-auto date-range-container">

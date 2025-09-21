@@ -14,6 +14,16 @@ from core.models.tariffs import TariffRoomPrice, Tariff, TariffService
 
 class Booking(BaseAuditModel):
     """Main booking record"""
+
+    class BookingStatus(models.TextChoices):
+        PENDING = 'pending', 'В ожидании'
+        CONFIRMED = 'confirmed', 'Подтверждено'
+        CHECKED_IN = 'checked_in', 'Заселен'
+        IN_PROGRESS = 'in_progress', 'В процессе'
+        COMPLETED = 'completed', 'Завершено'
+        CANCELLED = 'cancelled', 'Отменено'
+        DISCHARGED = 'discharged', 'Выписан'
+
     booking_number = models.CharField(max_length=20, unique=True)
     staff = models.ForeignKey('Account', on_delete=models.SET_NULL, null=True, related_name='bookings')
 
@@ -21,14 +31,11 @@ class Booking(BaseAuditModel):
     end_date = models.DateTimeField()
     notes = models.TextField(blank=True, null=True)
 
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('checked_in', 'Checked In'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(
+        max_length=20,
+        choices=BookingStatus.choices,
+        default=BookingStatus.PENDING
+    )
 
     def __str__(self):
         return f"Booking #{self.booking_number}"
@@ -37,6 +44,48 @@ class Booking(BaseAuditModel):
         booking_details_total = sum(detail.price for detail in self.details.all())
         additional_services_total = sum(service.price for service in self.additional_services.all())
         return booking_details_total + additional_services_total
+
+    @property
+    def is_active(self):
+        """Check if booking is currently active"""
+        return self.status in [
+            self.BookingStatus.CONFIRMED,
+            self.BookingStatus.CHECKED_IN,
+            self.BookingStatus.IN_PROGRESS
+        ]
+
+    @property
+    def status_display_color(self):
+        """Return CSS color class for status display"""
+        color_mapping = {
+            self.BookingStatus.PENDING: 'warning',
+            self.BookingStatus.CONFIRMED: 'info',
+            self.BookingStatus.CHECKED_IN: 'primary',
+            self.BookingStatus.IN_PROGRESS: 'primary',
+            self.BookingStatus.COMPLETED: 'success',
+            self.BookingStatus.CANCELLED: 'danger',
+            self.BookingStatus.DISCHARGED: 'success',
+        }
+        return color_mapping.get(self.status, 'secondary')
+
+    @staticmethod
+    def generate_booking_number():
+        """Generate unique booking number"""
+        from django.utils import timezone
+        import random
+
+        # Format: BK-YYYYMMDD-XXXX
+        date_part = timezone.now().strftime('%Y%m%d')
+        random_part = f"{random.randint(1000, 9999)}"
+
+        booking_number = f"BK-{date_part}-{random_part}"
+
+        # Ensure uniqueness
+        while Booking.objects.filter(booking_number=booking_number).exists():
+            random_part = f"{random.randint(1000, 9999)}"
+            booking_number = f"BK-{date_part}-{random_part}"
+
+        return booking_number
 
 
 class BookingDetail(BaseAuditModel):
@@ -64,6 +113,99 @@ class BookingDetail(BaseAuditModel):
         super().save(*args, **kwargs)
 
 
+class BookingBilling(BaseAuditModel):
+    """
+    Model to track billing information for each booking.
+    Stores breakdown of costs including tariff base amount and additional charges.
+    """
+
+    class BillingStatus(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        CALCULATED = 'calculated', 'Calculated'
+        INVOICED = 'invoiced', 'Invoiced'
+
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='billing',
+        help_text="Reference to the booking this billing record belongs to"
+    )
+
+    tariff_base_amount = models.IntegerField(
+        default=0,
+        help_text="Base amount from the tariff package"
+    )
+
+    additional_services_amount = models.IntegerField(
+        default=0,
+        help_text="Amount for services not included in tariff or exceeding included quantities"
+    )
+
+    medications_amount = models.IntegerField(
+        default=0,
+        help_text="Total amount for prescribed medications"
+    )
+
+    lab_research_amount = models.IntegerField(
+        default=0,
+        help_text="Total amount for laboratory research and tests"
+    )
+
+    total_amount = models.IntegerField(
+        default=0,
+        help_text="Total billing amount (sum of all components)"
+    )
+
+    billing_status = models.CharField(
+        max_length=20,
+        choices=BillingStatus.choices,
+        default=BillingStatus.PENDING,
+        help_text="Current status of the billing calculation"
+    )
+
+    class Meta:
+        db_table = 'booking_billing'
+        verbose_name = 'Booking Billing'
+        verbose_name_plural = 'Booking Billings'
+        indexes = [
+            models.Index(fields=['booking'], name='idx_billing_booking'),
+            models.Index(fields=['billing_status'], name='idx_billing_status'),
+            models.Index(fields=['created_at'], name='idx_billing_calculated'),
+        ]
+
+    def __str__(self):
+        return f"Billing for Booking #{self.booking.booking_number} - {self.total_amount}"
+
+    def calculate_total(self):
+        """
+        Calculate and update the total amount from all components.
+        """
+        self.total_amount = (
+                self.tariff_base_amount +
+                self.additional_services_amount +
+                self.medications_amount +
+                self.lab_research_amount
+        )
+        return self.total_amount
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to automatically calculate total before saving.
+        """
+        self.calculate_total()
+        super().save(*args, **kwargs)
+
+    @property
+    def is_calculated(self):
+        """Check if billing has been calculated."""
+        return self.billing_status in [self.BillingStatus.CALCULATED, self.BillingStatus.INVOICED]
+
+    @property
+    def is_invoiced(self):
+        """Check if billing has been invoiced."""
+        return self.billing_status == self.BillingStatus.INVOICED
+
+
 class ServiceUsage(BaseAuditModel):
     """Additional services purchased beyond what's included in the tariff"""
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='additional_services')
@@ -82,23 +224,6 @@ class ServiceUsage(BaseAuditModel):
         if not self.price:
             self.price = self.service.base_price * self.quantity
         super().save(*args, **kwargs)
-
-
-class ServiceSessionTracking(BaseAuditModel):
-    """Tracks usage of services included in tariffs"""
-    booking_detail = models.ForeignKey(BookingDetail, on_delete=models.CASCADE, related_name='service_sessions')
-    tariff_service = models.ForeignKey(TariffService, on_delete=models.CASCADE, related_name='usages')
-    sessions_used = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        unique_together = ['booking_detail', 'tariff_service']
-
-    def __str__(self):
-        return f"{self.booking_detail.client.full_name} - {self.tariff_service.service.name}: {self.sessions_used}/{self.tariff_service.sessions_included}"
-
-    @property
-    def sessions_remaining(self):
-        return max(0, self.tariff_service.sessions_included - self.sessions_used)
 
 
 @receiver(post_save, sender=Booking)

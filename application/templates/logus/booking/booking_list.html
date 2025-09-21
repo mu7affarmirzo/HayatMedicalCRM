@@ -205,9 +205,9 @@
                                         <label>Статус:</label>
                                         <select class="form-control" name="status">
                                             <option value="">Все статусы</option>
-                                            {% for status_value, status_name in status_choices %}
-                                            <option value="{{ status_value }}" {% if filter_status == status_value %}selected{% endif %}>
-                                                {{ status_name }}
+                                            {% for status in status_choices %}
+                                            <option value="{{ status.value }}" {% if filter_status == status.value %}selected{% endif %}>
+                                                {{ status.name }}
                                             </option>
                                             {% endfor %}
                                         </select>

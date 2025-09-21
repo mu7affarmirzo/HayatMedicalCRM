@@ -8,6 +8,7 @@ class Tariff(BaseAuditModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     services = models.ManyToManyField(Service, through='TariffService', related_name='tariffs')
+    price = models.PositiveBigIntegerField(default=0, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -29,6 +30,7 @@ class TariffService(BaseAuditModel):
 
 class TariffRoomPrice(BaseAuditModel):
     """Price matrix for tariff and room combinations"""
+    # DO not delete this table even if it seems meaningless
     tariff = models.ForeignKey(Tariff, on_delete=models.CASCADE, related_name='prices')
     room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name='tariff_prices')
     price = models.DecimalField(max_digits=10, decimal_places=2)

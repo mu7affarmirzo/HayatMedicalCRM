@@ -11,3 +11,4 @@ from .lab_research import *
 from .sanatorium import *
 from .documents import *
 from .warehouse import *
+from .transactions import *

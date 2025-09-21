@@ -180,7 +180,7 @@ def booking_list(request):
         )
 
     # Get status choices for filter dropdown
-    status_choices = Booking.STATUS_CHOICES
+    status_choices = Booking.BookingStatus
 
     # Add some statistics
     stats = {
@@ -232,11 +232,11 @@ def update_booking_status(request, booking_id):
         booking = Booking.objects.get(id=booking_id)
         new_status = request.POST.get('status')
 
-        if new_status in dict(Booking.STATUS_CHOICES).keys():
+        if new_status in dict(Booking.BookingStatus).keys():
             booking.status = new_status
             booking.save()
             return JsonResponse({'success': True, 'status': new_status,
-                                 'status_display': dict(Booking.STATUS_CHOICES)[new_status]})
+                                 'status_display': dict(Booking.BookingStatus)[new_status]})
         else:
             return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
     except Booking.DoesNotExist:

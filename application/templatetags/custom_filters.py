@@ -106,13 +106,6 @@ def get_item(dictionary, key):
     return dictionary.get(key)
 
 
-from django import template
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
-
-register = template.Library()
-
-
 @register.filter
 def get_verbose_field_name(obj, field_name):
     """

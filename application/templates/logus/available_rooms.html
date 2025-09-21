@@ -87,7 +87,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mx-auto date-range-box">
-                        <form method="post" action="{% url 'check_availability' %}">
+                        <form method="post" action="{% url 'logus:check_availability' %}">
                             {% csrf_token %}
                             <div class="form-group">
                                 <label>Выберите диапазон дат:</label>
@@ -268,7 +268,7 @@
                 {% endif %}
 
                 <div class="mt-3">
-                    <a href="{% url 'check_availability' %}" class="btn btn-default">
+                    <a href="{% url 'logus:check_availability' %}" class="btn btn-default">
                         <i class="fas fa-arrow-left"></i> Вернуться к списку
                     </a>
                 </div>

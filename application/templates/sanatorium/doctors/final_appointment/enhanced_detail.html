@@ -1,0 +1,734 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Заключительный прием - {{ patient.full_name }}{% endblock %}
+
+{% block extra_css %}
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <!-- Chart.js -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.css' %}">
+    <style>
+        .appointment-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .status-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        .vitals-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            height: 100%;
+        }
+        .bmi-indicator {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+        .bmi-success { background-color: #28a745; }
+        .bmi-warning { background-color: #ffc107; color: #000; }
+        .bmi-danger { background-color: #dc3545; }
+        .bmi-info { background-color: #17a2b8; }
+        .diagnosis-tag {
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            display: inline-block;
+            font-size: 0.875rem;
+        }
+        .treatment-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .treatment-timeline:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(to bottom, #007bff, #6f42c1);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 70px;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: 14px;
+            top: 10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #007bff;
+            border: 4px solid #fff;
+            box-shadow: 0 0 0 4px #007bff;
+        }
+        .timeline-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .export-buttons {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        .print-only {
+            display: none;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .content-wrapper { margin: 0; padding: 0; }
+            .appointment-header { background: #f8f9fa !important; color: #000 !important; }
+            .vitals-card { background: #f8f9fa !important; color: #000 !important; }
+        }
+        .summary-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .recommendations-card {
+            background: linear-gradient(135deg, #fff3cd 0%, #d4edda 100%);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header no-print">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-file-medical text-primary mr-2"></i>
+                        Заключительный прием
+                    </h1>
+                    <p class="text-muted">{{ patient.full_name }} - {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item active">Заключительный прием</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Print Header (visible only when printing) -->
+    <div class="print-only">
+        <div class="text-center mb-4">
+            <h1>HAYAT MEDICAL CENTER</h1>
+            <h2>Заключительный прием лечащего врача</h2>
+            <hr>
+            <div class="row">
+                <div class="col-6">
+                    <p><strong>Пациент:</strong> {{ patient.full_name }}</p>
+                    <p><strong>Дата рождения:</strong> {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                </div>
+                <div class="col-6">
+                    <p><strong>Врач:</strong> {{ appointment.doctor.full_name }}</p>
+                    <p><strong>Дата приема:</strong> {{ appointment.created_at|date:"d.m.Y H:i" }}</p>
+                </div>
+            </div>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div class="row no-print">
+                    <div class="col-md-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h5>
+                                    <i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> 
+                                    {{ message }}
+                                </h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Export Actions Sidebar -->
+                <div class="col-md-3 no-print">
+                    <div class="export-buttons">
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-download mr-2"></i>Экспорт документа
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <a href="{% url 'final_appointment_export_pdf' appointment.pk %}" class="btn btn-danger btn-block mb-2" target="_blank">
+                                    <i class="fas fa-file-pdf mr-1"></i> Скачать PDF
+                                </a>
+                                <a href="{% url 'final_appointment_export_word' appointment.pk %}" class="btn btn-primary btn-block mb-2" target="_blank">
+                                    <i class="fas fa-file-word mr-1"></i> Скачать Word
+                                </a>
+                                <button type="button" class="btn btn-info btn-block mb-2" onclick="window.print()">
+                                    <i class="fas fa-print mr-1"></i> Печать
+                                </button>
+                                <button type="button" class="btn btn-success btn-block mb-2" onclick="emailDocument()">
+                                    <i class="fas fa-envelope mr-1"></i> Отправить email
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="card card-secondary">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-tools mr-2"></i>Действия
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <a href="{% url 'final_appointment_enhanced_update' appointment.pk %}" class="btn btn-warning btn-block mb-2">
+                                    <i class="fas fa-edit mr-1"></i> Редактировать
+                                </a>
+                                <button type="button" class="btn btn-outline-info btn-block mb-2" onclick="copyToClipboard()">
+                                    <i class="fas fa-copy mr-1"></i> Копировать текст
+                                </button>
+                                <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-outline-secondary btn-block">
+                                    <i class="fas fa-arrow-left mr-1"></i> К истории болезни
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Treatment Progress -->
+                        <div class="card card-info">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-chart-line mr-2"></i>Статистика лечения
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <div class="h3 text-primary">{{ treatment_duration }}</div>
+                                    <div class="text-muted">дней лечения</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Консультации:</span>
+                                        <span class="font-weight-bold">{{ treatment_summary.consultations.cardiologist|length|add:treatment_summary.consultations.neurologist|length|add:treatment_summary.consultations.repeated|length }}</span>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Процедуры:</span>
+                                        <span class="font-weight-bold">{{ treatment_summary.procedures|length }}</span>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Лаб. анализы:</span>
+                                        <span class="font-weight-bold">{{ treatment_summary.lab_tests|length }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="col-md-9">
+                    <!-- Appointment Header -->
+                    <div class="appointment-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div style="font-size: 4rem;">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h2 class="mb-2">Заключительный прием лечащего врача</h2>
+                                <p class="mb-3">{{ patient.full_name }} - {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="h5 mb-0">{{ appointment.doctor.full_name }}</div>
+                                        <div class="small">Лечащий врач</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="h5 mb-0">{{ appointment.created_at|date:"d.m.Y" }}</div>
+                                        <div class="small">Дата приема</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="h5 mb-0">{{ appointment.treatment_results }}</div>
+                                        <div class="small">Результат лечения</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <span class="status-badge badge-{% if appointment.state == 'Приём завершён' %}success{% else %}warning{% endif %}">
+                                    {{ appointment.state }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Vital Signs -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body vitals-card">
+                                    <h5 class="text-center mb-4">
+                                        <i class="fas fa-heartbeat mr-2"></i>Жизненные показатели
+                                    </h5>
+                                    
+                                    {% if appointment.height or appointment.weight or appointment.heart_beat or appointment.arterial_high %}
+                                        <div class="row text-center">
+                                            {% if appointment.height %}
+                                            <div class="col-6 mb-3">
+                                                <div class="h4">{{ appointment.height }}</div>
+                                                <div class="small">см (рост)</div>
+                                            </div>
+                                            {% endif %}
+                                            {% if appointment.weight %}
+                                            <div class="col-6 mb-3">
+                                                <div class="h4">{{ appointment.weight }}</div>
+                                                <div class="small">кг (вес)</div>
+                                            </div>
+                                            {% endif %}
+                                            {% if appointment.heart_beat %}
+                                            <div class="col-6 mb-3">
+                                                <div class="h4">{{ appointment.heart_beat }}</div>
+                                                <div class="small">уд/мин (пульс)</div>
+                                            </div>
+                                            {% endif %}
+                                            {% if appointment.arterial_high and appointment.arterial_low %}
+                                            <div class="col-6 mb-3">
+                                                <div class="h4">{{ appointment.arterial_high }}/{{ appointment.arterial_low }}</div>
+                                                <div class="small">мм рт.ст. (АД)</div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if appointment.imt %}
+                                        <div class="text-center mt-3">
+                                            <div class="bmi-indicator bmi-{{ bmi_color }}">
+                                                {{ appointment.imt|floatformat:1 }}
+                                            </div>
+                                            <div class="mt-2">
+                                                <strong>ИМТ: {{ bmi_category }}</strong>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="text-center">
+                                            <div class="h5">Данные не указаны</div>
+                                            <p class="mb-0">Жизненные показатели не были измерены</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diagnosis -->
+                        <div class="col-md-6">
+                            <div class="card card-info">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-diagnosis mr-2"></i>Клинические диагнозы
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    {% if appointment.diagnosis.exists %}
+                                        {% for diagnosis in appointment.diagnosis.all %}
+                                            <div class="diagnosis-tag">
+                                                <i class="fas fa-tag mr-1"></i>{{ diagnosis.name }}
+                                            </div>
+                                        {% endfor %}
+                                        <div class="mt-3">
+                                            <small class="text-muted">
+                                                Всего диагнозов: {{ appointment.diagnosis.count }}
+                                            </small>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                            <p>Диагнозы не указаны</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Objective Status -->
+                    {% if appointment.objective_status %}
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-stethoscope mr-2"></i>Объективный статус пациента
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="bg-light p-3 rounded">
+                                {{ appointment.objective_status|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Doctor's Summary -->
+                    {% if appointment.summary %}
+                    <div class="summary-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-file-medical-alt text-primary mr-2"></i>
+                            Заключение лечащего врача
+                        </h4>
+                        <div class="bg-white p-4 rounded shadow-sm">
+                            {{ appointment.summary|linebreaks }}
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="recommendations-card">
+                                    <h6><i class="fas fa-lightbulb mr-2"></i>Результат лечения</h6>
+                                    <p class="mb-0 font-weight-bold text-{% if appointment.treatment_results == 'Улучение' %}success{% elif appointment.treatment_results == 'Без изменения' %}warning{% else %}danger{% endif %}">
+                                        {{ appointment.treatment_results }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-right">
+                                    <p class="mb-1"><strong>Врач:</strong> {{ appointment.doctor.full_name }}</p>
+                                    <p class="mb-0"><strong>Дата:</strong> {{ appointment.created_at|date:"d.m.Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Treatment Timeline -->
+                    <div class="card card-secondary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-history mr-2"></i>Хронология лечения
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="treatment-timeline">
+                                <!-- Initial appointment -->
+                                <div class="timeline-item">
+                                    <div class="timeline-marker" style="background: #28a745;"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">Поступление в санаторий</h6>
+                                            <span class="text-muted">{{ history.created_at|date:"d.m.Y" }}</span>
+                                        </div>
+                                        <p class="mb-0">Пациент поступил на санаторно-курортное лечение</p>
+                                    </div>
+                                </div>
+
+                                <!-- Consultations -->
+                                {% for consultation in treatment_summary.consultations.cardiologist %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker" style="background: #dc3545;"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">Консультация кардиолога</h6>
+                                            <span class="text-muted">{{ consultation.created_at|date:"d.m.Y" }}</span>
+                                        </div>
+                                        <p class="mb-0">Статус: {{ consultation.state }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                {% for consultation in treatment_summary.consultations.neurologist %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker" style="background: #6f42c1;"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">Консультация невролога</h6>
+                                            <span class="text-muted">{{ consultation.created_at|date:"d.m.Y" }}</span>
+                                        </div>
+                                        <p class="mb-0">Статус: {{ consultation.state }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                <!-- Final appointment -->
+                                <div class="timeline-item">
+                                    <div class="timeline-marker" style="background: #007bff;"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">Заключительный прием</h6>
+                                            <span class="text-muted">{{ appointment.created_at|date:"d.m.Y" }}</span>
+                                        </div>
+                                        <p class="mb-1">Результат лечения: <strong>{{ appointment.treatment_results }}</strong></p>
+                                        <p class="mb-0">Статус: {{ appointment.state }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vitals History Chart -->
+                    <div class="card card-info no-print">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-line mr-2"></i>Динамика показателей
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="vitalsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attached Files -->
+                    {% if appointment.file %}
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-paperclip mr-2"></i>Прикрепленные файлы
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file fa-2x text-secondary mr-3"></i>
+                                <div>
+                                    <a href="{{ appointment.file.url }}" target="_blank" class="font-weight-bold">
+                                        {{ appointment.file.name|slice:"20:" }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">Прикреплен {{ appointment.created_at|date:"d.m.Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Navigation -->
+                    <div class="card no-print">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a href="{% url 'final_appointment_enhanced_update' appointment.pk %}" class="btn btn-warning btn-lg">
+                                        <i class="fas fa-edit mr-2"></i>Редактировать прием
+                                    </a>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-secondary btn-lg">
+                                        <i class="fas fa-arrow-left mr-2"></i>К истории болезни
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Select2 -->
+    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    <!-- Chart.js -->
+    <script src="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.js' %}"></script>
+    
+    <script>
+        $(function() {
+            // Initialize vitals chart
+            initVitalsChart();
+        });
+
+        function initVitalsChart() {
+            const ctx = document.getElementById('vitalsChart').getContext('2d');
+            
+            // Fetch vitals history data
+            $.ajax({
+                url: "{% url 'final_appointment_vitals_history' history.id %}",
+                type: 'GET',
+                success: function(data) {
+                    const appointments = data.appointments;
+                    
+                    if (appointments.length === 0) {
+                        $('#vitalsChart').parent().html('<p class="text-center text-muted">Данные о показателях отсутствуют</p>');
+                        return;
+                    }
+                    
+                    const labels = appointments.map(app => app.date);
+                    const weightData = appointments.map(app => app.weight);
+                    const heartBeatData = appointments.map(app => app.heart_beat);
+                    const systolicData = appointments.map(app => app.arterial_high);
+                    const diastolicData = appointments.map(app => app.arterial_low);
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Вес (кг)',
+                                    data: weightData,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'ЧСС (уд/мин)',
+                                    data: heartBeatData,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                    yAxisID: 'y1'
+                                },
+                                {
+                                    label: 'Систолическое АД',
+                                    data: systolicData,
+                                    borderColor: 'rgb(54, 162, 235)',
+                                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                    yAxisID: 'y2'
+                                },
+                                {
+                                    label: 'Диастолическое АД',
+                                    data: diastolicData,
+                                    borderColor: 'rgb(255, 205, 86)',
+                                    backgroundColor: 'rgba(255, 205, 86, 0.1)',
+                                    yAxisID: 'y2'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Дата приема'
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Вес (кг)'
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: 'ЧСС (уд/мин)'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false,
+                                    },
+                                },
+                                y2: {
+                                    type: 'linear',
+                                    display: false,
+                                    title: {
+                                        display: true,
+                                        text: 'АД (мм рт.ст.)'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Динамика жизненных показателей'
+                                }
+                            }
+                        }
+                    });
+                },
+                error: function() {
+                    $('#vitalsChart').parent().html('<p class="text-center text-danger">Ошибка загрузки данных</p>');
+                }
+            });
+        }
+
+        function emailDocument() {
+            const subject = `Заключительный прием - {{ patient.full_name }}`;
+            const body = `Во вложении заключительный прием пациента {{ patient.full_name }} от {{ appointment.created_at|date:"d.m.Y" }}.`;
+            
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        function copyToClipboard() {
+            const textToCopy = `
+ЗАКЛЮЧИТЕЛЬНЫЙ ПРИЕМ ЛЕЧАЩЕГО ВРАЧА
+
+Пациент: {{ patient.full_name }}
+Дата рождения: {{ patient.date_of_birth|date:"d.m.Y" }}
+Врач: {{ appointment.doctor.full_name }}
+Дата приема: {{ appointment.created_at|date:"d.m.Y H:i" }}
+
+{% if appointment.diagnosis.exists %}Диагнозы:
+{% for diagnosis in appointment.diagnosis.all %}• {{ diagnosis.name }}
+{% endfor %}{% endif %}
+
+{% if appointment.objective_status %}Объективный статус:
+{{ appointment.objective_status }}
+
+{% endif %}{% if appointment.summary %}Заключение врача:
+{{ appointment.summary }}
+
+{% endif %}Результат лечения: {{ appointment.treatment_results }}
+            `.trim();
+
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                alert('Текст скопирован в буфер обмена');
+            }, function() {
+                alert('Ошибка копирования в буфер обмена');
+            });
+        }
+    </script>
+{% endblock %}

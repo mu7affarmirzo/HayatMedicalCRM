@@ -1,0 +1,595 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Назначить диету - {{ patient.full_name }}{% endblock %}
+
+{% block extra_css %}
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+    <style>
+        .form-group label {
+            font-weight: bold;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .diet-type-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            height: 120px;
+        }
+        .diet-type-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+        .diet-type-card.selected {
+            border-color: #007bff;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .diet-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .quick-template-btn {
+            margin-bottom: 0.5rem;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+        }
+        .quick-template-btn:hover {
+            transform: scale(1.05);
+        }
+        .nutrition-calculator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .calorie-slider {
+            width: 100%;
+        }
+        .restriction-tag {
+            display: inline-block;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 0.25rem 0.75rem;
+            margin: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .restriction-tag .remove {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .tabs-left .nav-tabs {
+            border-bottom: none;
+            border-right: 1px solid #dee2e6;
+        }
+        .tabs-left .nav-tabs .nav-link {
+            border-radius: 0;
+            border: none;
+            border-right: 3px solid transparent;
+            text-align: left;
+        }
+        .tabs-left .nav-tabs .nav-link.active {
+            border-right-color: #007bff;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-plus text-primary mr-2"></i>
+                        Назначить диету
+                    </h1>
+                    <p class="text-muted">{{ patient.full_name }} - {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'diet_list' history.id %}">Питание</a></li>
+                        <li class="breadcrumb-item active">Назначить диету</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div class="row">
+                    <div class="col-md-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h5>
+                                    <i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> 
+                                    {{ message }}
+                                </h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Patient Information -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <h5><i class="icon fas fa-info"></i> Информация о пациенте</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p><strong>ФИО:</strong> {{ patient.full_name }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Дата рождения:</strong> {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Возраст:</strong> {{ patient.age }} лет</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Палата:</strong> {{ history.room|default:"Не назначена" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Quick Templates Sidebar -->
+                <div class="col-md-3">
+                    <div class="card card-secondary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt mr-2"></i>Быстрые шаблоны
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <button type="button" class="btn btn-outline-primary btn-block quick-template-btn" onclick="applyTemplate('standard')">
+                                <i class="fas fa-utensils mr-1"></i> Стандартная диета
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-block quick-template-btn" onclick="applyTemplate('heart')">
+                                <i class="fas fa-heart mr-1"></i> Диета №10 (сердце)
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-block quick-template-btn" onclick="applyTemplate('diabetes')">
+                                <i class="fas fa-tint mr-1"></i> Диабетическая
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-block quick-template-btn" onclick="applyTemplate('low_salt')">
+                                <i class="fas fa-minus mr-1"></i> Низкосолевая
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-block quick-template-btn" onclick="applyTemplate('liquid')">
+                                <i class="fas fa-glass mr-1"></i> Жидкая диета
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Nutrition Calculator -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-calculator mr-2"></i>Калькулятор
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="nutrition-calculator text-center">
+                                <h5>Суточная норма</h5>
+                                <div class="h3" id="calorie-display">1800</div>
+                                <p class="mb-0">ккал</p>
+                                <input type="range" class="calorie-slider mt-3" min="1000" max="3000" value="1800" id="calorie-slider">
+                                <div class="row mt-3">
+                                    <div class="col-4">
+                                        <div class="font-weight-bold" id="proteins">90г</div>
+                                        <div class="small">Белки</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="font-weight-bold" id="fats">60г</div>
+                                        <div class="small">Жиры</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="font-weight-bold" id="carbs">225г</div>
+                                        <div class="small">Углеводы</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Form -->
+                <div class="col-md-9">
+                    <form method="post" id="dietForm">
+                        {% csrf_token %}
+                        
+                        <!-- Diet Type Selection -->
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-list mr-2"></i>Выбор типа диеты
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <input type="hidden" name="diet_type" id="selected_diet_type" required>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card diet-type-card text-center" data-type="standard">
+                                            <div class="card-body d-flex flex-column justify-content-center">
+                                                <div class="diet-icon text-primary">
+                                                    <i class="fas fa-utensils"></i>
+                                                </div>
+                                                <h6 class="card-title mb-0">Стандартная диета</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card diet-type-card text-center" data-type="therapeutic">
+                                            <div class="card-body d-flex flex-column justify-content-center">
+                                                <div class="diet-icon text-success">
+                                                    <i class="fas fa-heart"></i>
+                                                </div>
+                                                <h6 class="card-title mb-0">Лечебная диета</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card diet-type-card text-center" data-type="low_salt">
+                                            <div class="card-body d-flex flex-column justify-content-center">
+                                                <div class="diet-icon text-info">
+                                                    <i class="fas fa-tint"></i>
+                                                </div>
+                                                <h6 class="card-title mb-0">Низкосолевая</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card diet-type-card text-center" data-type="diabetic">
+                                            <div class="card-body d-flex flex-column justify-content-center">
+                                                <div class="diet-icon text-warning">
+                                                    <i class="fas fa-chart-line"></i>
+                                                </div>
+                                                <h6 class="card-title mb-0">Диабетическая</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card diet-type-card text-center" data-type="hypoallergenic">
+                                            <div class="card-body d-flex flex-column justify-content-center">
+                                                <div class="diet-icon text-danger">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                </div>
+                                                <h6 class="card-title mb-0">Гипоаллергенная</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card diet-type-card text-center" data-type="custom">
+                                            <div class="card-body d-flex flex-column justify-content-center">
+                                                <div class="diet-icon text-secondary">
+                                                    <i class="fas fa-cog"></i>
+                                                </div>
+                                                <h6 class="card-title mb-0">Индивидуальная</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diet Details -->
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-edit mr-2"></i>Детали диеты
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="start_date" class="required-field">Дата начала</label>
+                                            <div class="input-group date" id="start-date-picker" data-target-input="nearest">
+                                                <input type="date" name="start_date" class="form-control" required>
+                                                <div class="input-group-append" data-target="#start-date-picker" data-toggle="datetimepicker">
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="end_date">Дата окончания</label>
+                                            <div class="input-group date" id="end-date-picker" data-target-input="nearest">
+                                                <input type="date" name="end_date" class="form-control">
+                                                <div class="input-group-append" data-target="#end-date-picker" data-toggle="datetimepicker">
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="calories_per_day">Калории в день</label>
+                                            <div class="input-group">
+                                                <input type="number" name="calories_per_day" class="form-control" min="500" max="5000" placeholder="1800" id="calories_input">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">ккал</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="meals_per_day">Приемов пищи в день</label>
+                                            <select name="meals_per_day" class="form-control">
+                                                <option value="3">3 приема</option>
+                                                <option value="4">4 приема</option>
+                                                <option value="5" selected>5 приемов</option>
+                                                <option value="6">6 приемов</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Restrictions -->
+                                <div class="form-group">
+                                    <label for="restrictions">Ограничения</label>
+                                    <div id="restrictions-tags" class="mb-2"></div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="restriction-input" placeholder="Добавить ограничение...">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="addRestriction()">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <textarea name="restrictions" class="form-control mt-2" rows="3" placeholder="Подробные ограничения в питании..."></textarea>
+                                </div>
+
+                                <!-- Recommendations -->
+                                <div class="form-group">
+                                    <label for="recommendations">Рекомендации</label>
+                                    <textarea name="recommendations" class="form-control" rows="4" placeholder="Рекомендации по питанию и режиму приема пищи..."></textarea>
+                                </div>
+
+                                <!-- Additional Notes -->
+                                <div class="form-group">
+                                    <label for="notes">Дополнительные примечания</label>
+                                    <textarea name="notes" class="form-control" rows="3" placeholder="Дополнительные указания и примечания..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save mr-2"></i>Назначить диету
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-lg ml-2" onclick="saveAsDraft()">
+                                            <i class="fas fa-clipboard mr-2"></i>Сохранить как черновик
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <a href="{% url 'diet_list' history.id %}" class="btn btn-secondary btn-lg">
+                                            <i class="fas fa-arrow-left mr-2"></i>Назад к списку
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Select2 -->
+    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    <!-- Moment.js -->
+    <script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+    <script src="{% static 'adminlte3_assets/plugins/moment/locale/ru.js' %}"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+    
+    <script>
+        $(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'bootstrap4'
+            });
+
+            // Set today as default start date
+            const today = new Date().toISOString().split('T')[0];
+            $('input[name="start_date"]').val(today);
+
+            // Handle diet type selection
+            $('.diet-type-card').on('click', function() {
+                $('.diet-type-card').removeClass('selected');
+                $(this).addClass('selected');
+                const dietType = $(this).data('type');
+                $('#selected_diet_type').val(dietType);
+                
+                // Apply template if available
+                if (dietType !== 'custom') {
+                    applyTemplate(dietType);
+                }
+            });
+
+            // Calorie slider
+            $('#calorie-slider').on('input', function() {
+                const calories = $(this).val();
+                $('#calorie-display').text(calories);
+                $('#calories_input').val(calories);
+                updateNutrition(calories);
+            });
+
+            // Sync calories input with slider
+            $('#calories_input').on('change', function() {
+                const calories = $(this).val();
+                if (calories >= 1000 && calories <= 3000) {
+                    $('#calorie-slider').val(calories);
+                    $('#calorie-display').text(calories);
+                    updateNutrition(calories);
+                }
+            });
+
+            // Add restriction on Enter
+            $('#restriction-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    addRestriction();
+                }
+            });
+
+            // Form validation
+            $('#dietForm').on('submit', function(e) {
+                if (!$('#selected_diet_type').val()) {
+                    e.preventDefault();
+                    alert('Пожалуйста, выберите тип диеты');
+                    return false;
+                }
+            });
+        });
+
+        function updateNutrition(calories) {
+            // Calculate macronutrients (rough estimation)
+            const proteins = Math.round(calories * 0.2 / 4); // 20% proteins, 4 kcal/g
+            const fats = Math.round(calories * 0.3 / 9); // 30% fats, 9 kcal/g
+            const carbs = Math.round(calories * 0.5 / 4); // 50% carbs, 4 kcal/g
+            
+            $('#proteins').text(proteins + 'г');
+            $('#fats').text(fats + 'г');
+            $('#carbs').text(carbs + 'г');
+        }
+
+        function applyTemplate(templateType) {
+            const templates = {
+                'standard': {
+                    calories: 1800,
+                    meals: 3,
+                    restrictions: 'Ограничить острую и жирную пищу',
+                    recommendations: 'Сбалансированное питание с преобладанием овощей и фруктов'
+                },
+                'heart': {
+                    calories: 1600,
+                    meals: 5,
+                    restrictions: 'Исключить соль, жареную пищу, копчености',
+                    recommendations: 'Диета №10. Ограничение натрия до 2г в день. Паровые и отварные блюда.'
+                },
+                'diabetes': {
+                    calories: 1500,
+                    meals: 6,
+                    restrictions: 'Исключить простые углеводы, сахар',
+                    recommendations: 'Диета №9. Контроль углеводов. Регулярные приемы пищи.'
+                },
+                'low_salt': {
+                    calories: 1700,
+                    meals: 4,
+                    restrictions: 'Соль не более 2г в день',
+                    recommendations: 'Пища без досаливания. Использование специй и трав.'
+                },
+                'liquid': {
+                    calories: 1200,
+                    meals: 6,
+                    restrictions: 'Только жидкая и протертая пища',
+                    recommendations: 'Супы, бульоны, соки, молочные продукты'
+                }
+            };
+
+            const template = templates[templateType];
+            if (template) {
+                $('input[name="calories_per_day"]').val(template.calories);
+                $('select[name="meals_per_day"]').val(template.meals);
+                $('textarea[name="restrictions"]').val(template.restrictions);
+                $('textarea[name="recommendations"]').val(template.recommendations);
+                
+                // Update slider and nutrition display
+                $('#calorie-slider').val(template.calories);
+                $('#calorie-display').text(template.calories);
+                updateNutrition(template.calories);
+            }
+        }
+
+        let restrictions = [];
+
+        function addRestriction() {
+            const input = $('#restriction-input');
+            const value = input.val().trim();
+            
+            if (value && !restrictions.includes(value)) {
+                restrictions.push(value);
+                updateRestrictionsDisplay();
+                input.val('');
+                updateRestrictionsTextarea();
+            }
+        }
+
+        function removeRestriction(index) {
+            restrictions.splice(index, 1);
+            updateRestrictionsDisplay();
+            updateRestrictionsTextarea();
+        }
+
+        function updateRestrictionsDisplay() {
+            const container = $('#restrictions-tags');
+            container.empty();
+            
+            restrictions.forEach((restriction, index) => {
+                const tag = $(`
+                    <span class="restriction-tag">
+                        ${restriction}
+                        <span class="remove" onclick="removeRestriction(${index})">×</span>
+                    </span>
+                `);
+                container.append(tag);
+            });
+        }
+
+        function updateRestrictionsTextarea() {
+            const currentText = $('textarea[name="restrictions"]').val();
+            const tagsText = restrictions.join(', ');
+            
+            if (tagsText && currentText && !currentText.includes(tagsText)) {
+                $('textarea[name="restrictions"]').val(tagsText + '\n' + currentText);
+            } else if (tagsText && !currentText) {
+                $('textarea[name="restrictions"]').val(tagsText);
+            }
+        }
+
+        function saveAsDraft() {
+            // Add a hidden field to indicate this is a draft
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'save_as_draft',
+                value: 'true'
+            }).appendTo('#dietForm');
+            
+            $('#dietForm').submit();
+        }
+    </script>
+{% endblock %}

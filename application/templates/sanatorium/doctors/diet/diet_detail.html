@@ -1,0 +1,658 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Детали диеты - {{ patient.full_name }}{% endblock %}
+
+{% block extra_css %}
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <style>
+        .diet-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .diet-status-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        .nutrition-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            height: 100%;
+        }
+        .timeline {
+            position: relative;
+            padding: 20px 0 20px;
+            margin-top: 20px;
+        }
+        .timeline:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            height: 100%;
+            width: 4px;
+            background: #007bff;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 70px;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: 14px;
+            top: 10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #007bff;
+            border: 4px solid #fff;
+            box-shadow: 0 0 0 4px #007bff;
+        }
+        .timeline-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+        }
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+        }
+        .progress-ring__circle {
+            transition: stroke-dasharray 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .restriction-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            margin: 0.25rem;
+            display: inline-block;
+        }
+        .recommendation-item {
+            background-color: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+        .action-buttons {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        .print-section {
+            display: none;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-section { display: block !important; }
+            .content-wrapper { margin: 0; padding: 0; }
+        }
+        .meal-schedule {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .meal-time {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header no-print">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-info-circle text-info mr-2"></i>
+                        Детали диеты
+                    </h1>
+                    <p class="text-muted">{{ patient.full_name }} - {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'doctors_main_screen' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'diet_list' history.id %}">Питание</a></li>
+                        <li class="breadcrumb-item active">Детали диеты</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Print Header (only visible when printing) -->
+    <div class="print-section">
+        <div class="text-center mb-4">
+            <h2>Hayat Medical Center</h2>
+            <h3>Диетический план пациента</h3>
+            <p><strong>Пациент:</strong> {{ patient.full_name }}</p>
+            <p><strong>Дата рождения:</strong> {{ patient.date_of_birth|date:"d.m.Y" }}</p>
+            <p><strong>Дата печати:</strong> {% now "d.m.Y" %}</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div class="row no-print">
+                    <div class="col-md-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h5>
+                                    <i class="icon fas {% if message.tags == 'success' %}fa-check{% else %}fa-exclamation-triangle{% endif %}"></i> 
+                                    {{ message }}
+                                </h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Action Buttons Sidebar -->
+                <div class="col-md-3 no-print">
+                    <div class="action-buttons">
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-tools mr-2"></i>Действия
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <a href="{% url 'diet_update' history.id diet_id %}" class="btn btn-warning btn-block mb-2">
+                                    <i class="fas fa-edit mr-1"></i> Редактировать
+                                </a>
+                                <button type="button" class="btn btn-success btn-block mb-2" onclick="copyDiet()">
+                                    <i class="fas fa-copy mr-1"></i> Копировать
+                                </button>
+                                <button type="button" class="btn btn-info btn-block mb-2" onclick="window.print()">
+                                    <i class="fas fa-print mr-1"></i> Печать
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-block mb-2" onclick="exportToPDF()">
+                                    <i class="fas fa-file-pdf mr-1"></i> Экспорт PDF
+                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary btn-block dropdown-toggle" type="button" data-toggle="dropdown">
+                                        <i class="fas fa-share mr-1"></i> Поделиться
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="#" onclick="shareWithNutritionist()">
+                                            <i class="fas fa-user-md mr-1"></i> С диетологом
+                                        </a>
+                                        <a class="dropdown-item" href="#" onclick="shareWithPatient()">
+                                            <i class="fas fa-user mr-1"></i> С пациентом
+                                        </a>
+                                        <a class="dropdown-item" href="#" onclick="shareWithFamily()">
+                                            <i class="fas fa-users mr-1"></i> С родственниками
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="card card-info">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-chart-pie mr-2"></i>Прогресс
+                                </h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="progress-circle mb-3">
+                                    <svg class="progress-ring" width="120" height="120">
+                                        <circle class="progress-ring__circle"
+                                                stroke="#007bff" stroke-width="8" fill="transparent"
+                                                r="50" cx="60" cy="60"
+                                                stroke-dasharray="188.4 188.4"
+                                                stroke-dashoffset="75.36"/>
+                                        <text x="60" y="65" text-anchor="middle" font-size="20" font-weight="bold" fill="#007bff">60%</text>
+                                    </svg>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="font-weight-bold">7</div>
+                                        <div class="small text-muted">дней прошло</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="font-weight-bold">5</div>
+                                        <div class="small text-muted">дней осталось</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="col-md-9">
+                    <!-- Diet Header -->
+                    <div class="diet-header text-center">
+                        <div class="row align-items-center">
+                            <div class="col-md-2">
+                                <div style="font-size: 4rem;">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h2 class="mb-2">Лечебная диета №10</h2>
+                                <p class="mb-3">Диета при заболеваниях сердечно-сосудистой системы</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="h4 mb-0">1800</div>
+                                        <div class="small">ккал/день</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="h4 mb-0">5</div>
+                                        <div class="small">приемов пищи</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="h4 mb-0">12</div>
+                                        <div class="small">дней курса</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="diet-status-badge badge-success">Активная</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Diet Information -->
+                        <div class="col-md-8">
+                            <!-- Basic Information -->
+                            <div class="card card-primary">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-info mr-2"></i>Основная информация
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <td><strong>Тип диеты:</strong></td>
+                                                    <td>Лечебная диета №10</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Дата начала:</strong></td>
+                                                    <td>15.01.2024</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Дата окончания:</strong></td>
+                                                    <td>27.01.2024</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Продолжительность:</strong></td>
+                                                    <td>12 дней</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <td><strong>Калорийность:</strong></td>
+                                                    <td>1800 ккал/день</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Приемов пищи:</strong></td>
+                                                    <td>5 раз в день</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Назначил врач:</strong></td>
+                                                    <td>Д-р Иванов А.П.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Статус:</strong></td>
+                                                    <td><span class="badge badge-success">Активная</span></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Restrictions -->
+                            <div class="card card-danger">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-ban mr-2"></i>Ограничения в питании
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <span class="restriction-badge">Соль</span>
+                                        <span class="restriction-badge">Жареная пища</span>
+                                        <span class="restriction-badge">Копчености</span>
+                                        <span class="restriction-badge">Острые блюда</span>
+                                        <span class="restriction-badge">Алкоголь</span>
+                                    </div>
+                                    <p class="mb-0">
+                                        <strong>Подробные ограничения:</strong><br>
+                                        Исключить из рациона соленые продукты, жареную пищу, копчености, острые блюда, 
+                                        консервы, маринады. Ограничить потребление жидкости до 1.2 литра в день. 
+                                        Полностью исключить алкогольные напитки и крепкий кофе.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Recommendations -->
+                            <div class="card card-success">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-thumbs-up mr-2"></i>Рекомендации
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-check-circle text-success mr-2"></i>
+                                        Предпочтение отдавать паровым и отварным блюдам
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-check-circle text-success mr-2"></i>
+                                        Дробное питание 5-6 раз в день небольшими порциями
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-check-circle text-success mr-2"></i>
+                                        Увеличить потребление овощей и фруктов
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-check-circle text-success mr-2"></i>
+                                        Использовать нежирные сорта мяса и рыбы
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-check-circle text-success mr-2"></i>
+                                        Включить в рацион продукты, богатые калием и магнием
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Notes -->
+                            <div class="card card-secondary">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-sticky-note mr-2"></i>Дополнительные примечания
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">
+                                        Пациент хорошо переносит назначенную диету. Отмечается улучшение 
+                                        самочувствия и нормализация артериального давления. Рекомендуется 
+                                        продолжить курс диетотерапии и регулярно контролировать состояние.
+                                        При появлении любых негативных реакций немедленно обратиться к врачу.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar with nutrition and schedule -->
+                        <div class="col-md-4">
+                            <!-- Nutrition Breakdown -->
+                            <div class="card">
+                                <div class="card-body nutrition-card">
+                                    <h5 class="text-center mb-4">
+                                        <i class="fas fa-chart-pie mr-2"></i>Питательные вещества
+                                    </h5>
+                                    <div class="text-center mb-4">
+                                        <div class="h2">1800</div>
+                                        <p class="mb-0">ккал/день</p>
+                                    </div>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="h4">90г</div>
+                                            <div class="small">Белки</div>
+                                            <div class="small">20%</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h4">60г</div>
+                                            <div class="small">Жиры</div>
+                                            <div class="small">30%</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h4">225г</div>
+                                            <div class="small">Углеводы</div>
+                                            <div class="small">50%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Meal Schedule -->
+                            <div class="card">
+                                <div class="card-body meal-schedule">
+                                    <h5 class="text-center mb-4">
+                                        <i class="fas fa-clock mr-2"></i>Режим питания
+                                    </h5>
+                                    <div class="meal-time">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Завтрак</span>
+                                            <span>08:00</span>
+                                        </div>
+                                    </div>
+                                    <div class="meal-time">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Второй завтрак</span>
+                                            <span>10:30</span>
+                                        </div>
+                                    </div>
+                                    <div class="meal-time">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Обед</span>
+                                            <span>13:00</span>
+                                        </div>
+                                    </div>
+                                    <div class="meal-time">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Полдник</span>
+                                            <span>16:00</span>
+                                        </div>
+                                    </div>
+                                    <div class="meal-time">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Ужин</span>
+                                            <span>19:00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Adherence Tracking -->
+                            <div class="card card-warning">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-chart-line mr-2"></i>Соблюдение диеты
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Общее соблюдение</span>
+                                            <span class="font-weight-bold">85%</span>
+                                        </div>
+                                        <div class="progress mt-1">
+                                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Калорийность</span>
+                                            <span class="font-weight-bold">92%</span>
+                                        </div>
+                                        <div class="progress mt-1">
+                                            <div class="progress-bar bg-info" style="width: 92%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Режим питания</span>
+                                            <span class="font-weight-bold">78%</span>
+                                        </div>
+                                        <div class="progress mt-1">
+                                            <div class="progress-bar bg-warning" style="width: 78%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diet History Timeline -->
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-history mr-2"></i>История диеты
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between">
+                                            <h6>Первичное назначение диеты</h6>
+                                            <span class="text-muted">15.01.2024</span>
+                                        </div>
+                                        <p class="mb-1">Назначена лечебная диета №10 при заболеваниях сердечно-сосудистой системы</p>
+                                        <small class="text-muted">Врач: Д-р Иванов А.П.</small>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker" style="background: #ffc107;"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between">
+                                            <h6>Корректировка диеты</h6>
+                                            <span class="text-muted">18.01.2024</span>
+                                        </div>
+                                        <p class="mb-1">Снижена калорийность до 1800 ккал/день в связи с избыточным весом</p>
+                                        <small class="text-muted">Врач: Д-р Петров В.С.</small>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker" style="background: #28a745;"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between">
+                                            <h6>Контрольный осмотр</h6>
+                                            <span class="text-muted">22.01.2024</span>
+                                        </div>
+                                        <p class="mb-1">Пациент хорошо переносит диету, отмечается улучшение состояния</p>
+                                        <small class="text-muted">Врач: Д-р Иванов А.П.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="card no-print">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a href="{% url 'diet_update' history.id diet_id %}" class="btn btn-warning btn-lg">
+                                        <i class="fas fa-edit mr-2"></i>Редактировать диету
+                                    </a>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <a href="{% url 'diet_list' history.id %}" class="btn btn-secondary btn-lg">
+                                        <i class="fas fa-list mr-2"></i>Назад к списку
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Select2 -->
+    <script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    
+    <script>
+        $(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'bootstrap4'
+            });
+
+            // Animate progress ring on page load
+            animateProgressRing();
+        });
+
+        function animateProgressRing() {
+            const circle = document.querySelector('.progress-ring__circle');
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            const progress = 60; // 60%
+            
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference;
+            
+            setTimeout(() => {
+                const offset = circumference - progress / 100 * circumference;
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+        }
+
+        function copyDiet() {
+            if (confirm('Создать копию этой диеты?')) {
+                // Implement copy functionality
+                window.location.href = "{% url 'diet_create' history.id %}?copy_from={{ diet_id }}";
+            }
+        }
+
+        function exportToPDF() {
+            // Implement PDF export functionality
+            alert('Функция экспорта в PDF будет реализована');
+        }
+
+        function shareWithNutritionist() {
+            alert('Диета отправлена диетологу для консультации');
+        }
+
+        function shareWithPatient() {
+            alert('Диета отправлена пациенту');
+        }
+
+        function shareWithFamily() {
+            alert('Диета отправлена родственникам пациента');
+        }
+
+        // Print optimization
+        window.addEventListener('beforeprint', function() {
+            // Hide elements that shouldn't be printed
+            document.body.classList.add('printing');
+        });
+
+        window.addEventListener('afterprint', function() {
+            document.body.classList.remove('printing');
+        });
+    </script>
+{% endblock %}

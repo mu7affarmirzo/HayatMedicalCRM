@@ -257,6 +257,14 @@
                         </ul>
                     </li>
 
+                    <!-- Payments Section -->
+                    <li class="nav-item">
+                        <a href="{% url 'logus:payments_dashboard' %}" class="nav-link {% if 'payments' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-cash-register"></i>
+                            <p>Платежи</p>
+                        </a>
+                    </li>
+
                     <!-- Patients Section -->
                     <li class="nav-item {% if 'patient' in request.path %}menu-open{% endif %}">
                         <a href="#" class="nav-link {% if 'patient' in request.path %}active{% endif %}">

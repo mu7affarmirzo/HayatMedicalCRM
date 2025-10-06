@@ -111,9 +111,7 @@ def payments_dashboard(request):
 
     recent_transactions = transactions_qs.order_by('-created_at')[:10]
 
-    report_total = sum(
-        (item['total'] or Decimal('0.00')) for item in transaction_breakdown
-    , Decimal('0.00'))
+    report_total = transactions_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     report_count = transactions_qs.count()
 
     form_kwargs = {

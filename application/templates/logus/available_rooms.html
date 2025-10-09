@@ -1,6 +1,7 @@
 {% extends "logus/snippets/base.html" %}
 {% load custom_filters %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Доступные номера - Hayat Medical Center{% endblock %}
 
@@ -146,7 +147,7 @@
                                     {% for price in prices %}
                                         <td class="text-center">
                                             {% if price %}
-                                                <span class="matrix-price">{{ price }} ₸</span>
+                                                <span class="matrix-price">{{ price|intcomma }} Сум</span>
                                             {% else %}
                                                 <span class="no-price">Нет цены</span>
                                             {% endif %}

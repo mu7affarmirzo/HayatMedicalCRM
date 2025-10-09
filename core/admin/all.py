@@ -7,7 +7,7 @@ from core.models import (
     BookingDetail, Service, TariffService, Tariff,
     IllnessHistory, DiagnosisTemplate, ServiceTypeModel,
     Warehouse, CompanyModel, MedicationModel, MedicationsInStockModel,
-    RolesModel, ProfessionModel, Region, District
+    RolesModel, ProfessionModel, Region, District, TariffRoomPrice
 )
 
 from import_export.admin import ImportExportModelAdmin
@@ -92,6 +92,11 @@ class TariffServiceAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 @admin.register(Tariff)
 class TariffAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = [field.name for field in Tariff._meta.fields]
+
+
+@admin.register(TariffRoomPrice)
+class TariffRoomPriceAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = [field.name for field in TariffRoomPrice._meta.fields]
 
 
 @admin.register(IllnessHistory)

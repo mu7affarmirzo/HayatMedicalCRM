@@ -1,9 +1,12 @@
-# views.py
-
 from datetime import datetime, timedelta
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from core.models import Room, RoomType, Tariff, TariffRoomPrice, BookingDetail
+from django.utils import timezone
+from django.http import JsonResponse
+
+from core.models import Room, RoomType, Booking, BookingDetail, PatientModel, Tariff, TariffRoomPrice
+
 
 # Dictionary for weekday names
 WEEKDAYS = {
@@ -72,6 +75,7 @@ def available_room_view(request):
                 value = TariffRoomPrice.objects.get(tariff=tariff, room_type=room_type).price
             except TariffRoomPrice.DoesNotExist:
                 value = None
+            print(value)
             matrix[room_type].append(value)
 
     next_14_days = [today + timedelta(days=i) for i in range(14)]
@@ -101,6 +105,8 @@ def available_room_view(request):
 
             available_rooms = get_available_rooms(start_date, end_date, room_type_id)
 
+            print(available_rooms)
+
             # Get tariff pricing for the selected room type
             room_type = RoomType.objects.get(id=room_type_id)
             tariff_prices = {}
@@ -124,16 +130,6 @@ def available_room_view(request):
             })
 
     return render(request, 'logus/available_rooms.html', context)
-
-
-
-from datetime import datetime, timedelta
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from django.http import JsonResponse
-
-from core.models import Room, RoomType, Booking, BookingDetail, PatientModel, Tariff
 
 
 @login_required

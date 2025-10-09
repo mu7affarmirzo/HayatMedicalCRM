@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import timezone
-from core.models import Room, RoomType, BookingDetail, PatientModel, Tariff
+from core.models import Room, RoomType, BookingDetail, PatientModel, Tariff, Booking
 
 
 def get_today_statistics():
@@ -241,3 +241,25 @@ def reception_dashboard(request):
         context.update(search_results)
 
     return render(request, 'logus/dashboard/reception_dashboard.html', context)
+
+
+@login_required
+def current_guests(request):
+    """
+    View to display all current guests (checked-in bookings)
+    """
+    # Get all bookings with status 'checked_in'
+    current_bookings = BookingDetail.objects.filter(
+        booking__status=Booking.BookingStatus.CHECKED_IN
+    ).select_related(
+        'booking', 'client', 'room', 'room__room_type', 'tariff'
+    ).order_by('room__name')
+
+    # Build context
+    context = {
+        'current_bookings': current_bookings,
+        'total_guests': current_bookings.count(),
+        'room_types': RoomType.objects.all(),
+    }
+
+    return render(request, 'logus/dashboard/current_guests.html', context)

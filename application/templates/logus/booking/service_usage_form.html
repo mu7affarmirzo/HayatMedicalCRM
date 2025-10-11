@@ -1,0 +1,155 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">{% if service_usage %}Редактирование услуги{% else %}Добавление услуги{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{% if service_usage %}Редактирование услуги{% else %}Добавление услуги для {{ booking_detail.client.full_name }}{% endif %}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.service.id_for_label }}">Услуга</label>
+                                        {{ form.service }}
+                                        {% if form.service.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.service.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.date_used.id_for_label }}">Дата использования</label>
+                                        {{ form.date_used }}
+                                        {% if form.date_used.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.date_used.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.quantity.id_for_label }}">Количество</label>
+                                        {{ form.quantity }}
+                                        {% if form.quantity.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.quantity.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.price.id_for_label }}">Цена</label>
+                                        {{ form.price }}
+                                        {% if form.price.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.price.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Цена будет рассчитана автоматически на основе услуги и количества</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.notes.id_for_label }}">Примечания</label>
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.notes.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <a href="{% url 'logus:booking_detail' booking.id %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+        
+        // Auto-calculate price when service or quantity changes
+        $('#id_service, #id_quantity').change(function() {
+            // Clear price field to trigger auto-calculation on form submission
+            $('#id_price').val('');
+        });
+    });
+</script>
+{% endblock %}

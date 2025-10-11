@@ -520,7 +520,7 @@
                                                 <td>
                                                     <div class="btn-group">
                                                         {% if booking.status == 'checked_in' %}
-                                                            <a href="{% url 'service_usage_edit' service.id %}"
+                                                            <a href="{% url 'logus:service_usage_edit' service.id %}"
                                                                class="btn btn-sm btn-warning">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
@@ -552,7 +552,7 @@
                                                                             data-dismiss="modal">Отмена
                                                                     </button>
                                                                     <form method="post"
-                                                                          action="{% url 'service_usage_delete' service.id %}">
+                                                                          action="{% url 'logus:service_usage_delete' service.id %}">
                                                                         {% csrf_token %}
                                                                         <button type="submit" class="btn btn-danger">
                                                                             Удалить

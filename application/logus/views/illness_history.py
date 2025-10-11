@@ -4,10 +4,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, DeleteView, UpdateView
 
+from HayatMedicalCRM.auth.decorators import receptionist_required
 from application.logus.forms.patients import IllnessHistoryForm, IllnessHistoryEditForm
-from core.models import IllnessHistory, BookingDetail
+from core.models import BookingDetail, IllnessHistory
 
 
 class DoctorRequiredMixin(UserPassesTestMixin):
@@ -20,9 +21,6 @@ class DoctorRequiredMixin(UserPassesTestMixin):
 
 @login_required
 def all_patients_list(request):
-    # # Check if user is a doctor
-    # if not request.user.is_therapist:
-    #     return redirect('home')  # Redirect non-doctors
 
     # Get all illness histories where the current user is the assigned doctor
     patient_histories = IllnessHistory.objects.all()
@@ -107,7 +105,7 @@ class IllnessHistoryCreateView(LoginRequiredMixin, DoctorRequiredMixin, CreateVi
         return context
 
 
-@login_required
+@receptionist_required
 def illness_history_detail(request, pk):
     # Get the illness history
     history = get_object_or_404(IllnessHistory, pk=pk)
@@ -191,17 +189,6 @@ class IllnessHistoryCloseView(LoginRequiredMixin, DoctorRequiredMixin, UpdateVie
         form.instance.state = 'closed'
         messages.success(self.request, 'История болезни закрыта')
         return super().form_valid(form)
-
-
-# reception/views/illness_history.py
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.views.generic import UpdateView
-from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-from core.models.illness_history import IllnessHistory
 
 
 class IllnessHistoryEditView(LoginRequiredMixin, UpdateView):

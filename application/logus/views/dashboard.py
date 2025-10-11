@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import timezone
+
+from HayatMedicalCRM.auth.decorators import receptionist_required
 from core.models import Room, RoomType, BookingDetail, PatientModel, Tariff, Booking
 
 
@@ -223,7 +225,7 @@ def handle_availability_search(request):
         return None
 
 
-@login_required
+@receptionist_required
 def reception_dashboard(request):
     """
     Main dashboard view for reception staff to check room availability

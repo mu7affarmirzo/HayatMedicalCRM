@@ -1,5 +1,6 @@
 {% extends "logus/snippets/base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Бронирование #{{ booking.booking_number }} - Hayat Medical Center{% endblock %}
 
@@ -53,12 +54,6 @@
                             <h3 class="card-title">
                                 <i class="fas fa-info-circle mr-1"></i> Основная информация
                             </h3>
-                            <div class="card-tools">
-                                <a href="#" class="btn btn-sm btn-info">
-                                    {#                            <a href="{% url 'logus:booking_edit' booking.id %}" class="btn btn-sm btn-info">#}
-                                    <i class="fas fa-edit"></i> Редактировать
-                                </a>
-                            </div>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -123,7 +118,7 @@
                                             {{ detail.room.name }} ({{ detail.room.room_type.name }})<br>
                                             <small class="text-muted">{{ detail.tariff.name }}</small>
                                         </td>
-                                        <td class="text-right">{{ detail.price }}</td>
+                                        <td class="text-right">{{ detail.price|intcomma }}</td>
                                     </tr>
                                 {% endfor %}
 
@@ -137,7 +132,7 @@
                                                 {{ service.service.name }}<br>
                                                 <small class="text-muted">Количество: {{ service.quantity }}</small>
                                             </td>
-                                            <td class="text-right">{{ service.price }}</td>
+                                            <td class="text-right">{{ service.price|intcomma }}</td>
                                         </tr>
                                     {% endfor %}
                                 {% endif %}
@@ -145,7 +140,7 @@
                                 <tfoot>
                                 <tr>
                                     <th>Проживание:</th>
-                                    <th class="text-right">{{ booking_details_total }}</th>
+                                    <th class="text-right">{{ booking_details_total|intcomma }}</th>
                                 </tr>
                                 {% if additional_services %}
                                     <tr>
@@ -155,7 +150,7 @@
                                 {% endif %}
                                 <tr class="bg-light">
                                     <th>Итого:</th>
-                                    <th class="text-right">{{ total_price }}</th>
+                                    <th class="text-right">{{ total_price|intcomma }}</th>
                                 </tr>
                                 </tfoot>
                             </table>

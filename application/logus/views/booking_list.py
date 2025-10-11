@@ -2,18 +2,13 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from core.models import Booking, BookingDetail, Room
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from core.models import Booking, BookingDetail
+from core.models import Booking, BookingDetail, TariffService, IllnessHistory
 
 
 @login_required
@@ -58,10 +53,6 @@ def booking_detail_view(request, booking_id):
     booking_details = booking.details.all().select_related(
         'client', 'room', 'room__room_type', 'tariff'
     )
-
-    # Prefetch tariff services for all tariffs in the booking
-    from django.db.models import Prefetch
-    from core.models import TariffService, IllnessHistory
 
     tariff_ids = [detail.tariff_id for detail in booking_details]
     booking_details = booking_details.prefetch_related(

@@ -270,62 +270,6 @@
                 </div>
             </div>
 
-            <!-- Availability Check Section -->
-            <div class="card date-filter-card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-search mr-1"></i> Проверка доступности комнат
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <form method="post" id="availability-form">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Диапазон дат:</label>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                        <span class="input-group-text">
-                                            <i class="far fa-calendar-alt"></i>
-                                        </span>
-                                        </div>
-                                        <input type="text" class="form-control" id="date-range" name="date_range"
-                                               value="{{ date_range|default:'' }}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Тип комнаты:</label>
-                                    <select class="form-control select2" name="room_type_id" id="room-type-select">
-                                        <option value="">Все типы</option>
-                                        {% for room_type in room_types %}
-                                            <option value="{{ room_type.id }}"
-                                                    {% if selected_room_type_id == room_type.id|stringformat:"s" %}selected{% endif %}>
-                                                {{ room_type.name }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <div>
-                                        <button type="submit" class="btn btn-primary btn-block">
-                                            <i class="fas fa-search mr-1"></i> Проверить доступность
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <!-- Quick Links -->
             <div class="card">
                 <div class="card-header">
@@ -455,64 +399,6 @@
                                     {% endfor %}
                                     </tbody>
                                 </table>
-                            </div>
-                        {% endif %}
-
-                        <!-- Available Rooms Table -->
-                        {% if available_rooms %}
-                            <h5 class="mb-3"><i class="fas fa-check-circle text-success"></i> Доступные комнаты</h5>
-                            <div class="table-responsive">
-                                <table class="table table-bordered availability-table">
-                                    <thead>
-                                    <tr>
-                                        <th style="width: 10%">Номер</th>
-                                        <th style="width: 20%">Название</th>
-                                        <th style="width: 20%">Тип</th>
-                                        <th style="width: 15%">Вместимость</th>
-                                        <th style="width: 15%">Цена</th>
-                                        <th style="width: 20%">Действия</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for room in available_rooms %}
-                                        <tr>
-                                            <td class="text-center">{{ room.id }}</td>
-                                            <td>{{ room.name }}</td>
-                                            <td>
-                                                <span class="badge badge-info">{{ room.room_type.name }}</span>
-                                            </td>
-                                            <td class="text-center">
-                                                <i class="fas fa-user"></i> × {{ room.capacity }}
-                                            </td>
-                                            <td class="text-right">
-                                                {% if room.price %}
-                                                    <strong>{{ room.price|intcomma }} сум</strong>
-                                                {% else %}
-                                                    <span class="text-muted">Не указана</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-success quick-book-btn"
-                                                        data-room-id="{{ room.id }}"
-                                                        data-room-name="{{ room.name }}"
-                                                        data-room-type="{{ room.room_type.name }}"
-                                                        data-start-date="{{ start_date|date:'Y-m-d' }}"
-                                                        data-end-date="{{ end_date|date:'Y-m-d' }}">
-                                                    <i class="fas fa-calendar-plus"></i> Забронировать
-                                                </button>
-                                                <a href="#" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-info-circle"></i> Детали
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Нет доступных комнат для выбранных параметров.
                             </div>
                         {% endif %}
 

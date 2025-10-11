@@ -100,7 +100,7 @@ class BookingDetail(BaseAuditModel):
     end_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.client.full_name} - {self.room.name} - {self.tariff.name}"
+        return f"{self.booking.booking_number} - {self.client.full_name} - {self.room.name} - {self.tariff.name}"
 
     def save(self, *args, **kwargs):
         # Automatically calculate price based on tariff and room type if not set

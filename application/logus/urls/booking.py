@@ -25,6 +25,7 @@ urlpatterns = [
     path('<int:booking_id>/', booking.booking_detail, name='booking_detail_old'),
     path('detail/<int:booking_id>/', booking_detail_view, name='booking_detail'),
     path('status/<int:booking_id>/', update_booking_status, name='update_booking_status'),
+    path('status/<int:booking_id>/', update_booking_status, name='update_booking_status'),
 
     # Booking views
     path('<int:booking_id>/edit/', booking_edit_view, name='booking_edit'),

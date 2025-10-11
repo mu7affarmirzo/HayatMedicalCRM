@@ -1,0 +1,140 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">{% if booking_detail %}Редактирование гостя{% else %}Добавление гостя{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{% if booking_detail %}Редактирование данных гостя{% else %}Добавление нового гостя{% endif %}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.client.id_for_label }}">Пациент</label>
+                                        {{ form.client }}
+                                        {% if form.client.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.client.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Выберите пациента из списка или <a href="{% url 'logus:patient_create' %}" target="_blank">создайте нового</a></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.room.id_for_label }}">Комната</label>
+                                        {{ form.room }}
+                                        {% if form.room.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.room.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.tariff.id_for_label }}">Тариф</label>
+                                        {{ form.tariff }}
+                                        {% if form.tariff.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.tariff.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.price.id_for_label }}">Цена</label>
+                                        {{ form.price }}
+                                        {% if form.price.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.price.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Цена будет рассчитана автоматически на основе тарифа и типа комнаты</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <a href="{% url 'logus:booking_detail' booking.id %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+        
+        // Auto-calculate price when tariff or room changes
+        $('#id_tariff, #id_room').change(function() {
+            // Clear price field to trigger auto-calculation on form submission
+            $('#id_price').val('');
+        });
+    });
+</script>
+{% endblock %}

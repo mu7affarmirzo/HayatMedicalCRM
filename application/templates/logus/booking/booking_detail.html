@@ -169,7 +169,7 @@
                             </h3>
                             <div class="card-tools">
                                 {% if booking.status != 'cancelled' and booking.status != 'completed' %}
-                                    <a href="#" class="btn btn-sm btn-success">
+                                    <a href="{% url 'logus:booking_detail_add' booking.id %}" class="btn btn-sm btn-success">
                                         <i class="fas fa-plus"></i> Добавить гостя
                                     </a>
                                 {% endif %}

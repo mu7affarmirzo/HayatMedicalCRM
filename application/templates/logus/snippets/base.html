@@ -317,6 +317,7 @@
                         </ul>
                     </li>
 
+                    {% if request.user.is_staff or request.user.is_superuser %}
                     <!-- Rooms Section -->
                     <li class="nav-item {% if 'room' in request.path %}menu-open{% endif %}">
                         <a href="#" class="nav-link {% if 'room' in request.path %}active{% endif %}">
@@ -416,6 +417,7 @@
                             </li>
                         </ul>
                     </li>
+                    {% endif %}
 
                     {% if request.user.is_superuser %}
                     <!-- Reports Section -->

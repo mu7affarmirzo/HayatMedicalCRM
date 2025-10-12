@@ -111,88 +111,12 @@
                             <p>Главная</p>
                         </a>
                     </li>
-
-                    <!-- Booking Management Section -->
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-calendar-alt"></i>
-                            <p>
-                                Записи
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
+                        <a href="{% url 'patients_list' %}" class="nav-link">
+                            <i class="nav-icon fas fa-search"></i>
+                            <p>Поиск пациентов</p>
                         </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="far fa-calendar-plus nav-icon"></i>
-                                    <p>Новая запись</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="far fa-calendar-check nav-icon"></i>
-                                    <p>Расписание</p>
-                                </a>
-                            </li>
-                        </ul>
                     </li>
-
-                    <!-- Patients Section -->
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-baby"></i>
-                            <p>
-                                Пациенты
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="fas fa-search nav-icon"></i>
-                                    <p>Поиск пациента</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="fas fa-user-plus nav-icon"></i>
-                                    <p>Новый пациент</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Rooms Management Section -->
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-door-open"></i>
-                            <p>
-                                Номера
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{% url 'room_list' %}" class="nav-link">
-                                    <i class="fas fa-list nav-icon"></i>
-                                    <p>Список комнат</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'room_create' %}" class="nav-link">
-                                    <i class="fas fa-plus nav-icon"></i>
-                                    <p>Добавить комнату</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'roomtype_list' %}" class="nav-link">
-                                    <i class="fas fa-tags nav-icon"></i>
-                                    <p>Типы комнат</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
 
                 </ul>
             </nav>

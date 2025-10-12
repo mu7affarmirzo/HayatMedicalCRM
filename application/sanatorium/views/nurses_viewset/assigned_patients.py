@@ -45,7 +45,7 @@ def patient_detail(request, history_id):
 
     # Security check - only the assigned doctor can view
     if history.doctor != request.user and not request.user.is_admin:
-        return redirect('doctor_dashboard')
+        return redirect('doctors_main_screen')
 
     # Get patient data
     patient = history.patient
@@ -67,7 +67,7 @@ def patient_edit(request, history_id):
 
     # Security check - only the assigned doctor can edit
     if history.doctor != request.user and not request.user.is_admin:
-        return redirect('doctor_dashboard')
+        return redirect('doctors_main_screen')
 
     if request.method == 'POST':
         # Handle form submission

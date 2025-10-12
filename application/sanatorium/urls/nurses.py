@@ -9,7 +9,6 @@ urlpatterns = [
     path('main_screen/', assigned_patients_list, name='nurses_main_screen'),
     path('patients-list/', all_patients_list, name='nurse_patients_list'),
 
-
     path('appointments/', include('application.sanatorium.urls.nurse_urls.appointments')),
     path('histories/', include('application.sanatorium.urls.nurse_urls.illness_histories')),
     path('patients/', include('application.sanatorium.urls.nurse_urls.patients')),

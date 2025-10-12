@@ -51,9 +51,6 @@ def all_patients_list(request):
 
 @login_required
 def assigned_patients_list(request):
-    # # Check if user is a doctor
-    # if not request.user.is_therapist:
-    #     return redirect('home')  # Redirect non-doctors
 
     # Get all illness histories where the current user is the assigned doctor
     patient_histories = IllnessHistory.objects.filter(doctor=request.user)

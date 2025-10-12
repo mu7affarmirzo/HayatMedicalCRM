@@ -7,7 +7,6 @@ from application.sanatorium.views.doctors_viewset.illness_history import assigne
 urlpatterns = [
     path('main_screen/', assigned_patients_list, name='doctors_main_screen'),
     path('patients-list/', all_patients_list, name='patients_list'),
-    path('dashboard/', assigned_patients_list, name='doctor_dashboard'),
 
     path('assigned-appointments/', doctor_appointments, name='doctor_appointments'),
 

@@ -5,10 +5,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 
+from HayatMedicalCRM.auth.decorators import nurse_required
 from core.models import IllnessHistory, Document, AssignedLabResult
 
 
-@login_required
+@nurse_required
 def documents_view(request, pk):
     """Main view for documents related to an illness history"""
     history = get_object_or_404(IllnessHistory, pk=pk)
@@ -31,7 +32,7 @@ def documents_view(request, pk):
     return render(request, 'sanatorium/nurses/documents/documents_page.html', context)
 
 
-@login_required
+@nurse_required
 @require_POST
 def document_upload(request, pk):
     """Handle document upload via AJAX"""
@@ -89,7 +90,7 @@ def document_upload(request, pk):
     })
 
 
-@login_required
+@nurse_required
 @require_POST
 def document_delete(request, document_id):
     """Delete a document"""

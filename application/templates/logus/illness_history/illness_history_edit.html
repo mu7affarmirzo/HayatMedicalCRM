@@ -336,12 +336,12 @@ $(function () {
     // Custom validation styling
     $('form').on('submit', function() {
         $('.is-invalid').removeClass('is-invalid');
-        
+
         // Add loading state to submit button
         var submitBtn = $(this).find('button[type="submit"]');
         var originalText = submitBtn.html();
         submitBtn.html('<i class="fas fa-spinner fa-spin mr-1"></i> Сохранение...').prop('disabled', true);
-        
+
         // Re-enable button after 3 seconds (in case of validation errors)
         setTimeout(function() {
             submitBtn.html(originalText).prop('disabled', false);
@@ -354,6 +354,19 @@ $(function () {
     $('#id_{{ field_name }}').addClass('is-invalid');
     {% endfor %}
     {% endif %}
+
+    // When the page loads, get the hash from the URL
+    var hash = window.location.hash;
+
+    // If a hash exists, activate the corresponding tab
+    if (hash) {
+        $('.nav-pills a[href="' + hash + '"]').tab('show');
+    }
+
+    // When a tab is clicked, update the URL hash
+    $('.nav-pills a').on('click', function (e) {
+        window.location.hash = $(this).attr('href');
+    });
 });
 </script>
 {% endblock %}

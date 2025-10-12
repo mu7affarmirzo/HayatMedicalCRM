@@ -42,7 +42,11 @@
                 <div class="card card-primary card-outline">
                     <div class="card-body box-profile">
                         <div class="text-center">
-                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Patient profile picture">
+                            {% if patient.gender %}
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Male patient profile picture">
+                            {% else %}
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar2.png' %}" alt="Female patient profile picture">
+                            {% endif %}
                         </div>
 
                         <h3 class="profile-username text-center">{{ patient.full_name }}</h3>

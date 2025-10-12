@@ -20,8 +20,8 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:nurse_dashboard' %}">Панель врача</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_list' %}">Истории болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Панель врача</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:illness_history_list' %}">Истории болезни</a></li>
                     <li class="breadcrumb-item active">{{ title }}</li>
                 </ol>
             </div>
@@ -248,7 +248,7 @@
 
                         <div class="card-footer">
                             <button type="submit" class="btn btn-primary">Сохранить</button>
-                            <a href="{% url 'nurses:illness_history_list' %}" class="btn btn-default">Отмена</a>
+                            <a href="{% url 'logus:illness_history_list' %}" class="btn btn-default">Отмена</a>
                         </div>
                     </form>
                 </div>

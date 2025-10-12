@@ -149,7 +149,7 @@
                                     </span>
                                     <div class="info-box-content">
                                         <span class="info-box-text">Cito</span>
-                                        <span class="info-box-number">{% if appointment.cito %}Да{% else %}Нет{% endif %}</span>
+                                        <span class="info-box-number">Нет</span>
                                     </div>
                                 </div>
                             </div>
@@ -227,6 +227,74 @@
                                 {{ appointment.objective_data|default:"Не указано"|linebreaks }}
                             </div>
                         </div>
+
+                        <div class="data-section">
+                            <h5 class="data-label">Объективный статус</h5>
+                            <div class="p-2 bg-light rounded">
+                                {{ appointment.objective_status|default:"Не указано"|linebreaks }}
+                            </div>
+                        </div>
+
+                        <div class="data-section">
+                            <h5 class="data-label">Физические показатели</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="info-box d-flex">
+                                        <span class="info-box-icon bg-info">
+                                            <i class="fas fa-ruler-vertical"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Рост</span>
+                                            <span class="info-box-number">{{ appointment.height|default:"--" }} см</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-box d-flex">
+                                        <span class="info-box-icon bg-success">
+                                            <i class="fas fa-weight"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Вес</span>
+                                            <span class="info-box-number">{{ appointment.weight|default:"--" }} кг</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-box d-flex">
+                                        <span class="info-box-icon bg-warning">
+                                            <i class="fas fa-heartbeat"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Пульс</span>
+                                            <span class="info-box-number">{{ appointment.heart_beat|default:"--" }} уд/мин</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-box d-flex">
+                                        <span class="info-box-icon bg-danger">
+                                            <i class="fas fa-calculator"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">ИМТ интерпретация</span>
+                                            <span class="info-box-number">{{ appointment.imt_interpretation|default:"--" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if appointment.file %}
+                        <div class="data-section">
+                            <h5 class="data-label">Прикрепленный файл</h5>
+                            <div class="p-2 bg-light rounded">
+                                <a href="{{ appointment.file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-download mr-1"></i> Скачать файл
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- Conclusion tab -->
@@ -234,7 +302,11 @@
                         <div class="data-section">
                             <h5 class="data-label">Диагноз</h5>
                             <div class="p-2 bg-light rounded">
-                                {{ appointment.diagnosis.name|default:"Не указано" }}
+                                {% for diag in appointment.diagnosis.all %}
+                                    <div>{{ diag.name }}</div>
+                                {% empty %}
+                                    Не указано
+                                {% endfor %}
                             </div>
                         </div>
 
@@ -242,6 +314,15 @@
                             <h5 class="data-label">Заключение</h5>
                             <div class="p-2 bg-light rounded">
                                 {{ appointment.summary|default:"Не указано"|linebreaks }}
+                            </div>
+                        </div>
+
+                        <div class="data-section">
+                            <h5 class="data-label">Результаты лечения</h5>
+                            <div class="p-2 bg-light rounded">
+                                <span class="badge {% if appointment.treatment_results == 'Улучение' %}bg-success{% elif appointment.treatment_results == 'Без изменения' %}bg-warning{% else %}bg-danger{% endif %} p-2">
+                                    {{ appointment.treatment_results }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -257,6 +338,12 @@
 {#                </a>#}
                 <a href="{% url 'illness_history_detail' appointment.illness_history.id %}" class="btn btn-default float-right">
                     <i class="fas fa-arrow-left mr-1"></i> Назад к истории болезни
+                </a>
+                <button onclick="window.print();" class="btn btn-info ml-2">
+                    <i class="fas fa-print mr-1"></i> Печать
+                </button>
+                <a href="{% url 'final_appointment_download' appointment.id %}" class="btn btn-success ml-2">
+                    <i class="fas fa-file-word mr-1"></i> Скачать в DOC
                 </a>
             </div>
         </div>

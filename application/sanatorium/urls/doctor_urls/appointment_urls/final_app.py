@@ -3,7 +3,7 @@ from application.sanatorium.views.doctors_viewset.appointment_views.final_app im
     FinalAppointmentListView,
     FinalAppointmentDetailView,
     FinalAppointmentUpdateView, FinalAppointmentCreateOrUpdateView,
-    # FinalAppointmentDeleteView
+    FinalAppointmentDownloadView,
 )
 
 urlpatterns = [
@@ -14,10 +14,6 @@ urlpatterns = [
     path('illness/<int:history_id>/create/',
          FinalAppointmentCreateOrUpdateView.as_view(),
          name='final_appointment_create'),
-    #
-    # path('illness/<int:history_id>/create/',
-    #      FinalAppointmentCreateView.as_view(),
-    #      name='final_appointment_create'),
 
     path('detail/<int:pk>/',
          FinalAppointmentDetailView.as_view(),
@@ -26,4 +22,8 @@ urlpatterns = [
     path('update/<int:pk>/',
          FinalAppointmentUpdateView.as_view(),
          name='final_appointment_update'),
+
+    path('download/<int:pk>/',
+         FinalAppointmentDownloadView.as_view(),
+         name='final_appointment_download'),
 ]

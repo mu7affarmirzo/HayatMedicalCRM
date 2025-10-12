@@ -131,3 +131,21 @@ class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
         context['history'] = self.object.illness_history
         return context
 
+
+class FinalAppointmentDetailByHistoryView(LoginRequiredMixin, DetailView):
+    """View that displays the first final appointment for a given illness history"""
+    model = FinalAppointmentWithDoctorModel
+    template_name = 'sanatorium/nurses/appointments/final_app/detail.html'
+    context_object_name = 'appointment'
+
+    def get_object(self, queryset=None):
+        history_id = self.kwargs.get('history_id')
+        illness_history = get_object_or_404(IllnessHistory, pk=history_id)
+        # Get the first final appointment for this history
+        return get_object_or_404(FinalAppointmentWithDoctorModel, illness_history=illness_history)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['illness_history'] = self.object.illness_history
+        context['history'] = self.object.illness_history
+        return context

@@ -5,6 +5,7 @@ from application.sanatorium.views.doctors_viewset.final_appointment_enhanced imp
     FinalAppointmentEnhancedUpdateView,
     FinalAppointmentEnhancedListView,
     FinalAppointmentEnhancedDetailView,
+    FinalAppointmentEnhancedDeleteView,
     export_final_appointment_pdf,
     export_final_appointment_word,
     get_patient_vitals_history
@@ -17,11 +18,12 @@ urlpatterns = [
     path('create-new/<int:history_id>/', FinalAppointmentEnhancedCreateView.as_view(), name='final_appointment_enhanced_create'),
     path('update/<int:pk>/', FinalAppointmentEnhancedUpdateView.as_view(), name='final_appointment_enhanced_update'),
     path('detail/<int:pk>/', FinalAppointmentEnhancedDetailView.as_view(), name='final_appointment_enhanced_detail'),
-    
+    path('delete/<int:pk>/', FinalAppointmentEnhancedDeleteView.as_view(), name='final_appointment_enhanced_delete'),
+
     # Export functionality
     path('export/pdf/<int:pk>/', export_final_appointment_pdf, name='final_appointment_export_pdf'),
     path('export/word/<int:pk>/', export_final_appointment_word, name='final_appointment_export_word'),
-    
+
     # AJAX endpoints
     path('api/vitals-history/<int:history_id>/', get_patient_vitals_history, name='final_appointment_vitals_history'),
 ]

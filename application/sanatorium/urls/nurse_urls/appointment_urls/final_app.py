@@ -14,10 +14,6 @@ urlpatterns = [
     path('illness/<int:history_id>/create/',
          FinalAppointmentCreateOrUpdateView.as_view(),
          name='final_appointment_create'),
-    #
-    # path('illness/<int:history_id>/create/',
-    #      FinalAppointmentCreateView.as_view(),
-    #      name='final_appointment_create'),
 
     path('detail/<int:pk>/',
          FinalAppointmentDetailView.as_view(),

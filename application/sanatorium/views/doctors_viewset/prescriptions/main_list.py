@@ -352,11 +352,12 @@ def get_appointment_detail_template(model_name):
         Template path string
     """
     template_mapping = {
-        'cardiologist': 'sanatorium/doctors/appointments/cardiologist_detail.html',
-        'neurologist': 'sanatorium/doctors/appointments/neurologist_detail.html',
-        'ekg': 'sanatorium/doctors/appointments/ekg_detail.html',
-        'onduty': 'sanatorium/doctors/appointments/onduty_detail.html',
-        'repeated': 'sanatorium/doctors/appointments/repeated_detail.html'
+        'cardiologist': 'sanatorium/doctors/appointments/cardiologist/detail.html',
+        'neurologist': 'sanatorium/doctors/appointments/neurologist/detail.html',
+        'ekg': 'sanatorium/doctors/appointments/ekg_app/detail.html',
+        'onduty': 'sanatorium/doctors/appointments/on_duty_app/detail.html',
+        'repeated': 'sanatorium/doctors/appointments/repeated_app/detail.html',
+        'on_arrival': 'sanatorium/doctors/appointments/on_arrival/detail.html'
     }
 
     return template_mapping.get(model_name, 'sanatorium/doctors/appointments/generic_detail.html')

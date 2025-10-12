@@ -79,7 +79,7 @@
                     <div class="attached-file mt-3">
                       <strong><i class="fas fa-paperclip mr-1"></i> Прикрепленный файл:</strong>
                       <div class="mt-2">
-                        <a href="{% url 'nurses:download_result_file' result.id %}" class="btn btn-primary btn-sm" target="_blank">
+                        <a href="{% url 'sanatorium.nurses:download_result_file' result.id %}" class="btn btn-primary btn-sm" target="_blank">
                           <i class="fas fa-download mr-1"></i>
                           {% if result.file_format %}
                             {% if result.file_format == 'pdf' %}PDF-документ

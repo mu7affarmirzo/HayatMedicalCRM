@@ -16,7 +16,7 @@
                         <a href="#" class="btn btn-default btn-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Вернуться к списку
                         </a>
-                        <a href="{% url 'nurses:assigned_labs_update' assigned_lab.id %}" class="btn btn-warning btn-sm">
+                        <a href="{% url 'sanatorium.nurses:assigned_labs_update' assigned_lab.id %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit mr-1"></i> Редактировать
                         </a>
                         <a href="#" class="btn btn-danger btn-sm">
@@ -217,7 +217,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form action="{% url 'nurses:add_lab_result' assigned_lab.id %}" method="post" enctype="multipart/form-data">
+            <form action="{% url 'sanatorium.nurses:add_lab_result' assigned_lab.id %}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="form-group">

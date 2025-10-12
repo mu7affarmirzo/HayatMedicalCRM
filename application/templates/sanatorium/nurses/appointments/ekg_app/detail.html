@@ -14,7 +14,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:illness_history_detail' appointment.illness_history.id %}">История болезни</a></li>
                     <li class="breadcrumb-item active">ЭКГ</li>
                 </ol>
             </div>
@@ -276,10 +276,10 @@
                         <div class="row mt-4">
                             <div class="col-md-12 text-right">
 
-{#                                <a href="{% url 'nurses:ekg_appointment_delete' appointment.id %}" class="btn btn-danger">#}
+{#                                <a href="{% url 'sanatorium.nurses:ekg_appointment_delete' appointment.id %}" class="btn btn-danger">#}
 {#                                    <i class="fas fa-trash"></i> Удалить#}
 {#                                </a>#}
-                                <a href="{% url 'nurses:illness_history_detail' appointment.illness_history.id %}" class="btn btn-default">
+                                <a href="{% url 'sanatorium.nurses:illness_history_detail' appointment.illness_history.id %}" class="btn btn-default">
                                     <i class="fas fa-arrow-left"></i> Назад к истории болезни
                                 </a>
                             </div>

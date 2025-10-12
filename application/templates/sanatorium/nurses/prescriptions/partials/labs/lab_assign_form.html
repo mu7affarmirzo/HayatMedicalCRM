@@ -8,7 +8,7 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form id="assignLabForm" method="post" action="{% url 'nurses:assign_lab' history.id %}">
+      <form id="assignLabForm" method="post" action="{% url 'sanatorium.nurses:assign_lab' history.id %}">
         {% csrf_token %}
         <div class="modal-body">
           <!-- Lab Category Filter -->

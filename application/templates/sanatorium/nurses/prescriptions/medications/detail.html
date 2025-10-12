@@ -493,7 +493,7 @@ $(document).ready(function() {
         showLoading();
 
         $.ajax({
-            url: "{% url 'nurses:api_medication_session_update_status' 0 %}".replace('0', sessionId),
+            url: "{% url 'sanatorium.nurses:api_medication_session_update_status' 0 %}".replace('0', sessionId),
             type: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
@@ -687,7 +687,7 @@ $(document).ready(function() {
             showLoading();
 
             $.ajax({
-                url: "{% url 'nurses:api_medication_session_update_notes' 0 %}".replace('0', currentSessionId),
+                url: "{% url 'sanatorium.nurses:api_medication_session_update_notes' 0 %}".replace('0', currentSessionId),
                 type: 'POST',
                 headers: {
                     'X-CSRFToken': getCSRFToken(),

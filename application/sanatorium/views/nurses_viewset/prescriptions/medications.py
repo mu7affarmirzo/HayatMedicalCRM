@@ -415,7 +415,7 @@ def update_session_status(request, session_id):
 
     # Only pending sessions can be updated
     if session.status != 'pending':
-        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+        return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
     # Get form data
     new_status = request.POST.get('status')
@@ -463,7 +463,7 @@ def update_session_status(request, session_id):
     session.save()
 
     # Redirect back to the medication detail page
-    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+    return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
 
 @login_required
@@ -520,7 +520,7 @@ def administer_medication(request, session_id):
 
     # Only pending sessions can be administered
     if session.status != 'pending':
-        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+        return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
     # Update session
     session.status = 'administered'
@@ -530,7 +530,7 @@ def administer_medication(request, session_id):
     session.save()
 
     # Redirect back to the medication detail page
-    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+    return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
 
 @login_required
@@ -539,7 +539,7 @@ def mark_missed(request, session_id):
     """Mark a medication session as missed"""
     session = get_object_or_404(MedicationSession, id=session_id)
     if session.status != 'pending':
-        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+        return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
     session.status = 'missed'
     session.administered_at = timezone.now()
@@ -547,7 +547,7 @@ def mark_missed(request, session_id):
     session.notes = request.POST.get('notes', '')
     session.save()
 
-    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+    return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
 
 @login_required
@@ -556,7 +556,7 @@ def mark_refused(request, session_id):
     """Mark a medication session as refused by patient"""
     session = get_object_or_404(MedicationSession, id=session_id)
     if session.status != 'pending':
-        return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+        return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
     session.status = 'refused'
     session.administered_at = timezone.now()
@@ -564,4 +564,4 @@ def mark_refused(request, session_id):
     session.notes = request.POST.get('notes', '')
     session.save()
 
-    return redirect(reverse('nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
+    return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))

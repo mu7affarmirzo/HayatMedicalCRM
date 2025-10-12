@@ -22,7 +22,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:illness_history_detail' history.id %}">История болезни</a></li>
                     <li class="breadcrumb-item active">
                         {% if appointment %}Редактирование приема{% else %}Новый прием{% endif %}
                     </li>
@@ -172,7 +172,7 @@
                             <button type="submit" class="btn btn-primary">
                                 {% if appointment %}Сохранить изменения{% else %}Создать прием{% endif %}
                             </button>
-                            <a href="{% if appointment %}{% url 'nurses:appointment_with_on_duty_doctor_detail' appointment.id %}{% else %}{% url 'nurses:illness_history_detail' history.id %}{% endif %}" class="btn btn-default">
+                            <a href="{% if appointment %}{% url 'sanatorium.nurses:appointment_with_on_duty_doctor_detail' appointment.id %}{% else %}{% url 'sanatorium.nurses:illness_history_detail' history.id %}{% endif %}" class="btn btn-default">
                                 Отмена
                             </a>
                         </div>

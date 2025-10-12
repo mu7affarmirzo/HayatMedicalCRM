@@ -3,12 +3,11 @@ from django.urls import path, include
 from application.sanatorium.views.nurses_viewset.illness_history import assigned_patients_list, all_patients_list
 
 
-app_name = 'nurses'
+app_name = 'sanatorium.nurses'
 
 urlpatterns = [
     path('main_screen/', assigned_patients_list, name='nurses_main_screen'),
     path('patients-list/', all_patients_list, name='nurse_patients_list'),
-    path('dashboard/', assigned_patients_list, name='nurse_dashboard'),
 
 
     path('appointments/', include('application.sanatorium.urls.nurse_urls.appointments')),

@@ -32,7 +32,8 @@
                 <div class="card card-primary card-outline">
                     <div class="card-body box-profile">
                         <div class="text-center">
-                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Patient profile picture">
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Patient profile picture" {% if not patient.gender %}style="display: none;"{% endif %}>
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar5.png' %}" alt="Patient profile picture" {% if patient.gender %}style="display: none;"{% endif %}>
                         </div>
 
                         <h3 class="profile-username text-center">{{ patient.full_name }}</h3>
@@ -92,7 +93,7 @@
                 <!-- /.card -->
             </div>
             <!-- /.col -->
-            
+
             <div class="col-md-9">
                 <div class="card">
                     <div class="card-header p-2">
@@ -151,7 +152,7 @@
                                         <dl class="row">
                                             <dt class="col-sm-4">Профессия:</dt>
                                             <dd class="col-sm-8">{{ history.profession.name|default:"Не указана" }}</dd>
-                                            
+
                                             <dt class="col-sm-4">Токсические факторы:</dt>
                                             <dd class="col-sm-8">
                                                 {% if history.toxic_factors.all %}
@@ -162,7 +163,7 @@
                                                     Не указаны
                                                 {% endif %}
                                             </dd>
-                                            
+
                                             <dt class="col-sm-4">Теги:</dt>
                                             <dd class="col-sm-8">
                                                 {% if history.tags %}
@@ -171,7 +172,7 @@
                                                     Не указаны
                                                 {% endif %}
                                             </dd>
-                                            
+
                                             <dt class="col-sm-4">Больничный лист:</dt>
                                             <dd class="col-sm-8">
                                                 {% if history.is_sick_leave %}
@@ -181,14 +182,14 @@
                                                 {% endif %}
                                             </dd>
                                         </dl>
-                                        
+
                                         <h5>Примечания</h5>
                                         <p>{{ history.notes|default:"Нет примечаний"|linebreaks }}</p>
                                     </div>
                                 </div>
                             </div>
                             <!-- /.tab-pane -->
-                            
+
                             <!-- Visits tab -->
                             <div class="tab-pane" id="visits">
                                 <div class="card card-primary card-outline">
@@ -218,7 +219,7 @@
                                         </dl>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Room information -->
                                 <div class="card card-primary card-outline">
                                     <div class="card-header">
@@ -249,7 +250,7 @@
                                         </table>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Services information if any -->
                                 {% if booking.additional_services.all %}
                                 <div class="card card-primary card-outline">
@@ -284,7 +285,7 @@
                                 {% endif %}
                             </div>
                             <!-- /.tab-pane -->
-                            
+
                             <!-- Documents tab - Placeholder for future implementation -->
                             <div class="tab-pane" id="documents">
                                 <div class="text-center py-5">

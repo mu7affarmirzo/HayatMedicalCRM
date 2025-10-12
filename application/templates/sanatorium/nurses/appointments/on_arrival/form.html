@@ -28,9 +28,9 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:illness_history_detail' history.id %}">История болезни</a></li>
                     {% if appointment %}
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:on_arrival_consulting_detail' history.id appointment.id %}">Приём дежурного врача</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:on_arrival_consulting_detail' history.id appointment.id %}">Приём дежурного врача</a></li>
                     <li class="breadcrumb-item active">Редактирование</li>
                     {% else %}
                     <li class="breadcrumb-item active">Новый приём дежурного врача при поступлении</li>
@@ -417,11 +417,11 @@
                     <i class="fas fa-save"></i> Сохранить
                 </button>
                 {% if appointment %}
-                <a href="{% url 'nurses:on_arrival_consulting_detail' appointment.id %}" class="btn btn-default">
+                <a href="{% url 'sanatorium.nurses:on_arrival_consulting_detail' appointment.id %}" class="btn btn-default">
                     <i class="fas fa-times"></i> Отмена
                 </a>
                 {% else %}
-                <a href="{% url 'nurses:on_arrival_consulting_list' history.id %}" class="btn btn-default">
+                <a href="{% url 'sanatorium.nurses:on_arrival_consulting_list' history.id %}" class="btn btn-default">
                     <i class="fas fa-times"></i> Отмена
                 </a>
                 {% endif %}

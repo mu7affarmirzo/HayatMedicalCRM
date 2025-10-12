@@ -80,9 +80,9 @@
                                 <i class="fas fa-trash mr-1"></i> Yes, Delete
                             </button>
                             <a href="{% if assigned_lab.illness_history %}
-                                       {% url 'nurses:prescription_list' assigned_lab.illness_history.id %}
+                                       {% url 'sanatorium.nurses:prescription_list' assigned_lab.illness_history.id %}
                                      {% else %}
-                                       {% url 'nurses:illness_history_detail' assigned_lab.illness_history.id %}
+                                       {% url 'sanatorium.nurses:illness_history_detail' assigned_lab.illness_history.id %}
                                      {% endif %}"
                                class="btn btn-default">
                                 Cancel

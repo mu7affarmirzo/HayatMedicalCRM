@@ -17,12 +17,12 @@
             </div>
             <div class="col-md-4 text-right">
                 {% if illness_history %}
-                    <a href="{% url 'nurses:prescribed_medication_create' %}?illness_history={{ illness_history.id }}"
+                    <a href="{% url 'sanatorium.nurses:prescribed_medication_create' %}?illness_history={{ illness_history.id }}"
                        class="btn btn-primary">
                         <i class="fas fa-plus"></i> Добавить назначение
                     </a>
                 {% else %}
-                    <a href="{% url 'nurses:prescribed_medication_create' %}" class="btn btn-primary">
+                    <a href="{% url 'sanatorium.nurses:prescribed_medication_create' %}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Добавить назначение
                     </a>
                 {% endif %}
@@ -57,7 +57,7 @@
                             <a href="
 
 
-                                    {% if illness_history %}{% url 'nurses:prescribed_medication_list' %}?illness_history={{ illness_history.id }}{% else %}{% url 'nurses:prescribed_medication_list' %}{% endif %}"
+                                    {% if illness_history %}{% url 'sanatorium.nurses:prescribed_medication_list' %}?illness_history={{ illness_history.id }}{% else %}{% url 'sanatorium.nurses:prescribed_medication_list' %}{% endif %}"
                                class="btn btn-secondary ml-2">Сбросить</a>
                         </form>
                     </div>
@@ -107,13 +107,13 @@
             {#                                        </span>#}
             {#                                    </td>#}
             {#                                    <td>#}
-            {#                                        <a href="{% url 'nurses:prescribed_medication_detail' medication.id %}" class="btn btn-info btn-sm">#}
+            {#                                        <a href="{% url 'sanatorium.nurses:prescribed_medication_detail' medication.id %}" class="btn btn-info btn-sm">#}
             {#                                            <i class="fas fa-eye"></i>#}
             {#                                        </a>#}
-            {#                                        <a href="{% url 'nurses:prescribed_medication_update' medication.id %}" class="btn btn-warning btn-sm">#}
+            {#                                        <a href="{% url 'sanatorium.nurses:prescribed_medication_update' medication.id %}" class="btn btn-warning btn-sm">#}
             {#                                            <i class="fas fa-edit"></i>#}
             {#                                        </a>#}
-            {#                                        <a href="{% url 'nurses:prescribed_medication_delete' medication.id %}" class="btn btn-danger btn-sm">#}
+            {#                                        <a href="{% url 'sanatorium.nurses:prescribed_medication_delete' medication.id %}" class="btn btn-danger btn-sm">#}
             {#                                            <i class="fas fa-trash"></i>#}
             {#                                        </a>#}
             {#                                    </td>#}
@@ -160,9 +160,9 @@
             {#                <div class="alert alert-info">#}
             {#                    Назначенные лекарства не найдены.#}
             {#                    {% if illness_history %}#}
-            {#                        <a href="{% url 'nurses:prescribed_medication_create' %}?illness_history={{ illness_history.id }}" class="alert-link">Создать новое назначение</a>#}
+            {#                        <a href="{% url 'sanatorium.nurses:prescribed_medication_create' %}?illness_history={{ illness_history.id }}" class="alert-link">Создать новое назначение</a>#}
             {#                    {% else %}#}
-            {#                        <a href="{% url 'nurses:prescribed_medication_create' %}" class="alert-link">Создать новое назначение</a>#}
+            {#                        <a href="{% url 'sanatorium.nurses:prescribed_medication_create' %}" class="alert-link">Создать новое назначение</a>#}
             {#                    {% endif %}#}
             {#                </div>#}
             {#            {% endif %}#}
@@ -226,15 +226,15 @@
                                         {% endwith %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'nurses:prescribed_medication_detail' medication.id %}"
+                                        <a href="{% url 'sanatorium.nurses:prescribed_medication_detail' medication.id %}"
                                            class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{% url 'nurses:prescribed_medication_update' medication.id %}"
+                                        <a href="{% url 'sanatorium.nurses:prescribed_medication_update' medication.id %}"
                                            class="btn btn-warning btn-sm">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'nurses:prescribed_medication_delete' medication.id %}"
+                                        <a href="{% url 'sanatorium.nurses:prescribed_medication_delete' medication.id %}"
                                            class="btn btn-danger btn-sm">
                                             <i class="fas fa-trash"></i>
                                         </a>
@@ -294,10 +294,10 @@
                     <div class="alert alert-info">
                         Назначенные лекарства не найдены.
                         {% if illness_history %}
-                            <a href="{% url 'nurses:prescribed_medication_create' %}?illness_history={{ illness_history.id }}"
+                            <a href="{% url 'sanatorium.nurses:prescribed_medication_create' %}?illness_history={{ illness_history.id }}"
                                class="alert-link">Создать новое назначение</a>
                         {% else %}
-                            <a href="{% url 'nurses:prescribed_medication_create' %}" class="alert-link">Создать новое
+                            <a href="{% url 'sanatorium.nurses:prescribed_medication_create' %}" class="alert-link">Создать новое
                                 назначение</a>
                         {% endif %}
                     </div>

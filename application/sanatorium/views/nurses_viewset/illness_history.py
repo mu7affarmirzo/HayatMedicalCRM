@@ -1,28 +1,16 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
+from HayatMedicalCRM.auth.decorators import nurse_required, NurseRequiredMixin, LoginRequiredMixin
 from application.sanatorium.forms.patients import IllnessHistoryForm
 from core.models import IllnessHistory, BookingDetail
 
 
-class DoctorRequiredMixin(UserPassesTestMixin):
-    """Mixin to ensure that only therapists can access the view"""
-
-    def test_func(self):
-        # return self.request.user.is_therapist
-        return self.request.user
-
-
-@login_required
+@nurse_required
 def all_patients_list(request):
-    # # Check if user is a doctor
-    # if not request.user.is_therapist:
-    #     return redirect('home')  # Redirect non-doctors
 
     # Get all illness histories where the current user is the assigned doctor
     patient_histories = IllnessHistory.objects.all()
@@ -49,14 +37,15 @@ def all_patients_list(request):
     return render(request, 'sanatorium/nurses/illness_histories_dashboard.html', context)
 
 
-@login_required
+@nurse_required
 def assigned_patients_list(request):
-    # # Check if user is a doctor
-    # if not request.user.is_therapist:
-    #     return redirect('home')  # Redirect non-doctors
 
     # Get all illness histories where the current user is the assigned doctor
-    patient_histories = IllnessHistory.objects.filter(doctor=request.user)
+    patient_histories = IllnessHistory.objects.filter(nurses__in=[request.user])
+
+    print(patient_histories)
+    for his in patient_histories:
+        print(his.nurses.all())
 
     # Get today's appointments
     today = timezone.now().date()
@@ -80,35 +69,7 @@ def assigned_patients_list(request):
     return render(request, 'sanatorium/nurses/doctors_dashboard.html', context)
 
 
-class IllnessHistoryListView(LoginRequiredMixin, DoctorRequiredMixin, ListView):
-    model = IllnessHistory
-    template_name = 'sanatorium/nurses/illness_history_list.html'
-    context_object_name = 'histories'
-
-    def get_queryset(self):
-        # Only show illness histories assigned to the logged-in doctor
-        return IllnessHistory.objects.filter(doctor=self.request.user).order_by('-modified_at')
-
-
-class IllnessHistoryCreateView(LoginRequiredMixin, DoctorRequiredMixin, CreateView):
-    model = IllnessHistory
-    form_class = IllnessHistoryForm
-    template_name = 'sanatorium/nurses/illness_history_form.html'
-    success_url = reverse_lazy('illness_history_list')
-
-    def form_valid(self, form):
-        # Set the doctor automatically to the current user
-        form.instance.doctor = self.request.user
-        messages.success(self.request, 'История болезни успешно создана')
-        return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Создание истории болезни'
-        return context
-
-
-@login_required
+@nurse_required
 def illness_history_detail(request, pk):
     # Get the illness history
     history = get_object_or_404(IllnessHistory, pk=pk)
@@ -137,7 +98,36 @@ def illness_history_detail(request, pk):
     return render(request, 'sanatorium/nurses/illness_history_detail.html', context)
 
 
-class IllnessHistoryUpdateView(LoginRequiredMixin, DoctorRequiredMixin, UpdateView):
+
+class IllnessHistoryListView(LoginRequiredMixin, NurseRequiredMixin, ListView):
+    model = IllnessHistory
+    template_name = 'sanatorium/nurses/illness_history_list.html'
+    context_object_name = 'histories'
+
+    def get_queryset(self):
+        # Only show illness histories assigned to the logged-in doctor
+        return IllnessHistory.objects.filter(doctor=self.request.user).order_by('-modified_at')
+
+
+class IllnessHistoryCreateView(LoginRequiredMixin, NurseRequiredMixin, CreateView):
+    model = IllnessHistory
+    form_class = IllnessHistoryForm
+    template_name = 'sanatorium/nurses/illness_history_form.html'
+    success_url = reverse_lazy('illness_history_list')
+
+    def form_valid(self, form):
+        # Set the doctor automatically to the current user
+        form.instance.doctor = self.request.user
+        messages.success(self.request, 'История болезни успешно создана')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Создание истории болезни'
+        return context
+
+
+class IllnessHistoryUpdateView(LoginRequiredMixin, NurseRequiredMixin, UpdateView):
     model = IllnessHistory
     form_class = IllnessHistoryForm
     template_name = 'sanatorium/nurses/illness_history_form.html'
@@ -160,7 +150,7 @@ class IllnessHistoryUpdateView(LoginRequiredMixin, DoctorRequiredMixin, UpdateVi
         return context
 
 
-class IllnessHistoryDeleteView(LoginRequiredMixin, DoctorRequiredMixin, DeleteView):
+class IllnessHistoryDeleteView(LoginRequiredMixin, NurseRequiredMixin, DeleteView):
     model = IllnessHistory
     template_name = 'sanatorium/patients/illness_history_confirm_delete.html'
     success_url = reverse_lazy('illness_history_list')
@@ -182,7 +172,7 @@ class IllnessHistoryDeleteView(LoginRequiredMixin, DoctorRequiredMixin, DeleteVi
     #     return redirect(self.success_url)
 
 
-class IllnessHistoryCloseView(LoginRequiredMixin, DoctorRequiredMixin, UpdateView):
+class IllnessHistoryCloseView(LoginRequiredMixin, NurseRequiredMixin, UpdateView):
     """Special view to mark an illness history as closed"""
     model = IllnessHistory
     template_name = 'sanatorium/nurses/illness_history_confirm_close.html'

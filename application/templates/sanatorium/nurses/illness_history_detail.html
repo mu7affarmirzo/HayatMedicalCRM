@@ -13,9 +13,9 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:nurses_main_screen' %}">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:nurses_main_screen' %}">Панель врача</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'nurses:nurses_main_screen' %}">Истории болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:nurses_main_screen' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:nurses_main_screen' %}">Панель врача</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:nurses_main_screen' %}">Истории болезни</a></li>
                     <li class="breadcrumb-item active">{{ history.series_number }}</li>
                 </ol>
             </div>
@@ -42,7 +42,8 @@
                 <div class="card card-primary card-outline">
                     <div class="card-body box-profile">
                         <div class="text-center">
-                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" alt="Patient profile picture">
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar2.png' %}" alt="Patient profile picture" {% if patient.gender %}style="display: none;"{% endif %}>
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'adminlte3_assets/dist/img/avatar5.png' %}" alt="Patient profile picture" {% if not patient.gender %}style="display: none;"{% endif %}>
                         </div>
 
                         <h3 class="profile-username text-center">{{ patient.full_name }}</h3>

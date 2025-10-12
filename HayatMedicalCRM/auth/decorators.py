@@ -3,6 +3,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from core.views import redirect_by_role
 
@@ -92,6 +93,14 @@ def receptionist_required(view_func):
     return role_required(RolesModel.RECEPTIONIST, RolesModel.ADMIN)(view_func)
 
 
+def nurse_required(view_func):
+    """
+    Decorator to check if user is nurse or admin.
+    """
+    from core.models import RolesModel
+    return role_required(RolesModel.NURSE, RolesModel.ADMIN)(view_func)
+
+
 def therapist_required(view_func):
     """
     Decorator to check if user is therapist or admin.
@@ -170,3 +179,14 @@ def all_roles_required(*required_roles):
         return wrapper
 
     return decorator
+
+
+
+class NurseRequiredMixin(UserPassesTestMixin):
+    """Mixin to ensure that only nurses or admins can access the view"""
+
+    def test_func(self):
+        user = self.request.user
+        # Check if user has NURSE or ADMIN role
+        from core.models import RolesModel
+        return user.has_role(RolesModel.NURSE) or user.has_role(RolesModel.ADMIN) or user.is_superuser

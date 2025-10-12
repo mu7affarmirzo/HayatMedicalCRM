@@ -12,6 +12,7 @@ class RolesModel(models.Model):
     ADMIN = 'admin'
     THERAPIST = 'therapist'
     DOCTOR = 'doctor'
+    NURSE = 'nurse'
     RECEPTIONIST = 'receptionist'
     MANAGER = 'manager'
 
@@ -19,6 +20,7 @@ class RolesModel(models.Model):
     DEFAULT_ROLES = [
         (ADMIN, 'Administrator'),
         (DOCTOR, 'Doctor'),
+        (NURSE, 'Nurse'),
         (THERAPIST, 'Therapist'),
         (RECEPTIONIST, 'Receptionist'),
         (MANAGER, 'Manager'),

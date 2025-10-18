@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import doctor_required
+
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q, Count, Case, When, IntegerField
@@ -12,7 +13,7 @@ import json
 from core.models import PrescribedMedication, MedicationSession, PatientModel
 
 
-@login_required
+@doctor_required
 def medication_sessions_list(request, med_id):
     """
     List all medication sessions for a specific prescribed medication with filtering and search capabilities
@@ -101,7 +102,7 @@ def medication_sessions_list(request, med_id):
     return render(request, 'sanatorium/doctors/prescriptions/medications/sessions_list.html', context)
 
 
-@login_required
+@doctor_required
 def today_sessions(request):
     """
     Show today's medication sessions for quick access
@@ -131,7 +132,7 @@ def today_sessions(request):
     return render(request, 'sanatorium/doctors/prescriptions/medications/today_sessions.html', context)
 
 
-@login_required
+@doctor_required
 @require_POST
 def update_session_status(request, session_id):
     """
@@ -169,7 +170,7 @@ def update_session_status(request, session_id):
         return JsonResponse({'error': str(e)}, status=400)
 
 
-@login_required
+@doctor_required
 def session_detail(request, session_id):
     """
     Show detailed view of a medication session
@@ -192,7 +193,7 @@ def session_detail(request, session_id):
     return render(request, 'sanatorium/doctors/prescriptions/medications/session_detail.html', context)
 
 
-@login_required
+@doctor_required
 def patient_medications(request, patient_id):
     """
     Show all medications for a specific patient
@@ -223,7 +224,7 @@ def patient_medications(request, patient_id):
     return render(request, 'sanatorium/doctors/prescriptions/medications/patient_medications.html', context)
 
 
-@login_required
+@doctor_required
 def medication_statistics(request):
     """
     Display statistics about medication administration
@@ -339,7 +340,7 @@ def medication_statistics(request):
     return render(request, 'sanatorium/doctors/prescriptions/medications/statistics.html', context)
 
 
-@login_required
+@doctor_required
 def create_medication_session(request, prescribed_medication_id):
     """
     Create a new medication session for a prescribed medication

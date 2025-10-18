@@ -1,18 +1,20 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import DoctorRequiredMixin
+
+from HayatMedicalCRM.auth.decorators import doctor_required
+
 from django.http import HttpResponse, JsonResponse
-from django.template.loader import render_to_string
+
 from django.contrib import messages
 from django.utils import timezone
-import json
+
 from io import BytesIO
-import zipfile
+
 from datetime import datetime
 
-# PDF generation imports
+
 try:
     from reportlab.lib.pagesizes import A4
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -37,7 +39,7 @@ from core.models import FinalAppointmentWithDoctorModel, IllnessHistory, Diagnos
 from application.sanatorium.forms.final_app_form import FinalAppointmentWithDoctorForm
 
 
-class FinalAppointmentEnhancedCreateOrUpdateView(LoginRequiredMixin, View):
+class FinalAppointmentEnhancedCreateOrUpdateView(DoctorRequiredMixin, View):
     """Enhanced view that handles either creating a new final appointment or updating an existing one"""
 
     def get(self, request, *args, **kwargs):
@@ -70,7 +72,7 @@ class FinalAppointmentEnhancedCreateOrUpdateView(LoginRequiredMixin, View):
             return create_view(request, *args, **kwargs)
 
 
-class FinalAppointmentEnhancedCreateView(LoginRequiredMixin, CreateView):
+class FinalAppointmentEnhancedCreateView(DoctorRequiredMixin, CreateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/doctors/final_appointment/enhanced_form.html'
@@ -120,7 +122,7 @@ class FinalAppointmentEnhancedCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class FinalAppointmentEnhancedUpdateView(LoginRequiredMixin, UpdateView):
+class FinalAppointmentEnhancedUpdateView(DoctorRequiredMixin, UpdateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/doctors/final_appointment/enhanced_form.html'
@@ -167,7 +169,7 @@ class FinalAppointmentEnhancedUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class FinalAppointmentEnhancedListView(LoginRequiredMixin, ListView):
+class FinalAppointmentEnhancedListView(DoctorRequiredMixin, ListView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/doctors/final_appointment/enhanced_list.html'
     context_object_name = 'appointments'
@@ -190,7 +192,7 @@ class FinalAppointmentEnhancedListView(LoginRequiredMixin, ListView):
         return context
 
 
-class FinalAppointmentEnhancedDetailView(LoginRequiredMixin, DetailView):
+class FinalAppointmentEnhancedDetailView(DoctorRequiredMixin, DetailView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/doctors/final_appointment/enhanced_detail.html'
     context_object_name = 'appointment'
@@ -238,7 +240,7 @@ class FinalAppointmentEnhancedDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-@login_required
+@doctor_required
 def export_final_appointment_pdf(request, pk):
     """Export final appointment to PDF format"""
     appointment = get_object_or_404(FinalAppointmentWithDoctorModel, pk=pk)
@@ -378,7 +380,7 @@ def export_final_appointment_pdf(request, pk):
     return response
 
 
-@login_required
+@doctor_required
 def export_final_appointment_word(request, pk):
     """Export final appointment to Word format"""
     appointment = get_object_or_404(FinalAppointmentWithDoctorModel, pk=pk)
@@ -472,7 +474,7 @@ def export_final_appointment_word(request, pk):
     return response
 
 
-@login_required
+@doctor_required
 def get_patient_vitals_history(request, history_id):
     """Get patient's vitals history for charts"""
     history = get_object_or_404(IllnessHistory, pk=history_id)
@@ -528,7 +530,7 @@ def get_patient_vitals_history(request, history_id):
     return JsonResponse({'appointments': appointments})
 
 
-class FinalAppointmentEnhancedDeleteView(LoginRequiredMixin, DeleteView):
+class FinalAppointmentEnhancedDeleteView(DoctorRequiredMixin, DeleteView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/doctors/final_appointment/enhanced_delete.html'
 

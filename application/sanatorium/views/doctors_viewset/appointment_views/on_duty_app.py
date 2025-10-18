@@ -1,6 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import DoctorRequiredMixin
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 
@@ -9,7 +10,7 @@ from core.models import IllnessHistory
 from core.models import AppointmentWithOnDutyDoctorModel
 
 
-class AppointmentWithOnDutyDoctorListView(LoginRequiredMixin, ListView):
+class AppointmentWithOnDutyDoctorListView(DoctorRequiredMixin, ListView):
     model = AppointmentWithOnDutyDoctorModel
     template_name = 'sanatorium/doctors/appointments/on_duty_app/list.html'
     context_object_name = 'appointments'
@@ -23,7 +24,7 @@ class AppointmentWithOnDutyDoctorListView(LoginRequiredMixin, ListView):
         return self.model.objects.filter(doctor=self.request.user).order_by('-created_at')
 
 
-class AppointmentWithOnDutyDoctorDetailView(LoginRequiredMixin, DetailView):
+class AppointmentWithOnDutyDoctorDetailView(DoctorRequiredMixin, DetailView):
     model = AppointmentWithOnDutyDoctorModel
     template_name = 'sanatorium/doctors/appointments/on_duty_app/detail.html'
     context_object_name = 'appointment'
@@ -36,7 +37,7 @@ class AppointmentWithOnDutyDoctorDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class AppointmentWithOnDutyDoctorCreateView(LoginRequiredMixin, CreateView):
+class AppointmentWithOnDutyDoctorCreateView(DoctorRequiredMixin, CreateView):
     model = AppointmentWithOnDutyDoctorModel
     form_class = AppointmentWithOnDutyDoctorForm
     template_name = 'sanatorium/doctors/appointments/on_duty_app/form.html'
@@ -63,7 +64,7 @@ class AppointmentWithOnDutyDoctorCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AppointmentWithOnDutyDoctorUpdateView(LoginRequiredMixin, UpdateView):
+class AppointmentWithOnDutyDoctorUpdateView(DoctorRequiredMixin, UpdateView):
     model = AppointmentWithOnDutyDoctorModel
     form_class = AppointmentWithOnDutyDoctorForm
     template_name = 'sanatorium/doctors/appointments/on_duty_app/form.html'

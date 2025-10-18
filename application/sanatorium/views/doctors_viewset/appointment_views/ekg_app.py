@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import DoctorRequiredMixin
 
 from core.models import EkgAppointmentModel, IllnessHistory
 from application.sanatorium.forms.ekg_app_form import EkgAppointmentForm
 
 
-class EkgAppointmentCreateView(LoginRequiredMixin, CreateView):
+class EkgAppointmentCreateView(DoctorRequiredMixin, CreateView):
     model = EkgAppointmentModel
     form_class = EkgAppointmentForm
     template_name = 'sanatorium/doctors/appointments/ekg_app/form.html'
@@ -30,7 +30,7 @@ class EkgAppointmentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class EkgAppointmentListView(LoginRequiredMixin, ListView):
+class EkgAppointmentListView(DoctorRequiredMixin, ListView):
     model = EkgAppointmentModel
     template_name = 'sanatorium/doctors/appointments/ekg_app/list.html'
     context_object_name = 'appointments'
@@ -46,7 +46,7 @@ class EkgAppointmentListView(LoginRequiredMixin, ListView):
         return context
 
 
-class EkgAppointmentDetailView(LoginRequiredMixin, DetailView):
+class EkgAppointmentDetailView(DoctorRequiredMixin, DetailView):
     model = EkgAppointmentModel
     template_name = 'sanatorium/doctors/appointments/ekg_app/detail.html'
     context_object_name = 'appointment'
@@ -58,7 +58,7 @@ class EkgAppointmentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class EkgAppointmentUpdateView(LoginRequiredMixin, UpdateView):
+class EkgAppointmentUpdateView(DoctorRequiredMixin, UpdateView):
     model = EkgAppointmentModel
     form_class = EkgAppointmentForm
     template_name = 'sanatorium/doctors/appointments/ekg_app/form.html'

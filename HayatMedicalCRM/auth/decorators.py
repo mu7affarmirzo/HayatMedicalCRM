@@ -190,3 +190,13 @@ class NurseRequiredMixin(UserPassesTestMixin):
         # Check if user has NURSE or ADMIN role
         from core.models import RolesModel
         return user.has_role(RolesModel.NURSE) or user.has_role(RolesModel.ADMIN) or user.is_superuser
+
+
+class DoctorRequiredMixin(UserPassesTestMixin):
+    """Mixin to ensure that only nurses or admins can access the view"""
+
+    def test_func(self):
+        user = self.request.user
+        # Check if user has NURSE or ADMIN role
+        from core.models import RolesModel
+        return user.has_role(RolesModel.DOCTOR) or user.has_role(RolesModel.ADMIN) or user.is_superuser

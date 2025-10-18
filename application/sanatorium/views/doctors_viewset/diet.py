@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import doctor_required
+
 from django.utils import timezone
 from django.http import JsonResponse
 
 from core.models import IllnessHistory
 
 
-@login_required
+@doctor_required
 def diet_list_view(request, history_id):
     """View for displaying patient's diet plans and recommendations"""
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -28,7 +29,7 @@ def diet_list_view(request, history_id):
     return render(request, 'sanatorium/doctors/diet/diet_list.html', context)
 
 
-@login_required
+@doctor_required
 def diet_create_view(request, history_id):
     """View for creating a new diet plan"""
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -59,7 +60,7 @@ def diet_create_view(request, history_id):
     return render(request, 'sanatorium/doctors/diet/diet_create.html', context)
 
 
-@login_required
+@doctor_required
 def diet_update_view(request, history_id, diet_id):
     """View for updating an existing diet plan"""
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -91,7 +92,7 @@ def diet_update_view(request, history_id, diet_id):
     return render(request, 'sanatorium/doctors/diet/diet_update.html', context)
 
 
-@login_required
+@doctor_required
 def diet_delete_view(request, history_id, diet_id):
     """View for deleting a diet plan"""
     if request.method == 'POST':
@@ -104,7 +105,7 @@ def diet_delete_view(request, history_id, diet_id):
     return redirect('diet_list', history_id=history_id)
 
 
-@login_required
+@doctor_required
 def diet_detail_view(request, history_id, diet_id):
     """View for displaying diet plan details"""
     history = get_object_or_404(IllnessHistory, id=history_id)

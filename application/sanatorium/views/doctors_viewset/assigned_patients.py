@@ -1,13 +1,13 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import doctor_required
 from django.utils import timezone
 
 from application.sanatorium.forms.patients import IllnessHistoryForm
 from core.models import IllnessHistory, PatientModel
 
 
-@login_required
+@doctor_required
 def assigned_patients_list(request):
     # # Check if user is a doctor
     # if not request.user.is_therapist:
@@ -38,7 +38,7 @@ def assigned_patients_list(request):
     return render(request, 'sanatorium/doctors/doctors_dashboard.html', context)
 
 
-@login_required
+@doctor_required
 def patient_detail(request, history_id):
     # Get the illness history
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -60,7 +60,7 @@ def patient_detail(request, history_id):
     return render(request, 'sanatorium/doctors/patient_detail.html', context)
 
 
-@login_required
+@doctor_required
 def patient_edit(request, history_id):
     # Get the illness history
     history = get_object_or_404(IllnessHistory, id=history_id)

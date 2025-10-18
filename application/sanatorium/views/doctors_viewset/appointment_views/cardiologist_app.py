@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
-from django.contrib.auth.mixins import LoginRequiredMixin
+
+from HayatMedicalCRM.auth.decorators import DoctorRequiredMixin
 from django.shortcuts import get_object_or_404
 
 from core.models import ConsultingWithCardiologistModel, IllnessHistory
@@ -9,7 +9,7 @@ from application.sanatorium.decorators import set_active_sidebar
 from application.sanatorium.forms.cardiologist_app_form import ConsultingWithCardiologistForm
 
 
-class CardiologistConsultingListView(LoginRequiredMixin, ListView):
+class CardiologistConsultingListView(DoctorRequiredMixin, ListView):
     model = ConsultingWithCardiologistModel
     template_name = 'sanatorium/doctors/appointments/cardiologist/list.html'
     context_object_name = 'consultings'
@@ -26,7 +26,7 @@ class CardiologistConsultingListView(LoginRequiredMixin, ListView):
         return context
 
 
-class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
+class CardiologistConsultingDetailView(DoctorRequiredMixin, DetailView):
     model = ConsultingWithCardiologistModel
     template_name = 'sanatorium/doctors/appointments/cardiologist/detail.html'
     context_object_name = 'consulting'
@@ -40,7 +40,7 @@ class CardiologistConsultingDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
+class CardiologistConsultingCreateView(DoctorRequiredMixin, CreateView):
     model = ConsultingWithCardiologistModel
     form_class = ConsultingWithCardiologistForm
     template_name = 'sanatorium/doctors/appointments/cardiologist/form.html'
@@ -63,7 +63,7 @@ class CardiologistConsultingCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class CardiologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
+class CardiologistConsultingUpdateView(DoctorRequiredMixin, UpdateView):
     model = ConsultingWithCardiologistModel
     form_class = ConsultingWithCardiologistForm
     template_name = 'sanatorium/doctors/appointments/cardiologist/form.html'

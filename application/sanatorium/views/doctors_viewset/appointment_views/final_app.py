@@ -1,18 +1,18 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.utils import timezone
 import docx
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
+from HayatMedicalCRM.auth.decorators import DoctorRequiredMixin
 from core.models import FinalAppointmentWithDoctorModel, IllnessHistory
 from application.sanatorium.forms.final_app_form import FinalAppointmentWithDoctorForm
 
 
-class FinalAppointmentCreateOrUpdateView(LoginRequiredMixin, View):
+class FinalAppointmentCreateOrUpdateView(DoctorRequiredMixin, View):
     """View that handles either creating a new final appointment or updating an existing one"""
 
     def get(self, request, *args, **kwargs):
@@ -45,7 +45,7 @@ class FinalAppointmentCreateOrUpdateView(LoginRequiredMixin, View):
             return create_view(request, *args, **kwargs)
 
 
-class FinalAppointmentCreateView(LoginRequiredMixin, CreateView):
+class FinalAppointmentCreateView(DoctorRequiredMixin, CreateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/doctors/appointments/final_app/form.html'
@@ -68,7 +68,7 @@ class FinalAppointmentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
+class FinalAppointmentUpdateView(DoctorRequiredMixin, UpdateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/doctors/appointments/final_app/form.html'
@@ -88,7 +88,7 @@ class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class FinalAppointmentListView(LoginRequiredMixin, ListView):
+class FinalAppointmentListView(DoctorRequiredMixin, ListView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/doctors/appointments/final_app/list.html'
     context_object_name = 'appointments'
@@ -105,7 +105,7 @@ class FinalAppointmentListView(LoginRequiredMixin, ListView):
         return context
 
 
-class FinalAppointmentDetailView(LoginRequiredMixin, DetailView):
+class FinalAppointmentDetailView(DoctorRequiredMixin, DetailView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/doctors/appointments/final_app/detail.html'
     context_object_name = 'appointment'
@@ -117,7 +117,7 @@ class FinalAppointmentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class FinalAppointmentDownloadView(LoginRequiredMixin, View):
+class FinalAppointmentDownloadView(DoctorRequiredMixin, View):
     """View for downloading appointment details as a Word document"""
 
     def get(self, request, *args, **kwargs):

@@ -1,9 +1,8 @@
-# views.py
 from datetime import datetime
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import doctor_required
 from django.utils import timezone
 
 # Import all appointment models
@@ -13,16 +12,12 @@ from core.models import (
     EkgAppointmentModel,
     AppointmentWithOnDutyDoctorModel,
     RepeatedAppointmentWithDoctorModel,
-    AppointmentWithOnDutyDoctorOnArrivalModel,
-    InitialAppointmentWithDoctorModel,
-    FinalAppointmentWithDoctorModel,
     Account,
     IllnessHistory, MedicalServiceModel, ProcedureServiceModel, LabResult, AssignedLabs,
     LabResearchModel, LabResearchCategoryModel, PrescribedMedication
 )
 
 
-# Helper functions for main_prescription_list view
 def get_available_doctors():
     """Get all doctors that can be assigned to appointments"""
     return Account.objects.filter(is_active=True).exclude(is_admin=True)
@@ -105,7 +100,7 @@ def get_all_appointments(history):
 #     return Medication.objects.filter(illness_history=history).order_by('-created_at')
 #
 #
-# @login_required
+# @doctor_required
 # def main_prescription_list(request, history_id):
 #     """View for the main prescription list page"""
 #     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -241,7 +236,7 @@ def schedule_appointment(appointment, scheduled_date):
     # )
 
 
-@login_required
+@doctor_required
 def create_appointment(request, history_id):
     """View for creating a new appointment"""
     if request.method != 'POST':
@@ -307,7 +302,7 @@ def get_appointment_instance(model_name, appointment_id):
     return get_object_or_404(model_class, id=appointment_id)
 
 
-@login_required
+@doctor_required
 def cancel_appointment(request, history_id):
     """View for canceling an appointment"""
     if request.method != 'POST':
@@ -363,7 +358,7 @@ def get_appointment_detail_template(model_name):
     return template_mapping.get(model_name, 'sanatorium/doctors/appointments/generic_detail.html')
 
 
-@login_required
+@doctor_required
 def view_appointment(request, model_name, appointment_id):
     """
     View for displaying appointment details
@@ -409,7 +404,7 @@ def view_appointment(request, model_name, appointment_id):
     return render(request, template, context)
 
 
-@login_required
+@doctor_required
 def main_prescription_list_view(request, history_id):
     # Get the illness history
     history = get_object_or_404(IllnessHistory, id=history_id)

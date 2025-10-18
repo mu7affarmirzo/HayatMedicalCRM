@@ -1,4 +1,4 @@
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import doctor_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -16,7 +16,7 @@ from core.models import (
 )
 
 
-@login_required
+@doctor_required
 def doctor_appointments(request):
     """View for doctors to see all their appointments."""
     # Get filter parameters

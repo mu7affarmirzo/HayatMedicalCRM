@@ -1,11 +1,13 @@
 # views.py
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import doctor_required
+
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from HayatMedicalCRM.auth.decorators import DoctorRequiredMixin
+
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404
 
@@ -16,7 +18,7 @@ from core.models import PrescribedMedication, MedicationSession, IllnessHistory,
 
 
 # PrescribedMedication Views
-class PrescribedMedicationListView(LoginRequiredMixin, ListView):
+class PrescribedMedicationListView(DoctorRequiredMixin, ListView):
     model = PrescribedMedication
     template_name = 'sanatorium/doctors/prescriptions/medications/list.html'
     context_object_name = 'medications'
@@ -51,7 +53,7 @@ class PrescribedMedicationListView(LoginRequiredMixin, ListView):
         return context
 
 
-class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
+class PrescribedMedicationDetailView(DoctorRequiredMixin, DetailView):
     model = PrescribedMedication
     template_name = 'sanatorium/doctors/prescriptions/medications/detail.html'
     context_object_name = 'medication'
@@ -63,7 +65,7 @@ class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class PrescribedMedicationCreateView(DoctorRequiredMixin, SuccessMessageMixin, CreateView):
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
@@ -120,7 +122,7 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
         return context
 
 
-class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class PrescribedMedicationUpdateView(DoctorRequiredMixin, SuccessMessageMixin, UpdateView):
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
@@ -143,7 +145,7 @@ class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, Up
         return context
 
 
-class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class PrescribedMedicationDeleteView(DoctorRequiredMixin, SuccessMessageMixin, DeleteView):
     model = PrescribedMedication
     template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
     context_object_name = 'medication'
@@ -156,7 +158,7 @@ class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, De
 
 
 # MedicationSession Views
-class MedicationSessionListView(LoginRequiredMixin, ListView):
+class MedicationSessionListView(DoctorRequiredMixin, ListView):
     model = MedicationSession
     template_name = 'sanatorium/doctors/prescriptions/medications/list.html'
     context_object_name = 'administrations'
@@ -186,13 +188,13 @@ class MedicationSessionListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MedicationSessionDetailView(LoginRequiredMixin, DetailView):
+class MedicationSessionDetailView(DoctorRequiredMixin, DetailView):
     model = MedicationSession
     template_name = 'sanatorium/doctors/prescriptions/medications/detail.html'
     context_object_name = 'administration'
 
 
-class MedicationSessionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MedicationSessionCreateView(DoctorRequiredMixin, SuccessMessageMixin, CreateView):
     model = MedicationSession
     form_class = MedicationSessionForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
@@ -239,7 +241,7 @@ class MedicationSessionCreateView(LoginRequiredMixin, SuccessMessageMixin, Creat
         return context
 
 
-class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class MedicationSessionUpdateView(DoctorRequiredMixin, SuccessMessageMixin, UpdateView):
     model = MedicationSession
     form_class = MedicationSessionForm
     template_name = 'sanatorium/doctors/prescriptions/medications/form.html'
@@ -254,7 +256,7 @@ class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, Updat
         return reverse_lazy('medication_administration_detail', kwargs={'pk': self.object.id})
 
 
-class MedicationSessionDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class MedicationSessionDeleteView(DoctorRequiredMixin, SuccessMessageMixin, DeleteView):
     model = MedicationSession
     template_name = 'sanatorium/doctors/prescriptions/medications/confirm_delete.html'
     context_object_name = 'administration'
@@ -264,7 +266,7 @@ class MedicationSessionDeleteView(LoginRequiredMixin, SuccessMessageMixin, Delet
                             kwargs={'pk': self.object.prescribed_medication.id})
 
 
-@login_required
+@doctor_required
 def api_medications_search(request):
     """
     AJAX endpoint для поиска медикаментов с фильтрацией и пагинацией.
@@ -398,7 +400,7 @@ def api_medications_search(request):
     })
 
 
-@login_required
+@doctor_required
 def api_medication_details(request):
     """
     AJAX endpoint для получения детальной информации о медикаменте.

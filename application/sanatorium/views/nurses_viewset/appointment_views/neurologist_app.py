@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import NurseRequiredMixin
 
 from core.models import ConsultingWithNeurologistModel, IllnessHistory
 from application.sanatorium.forms.neurologist_app_form import ConsultingWithNeurologistForm
 
 
-class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
+class NeurologistConsultingCreateView(NurseRequiredMixin, CreateView):
     model = ConsultingWithNeurologistModel
     form_class = ConsultingWithNeurologistForm
     template_name = 'sanatorium/nurses/appointments/neurologist/form.html'
@@ -29,7 +29,7 @@ class NeurologistConsultingCreateView(LoginRequiredMixin, CreateView):
         context['history'] = get_object_or_404(IllnessHistory, pk=self.kwargs.get('history_id'))
         return context
 
-class NeurologistConsultingListView(LoginRequiredMixin, ListView):
+class NeurologistConsultingListView(NurseRequiredMixin, ListView):
     model = ConsultingWithNeurologistModel
     template_name = 'sanatorium/nurses/appointments/neurologist/list.html'
     context_object_name = 'consultings'
@@ -46,7 +46,7 @@ class NeurologistConsultingListView(LoginRequiredMixin, ListView):
         return context
 
 
-class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
+class NeurologistConsultingDetailView(NurseRequiredMixin, DetailView):
     model = ConsultingWithNeurologistModel
     template_name = 'sanatorium/nurses/appointments/neurologist/detail.html'
     context_object_name = 'consulting'
@@ -58,7 +58,7 @@ class NeurologistConsultingDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class NeurologistConsultingUpdateView(LoginRequiredMixin, UpdateView):
+class NeurologistConsultingUpdateView(NurseRequiredMixin, UpdateView):
     model = ConsultingWithNeurologistModel
     form_class = ConsultingWithNeurologistForm
     template_name = 'sanatorium/nurses/appointments/neurologist/form.html'

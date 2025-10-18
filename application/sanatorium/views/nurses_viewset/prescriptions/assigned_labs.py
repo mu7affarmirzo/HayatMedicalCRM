@@ -1,18 +1,18 @@
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import nurse_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.http import JsonResponse
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import NurseRequiredMixin
 from django.db.models import Q
 
 from application.sanatorium.forms.assigned_labs_form import AssignedLabsForm
 from core.models import AssignedLabs, LabResearchModel, LabResearchCategoryModel, IllnessHistory, AssignedLabResult
 
 
-@login_required
+@nurse_required
 def assign_lab_create(request, history_id):
     """View for creating a new lab assignment"""
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -44,7 +44,7 @@ def assign_lab_create(request, history_id):
     return render(request, 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html', context)
 
 
-class AssignedLabsListView(LoginRequiredMixin, ListView):
+class AssignedLabsListView(NurseRequiredMixin, ListView):
     model = AssignedLabs
     template_name = 'sanatorium/nurses/appointments/on_duty_app/list.html'
     context_object_name = 'assigned_labs'
@@ -58,7 +58,7 @@ class AssignedLabsListView(LoginRequiredMixin, ListView):
         return self.model.objects.filter(doctor=self.request.user).order_by('-created_at')
 
 
-class AssignedLabsDetailView(LoginRequiredMixin, DetailView):
+class AssignedLabsDetailView(NurseRequiredMixin, DetailView):
     model = AssignedLabs
     template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_detail.html'
     context_object_name = 'assigned_lab'
@@ -71,7 +71,7 @@ class AssignedLabsDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class AssignedLabsCreateView(LoginRequiredMixin, CreateView):
+class AssignedLabsCreateView(NurseRequiredMixin, CreateView):
     model = AssignedLabs
     form_class = AssignedLabsForm
     template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html'
@@ -97,7 +97,7 @@ class AssignedLabsCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
+class AssignedLabsUpdateView(NurseRequiredMixin, UpdateView):
     model = AssignedLabs
     form_class = AssignedLabsForm
     template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html'
@@ -117,7 +117,7 @@ class AssignedLabsUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class AssignedLabsDeleteView(LoginRequiredMixin, DeleteView):
+class AssignedLabsDeleteView(NurseRequiredMixin, DeleteView):
     model = AssignedLabs
     context_object_name = 'assigned_lab'
     template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_confirm_delete.html'
@@ -135,7 +135,7 @@ class AssignedLabsDeleteView(LoginRequiredMixin, DeleteView):
         return reverse('assigned_labs_list')
 
 
-@login_required
+@nurse_required
 def get_labs_by_category(request):
     """AJAX view for getting labs filtered by category"""
     category_id = request.GET.get('category_id')
@@ -169,7 +169,7 @@ def get_labs_by_category(request):
     return JsonResponse({'labs': labs_data})
 
 
-@login_required
+@nurse_required
 def update_lab_state(request, pk, new_state):
     if request.method == 'POST':
         assigned_lab = get_object_or_404(AssignedLabs, pk=pk)
@@ -191,7 +191,7 @@ def update_lab_state(request, pk, new_state):
     return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
 
-# @login_required
+# @nurse_required
 # @require_POST
 # def update_lab_state(request, lab_id, new_state):
 #     """
@@ -248,7 +248,7 @@ def update_lab_state(request, pk, new_state):
 #         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-@login_required
+@nurse_required
 @require_POST
 def add_lab_result(request, assigned_lab_id):
     """
@@ -298,7 +298,7 @@ def add_lab_result(request, assigned_lab_id):
         return redirect('assigned_labs_detail', pk=assigned_lab.id)
 
 
-@login_required
+@nurse_required
 def view_lab_results(request, assigned_lab_id):
     """
     View to display all results for a specific assigned lab.

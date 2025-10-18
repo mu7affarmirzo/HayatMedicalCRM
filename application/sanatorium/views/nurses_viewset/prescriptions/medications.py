@@ -1,5 +1,5 @@
 # views.py
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import nurse_required
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from HayatMedicalCRM.auth.decorators import NurseRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404, redirect
 
@@ -18,7 +18,7 @@ from core.models import PrescribedMedication, MedicationSession, IllnessHistory,
 
 
 # PrescribedMedication Views
-class PrescribedMedicationListView(LoginRequiredMixin, ListView):
+class PrescribedMedicationListView(NurseRequiredMixin, ListView):
     model = PrescribedMedication
     template_name = 'sanatorium/nurses/prescriptions/medications/list.html'
     context_object_name = 'medications'
@@ -53,7 +53,7 @@ class PrescribedMedicationListView(LoginRequiredMixin, ListView):
         return context
 
 
-class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
+class PrescribedMedicationDetailView(NurseRequiredMixin, DetailView):
     model = PrescribedMedication
     template_name = 'sanatorium/nurses/prescriptions/medications/detail.html'
     context_object_name = 'medication'
@@ -68,7 +68,7 @@ class PrescribedMedicationDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class PrescribedMedicationCreateView(NurseRequiredMixin, SuccessMessageMixin, CreateView):
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
@@ -125,7 +125,7 @@ class PrescribedMedicationCreateView(LoginRequiredMixin, SuccessMessageMixin, Cr
         return context
 
 
-class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class PrescribedMedicationUpdateView(NurseRequiredMixin, SuccessMessageMixin, UpdateView):
     model = PrescribedMedication
     form_class = PrescribedMedicationForm
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
@@ -145,7 +145,7 @@ class PrescribedMedicationUpdateView(LoginRequiredMixin, SuccessMessageMixin, Up
         return reverse_lazy('prescribed_medication_detail', kwargs={'pk': self.object.id})
 
 
-class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class PrescribedMedicationDeleteView(NurseRequiredMixin, SuccessMessageMixin, DeleteView):
     model = PrescribedMedication
     template_name = 'sanatorium/nurses/prescriptions/medications/confirm_delete.html'
     context_object_name = 'medication'
@@ -158,7 +158,7 @@ class PrescribedMedicationDeleteView(LoginRequiredMixin, SuccessMessageMixin, De
 
 
 # MedicationSession Views
-class MedicationSessionListView(LoginRequiredMixin, ListView):
+class MedicationSessionListView(NurseRequiredMixin, ListView):
     model = MedicationSession
     template_name = 'sanatorium/nurses/prescriptions/medications/list.html'
     context_object_name = 'administrations'
@@ -188,13 +188,13 @@ class MedicationSessionListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MedicationSessionDetailView(LoginRequiredMixin, DetailView):
+class MedicationSessionDetailView(NurseRequiredMixin, DetailView):
     model = MedicationSession
     template_name = 'sanatorium/nurses/prescriptions/medications/detail.html'
     context_object_name = 'administration'
 
 
-class MedicationSessionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MedicationSessionCreateView(NurseRequiredMixin, SuccessMessageMixin, CreateView):
     model = MedicationSession
     form_class = MedicationSessionForm
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
@@ -241,7 +241,7 @@ class MedicationSessionCreateView(LoginRequiredMixin, SuccessMessageMixin, Creat
         return context
 
 
-class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class MedicationSessionUpdateView(NurseRequiredMixin, SuccessMessageMixin, UpdateView):
     model = MedicationSession
     form_class = MedicationSessionForm
     template_name = 'sanatorium/nurses/prescriptions/medications/form.html'
@@ -262,7 +262,7 @@ class MedicationSessionUpdateView(LoginRequiredMixin, SuccessMessageMixin, Updat
         return reverse_lazy('medication_administration_detail', kwargs={'pk': self.object.id})
 
 
-class MedicationSessionDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class MedicationSessionDeleteView(NurseRequiredMixin, SuccessMessageMixin, DeleteView):
     model = MedicationSession
     template_name = 'sanatorium/nurses/prescriptions/medications/confirm_delete.html'
     context_object_name = 'administration'
@@ -272,7 +272,7 @@ class MedicationSessionDeleteView(LoginRequiredMixin, SuccessMessageMixin, Delet
                             kwargs={'pk': self.object.prescribed_medication.id})
 
 
-@login_required
+@nurse_required
 def api_medications_search(request):
     """
     AJAX endpoint для поиска медикаментов с фильтрацией и пагинацией.
@@ -407,7 +407,7 @@ def api_medications_search(request):
 
 
 
-@login_required
+@nurse_required
 @require_POST
 def update_session_status(request, session_id):
     """Update the status of a medication session"""
@@ -466,7 +466,7 @@ def update_session_status(request, session_id):
     return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
 
-@login_required
+@nurse_required
 def api_medication_details(request):
     """
     AJAX endpoint для получения детальной информации о медикаменте.
@@ -512,7 +512,7 @@ def api_medication_details(request):
         return JsonResponse({'error': 'Медикамент не найден'}, status=404)
 
 
-@login_required
+@nurse_required
 @require_POST
 def administer_medication(request, session_id):
     """Directly mark a medication session as administered"""
@@ -533,7 +533,7 @@ def administer_medication(request, session_id):
     return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
 
-@login_required
+@nurse_required
 @require_POST
 def mark_missed(request, session_id):
     """Mark a medication session as missed"""
@@ -550,7 +550,7 @@ def mark_missed(request, session_id):
     return redirect(reverse('sanatorium.nurses:prescribed_medication_detail', args=[session.prescribed_medication.id]))
 
 
-@login_required
+@nurse_required
 @require_POST
 def mark_refused(request, session_id):
     """Mark a medication session as refused by patient"""

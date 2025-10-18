@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import NurseRequiredMixin
 
 from core.models import RepeatedAppointmentWithDoctorModel, IllnessHistory
 from application.sanatorium.forms.repeated_app_form import RepeatedAppointmentForm
 
 
-class RepeatedAppointmentCreateView(LoginRequiredMixin, CreateView):
+class RepeatedAppointmentCreateView(NurseRequiredMixin, CreateView):
     model = RepeatedAppointmentWithDoctorModel
     form_class = RepeatedAppointmentForm
     template_name = 'sanatorium/nurses/appointments/repeated_app/form.html'
@@ -30,7 +30,7 @@ class RepeatedAppointmentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class RepeatedAppointmentListView(LoginRequiredMixin, ListView):
+class RepeatedAppointmentListView(NurseRequiredMixin, ListView):
     model = RepeatedAppointmentWithDoctorModel
     template_name = 'sanatorium/nurses/appointments/repeated_app/list.html'
     context_object_name = 'appointments'
@@ -47,7 +47,7 @@ class RepeatedAppointmentListView(LoginRequiredMixin, ListView):
         return context
 
 
-class RepeatedAppointmentDetailView(LoginRequiredMixin, DetailView):
+class RepeatedAppointmentDetailView(NurseRequiredMixin, DetailView):
     model = RepeatedAppointmentWithDoctorModel
     template_name = 'sanatorium/nurses/appointments/repeated_app/detail.html'
     context_object_name = 'appointment'
@@ -59,7 +59,7 @@ class RepeatedAppointmentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class RepeatedAppointmentUpdateView(LoginRequiredMixin, UpdateView):
+class RepeatedAppointmentUpdateView(NurseRequiredMixin, UpdateView):
     model = RepeatedAppointmentWithDoctorModel
     form_class = RepeatedAppointmentForm
     template_name = 'sanatorium/nurses/appointments/repeated_app/form.html'

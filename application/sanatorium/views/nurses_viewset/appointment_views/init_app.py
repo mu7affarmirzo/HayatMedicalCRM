@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import nurse_required
 from django.contrib import messages
 from core.models import InitialAppointmentWithDoctorModel, IllnessHistory
 from application.sanatorium.forms.init_appointment_form import InitialAppointmentForm
 
 
-@login_required
+@nurse_required
 def initial_appointment_detail(request, history_id):
     """View for displaying the initial appointment details."""
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -26,7 +26,7 @@ def initial_appointment_detail(request, history_id):
     return render(request, 'sanatorium/nurses/appointments/init_appointment/appointment_detail.html', context)
 
 
-@login_required
+@nurse_required
 def initial_appointment_update(request, history_id):
     """View for updating the initial appointment."""
     history = get_object_or_404(IllnessHistory, id=history_id)

@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import NurseRequiredMixin
 
 from core.models import FinalAppointmentWithDoctorModel, IllnessHistory
 from application.sanatorium.forms.final_app_form import FinalAppointmentWithDoctorForm
 
 
-class FinalAppointmentCreateOrUpdateView(LoginRequiredMixin, View):
+class FinalAppointmentCreateOrUpdateView(NurseRequiredMixin, View):
     """View that handles either creating a new final appointment or updating an existing one"""
 
     def get(self, request, *args, **kwargs):
@@ -40,7 +40,7 @@ class FinalAppointmentCreateOrUpdateView(LoginRequiredMixin, View):
             return create_view(request, *args, **kwargs)
 
 
-class FinalAppointmentCreateView(LoginRequiredMixin, CreateView):
+class FinalAppointmentCreateView(NurseRequiredMixin, CreateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/nurses/appointments/final_app/form.html'
@@ -63,7 +63,7 @@ class FinalAppointmentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
+class FinalAppointmentUpdateView(NurseRequiredMixin, UpdateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/nurses/appointments/final_app/form.html'
@@ -83,7 +83,7 @@ class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class FinalAppointmentListView(LoginRequiredMixin, ListView):
+class FinalAppointmentListView(NurseRequiredMixin, ListView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/nurses/appointments/final_app/list.html'
     context_object_name = 'appointments'
@@ -100,7 +100,7 @@ class FinalAppointmentListView(LoginRequiredMixin, ListView):
         return context
 
 
-class FinalAppointmentDetailView(LoginRequiredMixin, DetailView):
+class FinalAppointmentDetailView(NurseRequiredMixin, DetailView):
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/nurses/appointments/final_app/detail.html'
     context_object_name = 'appointment'
@@ -112,7 +112,7 @@ class FinalAppointmentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
+class FinalAppointmentUpdateView(NurseRequiredMixin, UpdateView):
     model = FinalAppointmentWithDoctorModel
     form_class = FinalAppointmentWithDoctorForm
     template_name = 'sanatorium/nurses/appointments/final_app/form.html'
@@ -132,7 +132,7 @@ class FinalAppointmentUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class FinalAppointmentDetailByHistoryView(LoginRequiredMixin, DetailView):
+class FinalAppointmentDetailByHistoryView(NurseRequiredMixin, DetailView):
     """View that displays the first final appointment for a given illness history"""
     model = FinalAppointmentWithDoctorModel
     template_name = 'sanatorium/nurses/appointments/final_app/detail.html'

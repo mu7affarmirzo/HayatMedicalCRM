@@ -4,10 +4,10 @@ from application.sanatorium.forms.on_arrival_form import OnDutyDoctorOnArrivalFo
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from HayatMedicalCRM.auth.decorators import NurseRequiredMixin
 
 
-class AppointmentWithOnDutyDoctorOnArrivalCreateView(LoginRequiredMixin, CreateView):
+class AppointmentWithOnDutyDoctorOnArrivalCreateView(NurseRequiredMixin, CreateView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
     form_class = OnDutyDoctorOnArrivalForm
     template_name = 'sanatorium/nurses/appointments/on_arrival/form.html'
@@ -30,7 +30,7 @@ class AppointmentWithOnDutyDoctorOnArrivalCreateView(LoginRequiredMixin, CreateV
         return context
 
 
-class AppointmentWithOnDutyDoctorOnArrivalListView(LoginRequiredMixin, ListView):
+class AppointmentWithOnDutyDoctorOnArrivalListView(NurseRequiredMixin, ListView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
     template_name = 'sanatorium/nurses/appointments/on_arrival/list.html'
     context_object_name = 'consultings'
@@ -46,7 +46,7 @@ class AppointmentWithOnDutyDoctorOnArrivalListView(LoginRequiredMixin, ListView)
         return context
 
 
-class AppointmentWithOnDutyDoctorOnArrivalDetailView(LoginRequiredMixin, DetailView):
+class AppointmentWithOnDutyDoctorOnArrivalDetailView(NurseRequiredMixin, DetailView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
     template_name = 'sanatorium/nurses/appointments/on_arrival/detail.html'
     context_object_name = 'appointment'
@@ -58,7 +58,7 @@ class AppointmentWithOnDutyDoctorOnArrivalDetailView(LoginRequiredMixin, DetailV
         return context
 
 
-class AppointmentWithOnDutyDoctorOnArrivalUpdateView(LoginRequiredMixin, UpdateView):
+class AppointmentWithOnDutyDoctorOnArrivalUpdateView(NurseRequiredMixin, UpdateView):
     model = AppointmentWithOnDutyDoctorOnArrivalModel
     form_class = OnDutyDoctorOnArrivalForm
     template_name = 'sanatorium/nurses/appointments/on_arrival/form.html'

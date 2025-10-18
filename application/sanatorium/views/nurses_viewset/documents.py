@@ -1,6 +1,6 @@
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import nurse_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages

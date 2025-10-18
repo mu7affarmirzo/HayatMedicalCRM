@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import nurse_required
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -12,7 +12,7 @@ import json
 from core.models import MedicationSession, PrescribedMedication
 
 
-@method_decorator([login_required, csrf_exempt], name='dispatch')
+@method_decorator([nurse_required, csrf_exempt], name='dispatch')
 class MedicationSessionUpdateStatusView(View):
     """
     API endpoint to update medication session status
@@ -75,7 +75,7 @@ class MedicationSessionUpdateStatusView(View):
             }, status=500)
 
 
-@method_decorator([login_required, csrf_exempt], name='dispatch')
+@method_decorator([nurse_required, csrf_exempt], name='dispatch')
 class MedicationSessionUpdateNotesView(View):
     """
     API endpoint to update medication session notes
@@ -126,7 +126,7 @@ class MedicationSessionUpdateNotesView(View):
 
 # Alternative function-based views (if you prefer this approach)
 
-@login_required
+@nurse_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_medication_session_status(request, session_id):
@@ -189,7 +189,7 @@ def update_medication_session_status(request, session_id):
         }, status=500)
 
 
-@login_required
+@nurse_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_medication_session_notes(request, session_id):

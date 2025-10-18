@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import nurse_required
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
@@ -14,7 +14,7 @@ from core.models import (
 )
 # some comment to check if the code is working
 
-@login_required
+@nurse_required
 def procedure_detail(request, procedure_id):
     """View for showing procedure details"""
     procedure = get_object_or_404(ProcedureServiceModel, id=procedure_id)
@@ -33,7 +33,7 @@ def procedure_detail(request, procedure_id):
     return render(request, 'sanatorium/nurses/prescriptions/procedure_detail.html', context)
 
 
-@login_required
+@nurse_required
 def procedure_create(request, history_id):
     """View for creating a new procedure"""
     history = get_object_or_404(IllnessHistory, id=history_id)
@@ -66,7 +66,7 @@ def procedure_create(request, history_id):
     return render(request, 'sanatorium/nurses/prescriptions/procedure_form.html', context)
 
 
-@login_required
+@nurse_required
 def procedure_edit(request, procedure_id):
     """View for editing an existing procedure"""
     procedure = get_object_or_404(ProcedureServiceModel, id=procedure_id)
@@ -103,7 +103,7 @@ def procedure_edit(request, procedure_id):
     return render(request, 'sanatorium/nurses/prescriptions/procedure_form.html', context)
 
 
-@login_required
+@nurse_required
 def procedure_delete(request, procedure_id):
     """View for deleting a procedure"""
     procedure = get_object_or_404(ProcedureServiceModel, id=procedure_id)
@@ -125,7 +125,7 @@ def procedure_delete(request, procedure_id):
     return render(request, 'sanatorium/nurses/prescriptions/procedure_confirm_delete.html', context)
 
 
-# @login_required
+# @nurse_required
 # @require_POST
 # def update_session_status(request, session_id):
 #     """AJAX view for updating a procedure session status"""
@@ -159,7 +159,7 @@ def procedure_delete(request, procedure_id):
 #         'message': 'Статус сеанса успешно обновлен'
 #     })
 
-@login_required
+@nurse_required
 @require_POST
 def update_session_status(request, session_id):
     """AJAX view for updating a procedure session status"""
@@ -214,7 +214,7 @@ def update_session_status(request, session_id):
     return redirect(f"{url}#procedures")
 
 
-@login_required
+@nurse_required
 def get_services_by_type(request):
     """AJAX endpoint to get services filtered by type"""
     service_type_id = request.GET.get('service_type_id')

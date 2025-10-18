@@ -184,10 +184,13 @@ def get_appointment_model_class(consultation_type):
     """
     model_mapping = {
         'cardiologist': ConsultingWithCardiologistModel,
-        'neurologist': ConsultingWithNeurologistModel,
         'ekg': EkgAppointmentModel,
+        'final': FinalAppointmentWithDoctorModel,
+        'init': InitialAppointmentWithDoctorModel,
+        'neurologist': ConsultingWithNeurologistModel,
+        'on_arrival': AppointmentWithOnDutyDoctorOnArrivalModel,
         'onduty': AppointmentWithOnDutyDoctorModel,
-        'repeated': RepeatedAppointmentWithDoctorModel
+        'repeated': RepeatedAppointmentWithDoctorModel,
     }
 
     return model_mapping.get(consultation_type)
@@ -294,10 +297,13 @@ def get_appointment_instance(model_name, appointment_id):
     """
     model_mapping = {
         'cardiologist': ConsultingWithCardiologistModel,
-        'neurologist': ConsultingWithNeurologistModel,
         'ekg': EkgAppointmentModel,
+        'final': FinalAppointmentWithDoctorModel,
+        'init': InitialAppointmentWithDoctorModel,
+        'neurologist': ConsultingWithNeurologistModel,
+        'on_arrival': AppointmentWithOnDutyDoctorOnArrivalModel,
         'onduty': AppointmentWithOnDutyDoctorModel,
-        'repeated': RepeatedAppointmentWithDoctorModel
+        'repeated': RepeatedAppointmentWithDoctorModel,
     }
 
     model_class = model_mapping.get(model_name)
@@ -352,9 +358,12 @@ def get_appointment_detail_template(model_name):
         Template path string
     """
     template_mapping = {
-        'cardiologist': 'sanatorium/nurses/appointments/cardiologist_app/detail.html',
-        'neurologist': 'sanatorium/nurses/appointments/neurologist/detail.html',
+        'cardiologist': 'sanatorium/nurses/appointments/cardiologist/detail.html',
         'ekg': 'sanatorium/nurses/appointments/ekg_app/detail.html',
+        'final': 'sanatorium/nurses/appointments/final_app/detail.html',
+        'init': 'sanatorium/nurses/appointments/init_appointment/appointment_detail.html',
+        'neurologist': 'sanatorium/nurses/appointments/neurologist/detail.html',
+        'on_arrival': 'sanatorium/nurses/appointments/on_arrival/detail.html',
         'onduty': 'sanatorium/nurses/appointments/on_duty_app/detail.html',
         'repeated': 'sanatorium/nurses/appointments/repeated_app/detail.html'
     }

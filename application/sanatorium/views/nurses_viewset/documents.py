@@ -33,6 +33,19 @@ def documents_view(request, pk):
 
 
 @nurse_required
+def document_upload_page(request, pk):
+    """Dedicated page for document uploads"""
+    history = get_object_or_404(IllnessHistory, pk=pk)
+
+    context = {
+        'history': history,
+        'active_page': {'documents_page': 'active'}
+    }
+
+    return render(request, 'sanatorium/nurses/documents/document_upload_page.html', context)
+
+
+@nurse_required
 @require_POST
 def document_upload(request, pk):
     """Handle document upload via AJAX"""

@@ -1,0 +1,217 @@
+{% extends 'sanatorium/nurses/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Загрузка документов - История болезни #{{ history.id }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/dropzone/min/dropzone.min.css' %}">
+<style>
+    .dropzone {
+        min-height: 150px;
+        border: 2px dashed #3c8dbc;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    .dropzone .dz-message {
+        margin: 2em 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Загрузка документов</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:illness_history_detail' history.id %}">История болезни #{{ history.id }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:documents_view' history.id %}">Документы</a></li>
+                    <li class="breadcrumb-item active">Загрузка документов</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Загрузка новых документов</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="icon fas fa-info-circle"></i>
+                            Все загруженные документы будут привязаны к текущей истории болезни (№{{ history.id }}) пациента {{ history.patient.full_name }}.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Категория документа</label>
+                                    <select class="form-control select2" id="document-category" name="document_category">
+                                        <option value="">Выберите категорию</option>
+                                        <option value="medical_results">Результаты исследований</option>
+                                        <option value="consents">Согласия</option>
+                                        <option value="reports">Отчеты</option>
+                                        <option value="other">Прочее</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Описание</label>
+                                    <input type="text" class="form-control" id="document-description" name="document_description" placeholder="Краткое описание документа">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Перетащите файлы или нажмите для загрузки</label>
+                                    <div id="document-dropzone" class="dropzone">
+                                        <div class="dz-message">
+                                            <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
+                                            <h4>Перетащите файлы сюда или нажмите для выбора</h4>
+                                            <p class="text-muted">Поддерживаемые форматы: PDF, DOC, DOCX, JPG, JPEG, PNG, XLS, XLSX</p>
+                                            <p class="text-muted">Максимальный размер файла: 10 МБ</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="{% url 'sanatorium.nurses:documents_view' history.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left mr-1"></i> Вернуться к документам
+                                </a>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <button type="button" id="reset-dropzone" class="btn btn-default">
+                                    <i class="fas fa-undo mr-1"></i> Очистить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/dropzone/min/dropzone.min.js' %}"></script>
+<script>
+$(function () {
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Initialize Dropzone
+    Dropzone.autoDiscover = false;
+
+    var myDropzone = new Dropzone("#document-dropzone", {
+        url: "{% url 'sanatorium.nurses:document_upload' history.id %}",
+        paramName: "file",
+        maxFilesize: 10, // MB
+        acceptedFiles: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx",
+        addRemoveLinks: true,
+        dictDefaultMessage: "Перетащите файлы сюда или нажмите для загрузки",
+        dictRemoveFile: "Удалить",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        params: {
+            category: "",
+            description: "",
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        init: function() {
+            var dropzone = this;
+
+            // Set params before sending each file
+            this.on("sending", function(file, xhr, formData) {
+                var category = $("#document-category").val();
+                var description = $("#document-description").val();
+
+                formData.append("category", category);
+                formData.append("description", description);
+
+                console.log("Sending file:", file.name);
+                console.log("Category:", category);
+                console.log("Description:", description);
+            });
+
+            this.on("success", function(file, response) {
+                console.log("Upload success response:", response);
+
+                if (response.success) {
+                    // Show success message
+                    var successAlert = $('<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">' +
+                        '<i class="icon fas fa-check"></i> Документ успешно загружен!' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span></button></div>');
+
+                    $("#document-dropzone").after(successAlert);
+
+                    // Auto-dismiss after 3 seconds
+                    setTimeout(function() {
+                        successAlert.alert('close');
+                    }, 3000);
+
+                    // Clear form fields
+                    $("#document-category").val('').trigger('change');
+                    $("#document-description").val('');
+                } else {
+                    console.error("Upload failed:", response.error);
+                    this.removeFile(file);
+                    alert("Ошибка: " + response.error);
+                }
+            });
+
+            this.on("error", function(file, errorMessage) {
+                console.error("Upload error:", errorMessage);
+                this.removeFile(file);
+                alert("Ошибка загрузки: " + errorMessage);
+            });
+        }
+    });
+
+    // Reset dropzone button
+    $("#reset-dropzone").on("click", function() {
+        if (myDropzone && typeof myDropzone.removeAllFiles === 'function') {
+            myDropzone.removeAllFiles(true);
+            $("#document-category").val('').trigger('change');
+            $("#document-description").val('');
+        }
+    });
+
+    // Pass selected category and description to dropzone
+    $("#document-category, #document-description").on("change", function() {
+        if (myDropzone) {
+            myDropzone.options.params = {
+                category: $("#document-category").val(),
+                description: $("#document-description").val(),
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            };
+        }
+    });
+});
+</script>
+{% endblock %}

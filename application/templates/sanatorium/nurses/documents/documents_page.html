@@ -68,28 +68,35 @@
                 </ul>
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12 text-right">
+                        <a href="{% url 'sanatorium.nurses:document_upload_page' history.id %}" class="btn btn-primary">
+                            <i class="fas fa-upload mr-1"></i> Перейти на страницу загрузки документов
+                        </a>
+                    </div>
+                </div>
                 <div class="tab-content">
                     <!-- All Documents Tab -->
                     <div class="tab-pane active" id="all-documents">
                         {% include "sanatorium/nurses/documents/components/document_filters.html" %}
                         {% include "sanatorium/nurses/documents/components/document_list.html" with documents=all_documents %}
                     </div>
-                    
+
                     <!-- Medical Results Tab -->
                     <div class="tab-pane" id="medical-results">
                         {% include "sanatorium/nurses/documents/components/document_list.html" with documents=medical_results %}
                     </div>
-                    
+
                     <!-- Consents Tab -->
                     <div class="tab-pane" id="consents">
                         {% include "sanatorium/nurses/documents/components/document_list.html" with documents=consents %}
                     </div>
-                    
+
                     <!-- Reports Tab -->
                     <div class="tab-pane" id="reports">
                         {% include "sanatorium/nurses/documents/components/document_list.html" with documents=reports %}
                     </div>
-                    
+
                     <!-- Upload New Document Tab -->
                     <div class="tab-pane" id="upload-new">
                         {% include "sanatorium/nurses/documents/components/document_upload.html" %}
@@ -117,10 +124,10 @@ $(function () {
     $('.select2').select2({
         theme: 'bootstrap4'
     });
-    
+
     // Initialize Dropzone
     Dropzone.autoDiscover = false;
-    
+
     var myDropzone = new Dropzone("#document-dropzone", {
         url: "{% url 'sanatorium.nurses:document_upload' history.id %}",
         paramName: "file",
@@ -146,19 +153,19 @@ $(function () {
             });
         }
     });
-    
+
     // Document preview handler
     $(".preview-document").on("click", function() {
         var documentId = $(this).data("document-id");
         var documentName = $(this).data("document-name");
         var documentUrl = $(this).data("document-url");
         var documentType = $(this).data("document-type");
-        
+
         $("#previewModalLabel").text(documentName);
-        
+
         // Clear previous content
         $("#documentPreviewContent").empty();
-        
+
         // Different preview based on file type
         if (documentType === "pdf") {
             $("#documentPreviewContent").html('<iframe src="' + documentUrl + '" width="100%" height="450" style="border: none;"></iframe>');
@@ -167,21 +174,21 @@ $(function () {
         } else {
             $("#documentPreviewContent").html('<div class="alert alert-info">Предпросмотр недоступен. <a href="' + documentUrl + '" class="btn btn-sm btn-primary ml-2" target="_blank">Открыть файл</a></div>');
         }
-        
+
         $("#documentPreviewModal").modal("show");
     });
-    
+
     // Document delete handler
     $(".delete-document").on("click", function() {
         var documentId = $(this).data("document-id");
         var documentName = $(this).data("document-name");
-        
+
         $("#deleteDocumentName").text(documentName);
         $("#deleteDocumentForm").attr("action", "{% url 'sanatorium.nurses:document_delete' 0 %}".replace("0", documentId));
-        
+
         $("#documentDeleteModal").modal("show");
     });
-    
+
     // Filter handling
     $("#documentFilterForm").on("submit", function(e) {
         e.preventDefault();

@@ -256,7 +256,7 @@
                 <button class="btn btn-info" onclick="window.print();">
                     <i class="fas fa-print"></i> Печать отчета
                 </button>
-                <a href="#" class="btn btn-success">
+                <a href="{% url 'warehouse:expiring_medications_export' %}?days={{ days }}{% if selected_warehouse %}&warehouse={{ selected_warehouse }}{% endif %}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Экспорт в Excel
                 </a>
                 <a href="#" class="btn btn-danger" onclick="alert('Функция массового списания будет доступна в будущих версиях');">

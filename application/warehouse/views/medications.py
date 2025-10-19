@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from core.models import MedicationModel, Warehouse, MedicationsInStockModel, CompanyModel
 from ..forms.medications_form import MedicationForm
 
@@ -232,7 +235,6 @@ def expiring_medications(request):
 
     # Get context data
     warehouses = Warehouse.objects.all()
-
     context = {
         'stock_items': stock_items,
         'paginated_items': paginated_items,
@@ -252,6 +254,81 @@ def expiring_medications(request):
     }
 
     return render(request, 'warehouse/medications/expiring_medications.html', context)
+
+
+@login_required
+def expiring_medications_export_excel(request):
+    """
+    Export expiring medications to an Excel file using current filters (days, warehouse).
+    """
+    # Filters
+    days = int(request.GET.get('days', 90))
+    warehouse_id = request.GET.get('warehouse')
+
+    target_date = timezone.now().date() + timezone.timedelta(days=days)
+
+    stock_items = MedicationsInStockModel.objects.filter(
+        expire_date__lte=target_date,
+        expire_date__gt=timezone.now().date()
+    ).order_by('expire_date')
+
+    if warehouse_id:
+        stock_items = stock_items.filter(warehouse_id=warehouse_id)
+
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Expiring Medications'
+
+    # Header
+    headers = [
+        'Название',
+        'Компания',
+        'Склад',
+        'Серия прихода',
+        'Дата истечения',
+        'Осталось дней',
+        'Количество (упаковок)',
+        'Единиц в остатке',
+        'Ед. изм.',
+    ]
+    ws.append(headers)
+
+    today = timezone.now().date()
+
+    for s in stock_items.select_related('item', 'warehouse', 'item__company'):
+        days_left = (s.expire_date - today).days if s.expire_date else ''
+        ws.append([
+            s.item.name if s.item else '',
+            s.item.company.name if s.item and s.item.company else '',
+            s.warehouse.name if s.warehouse else '',
+            s.income_seria or '',
+            s.expire_date.strftime('%Y-%m-%d') if s.expire_date else '',
+            days_left,
+            s.quantity,
+            s.unit_quantity,
+            s.item.get_unit_display() if s.item else '',
+        ])
+
+    # Autosize columns
+    for col in range(1, len(headers) + 1):
+        max_length = 0
+        column = get_column_letter(col)
+        for cell in ws[column]:
+            try:
+                if cell.value is not None:
+                    max_length = max(max_length, len(str(cell.value)))
+            except Exception:
+                pass
+        ws.column_dimensions[column].width = min(max_length + 2, 50)
+
+    # Prepare response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = f"expiring_medications_{today.strftime('%Y%m%d')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    wb.save(response)
+    return response
 
 
 @login_required

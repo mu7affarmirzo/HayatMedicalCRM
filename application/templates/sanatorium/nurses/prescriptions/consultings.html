@@ -1,0 +1,85 @@
+{% extends 'sanatorium/nurses/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Консультации | Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+    {% include 'sanatorium/nurses/prescriptions/partials/prescription_styles.html' %}
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Консультации</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:illness_history_detail' history.id %}">История
+                            болезни #{{ history.series_number }}</a></li>
+                        <li class="breadcrumb-item active">Консультации</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info elevation-1"><i class="fas fa-stethoscope"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Консультации</span>
+                            <span class="info-box-number">{{ consultation_count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box mb-3">
+                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Завершено</span>
+                            <span class="info-box-number">{{ completed_consultations }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ completed_consultations_percent }}%"></div>
+                            </div>
+                            <span class="progress-description">
+                                {{ completed_consultations_percent|floatformat:1 }}% завершено
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Консультации</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addConsultationModal">
+                            <i class="fas fa-plus"></i> Добавить консультацию
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% include 'sanatorium/nurses/prescriptions/partials/consultations.html' %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Dialogs -->
+    {% include 'sanatorium/nurses/prescriptions/partials/consultation_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+    {% include 'sanatorium/nurses/prescriptions/partials/prescription_scripts.html' %}
+{% endblock %}

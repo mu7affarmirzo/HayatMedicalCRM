@@ -1,0 +1,85 @@
+{% extends 'sanatorium/doctors/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Медикаменты | Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+    {% include 'sanatorium/doctors/prescriptions/partials/prescription_styles.html' %}
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Медикаменты</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">История
+                            болезни #{{ history.series_number }}</a></li>
+                        <li class="breadcrumb-item active">Медикаменты</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info elevation-1"><i class="fas fa-pills"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Медикаменты</span>
+                            <span class="info-box-number">{{ medication_count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box mb-3">
+                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Активные</span>
+                            <span class="info-box-number">{{ active_medications }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ active_medications_percent }}%"></div>
+                            </div>
+                            <span class="progress-description">
+                                {{ active_medications_percent|floatformat:1 }}% активных
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Медикаменты</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addMedicationModal">
+                            <i class="fas fa-plus"></i> Добавить медикамент
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% include 'sanatorium/doctors/prescriptions/partials/medications.html' %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Dialogs -->
+    {% include 'sanatorium/doctors/prescriptions/partials/medication_modals.html' %}
+{% endblock %}
+
+{% block extra_js %}
+    {% include 'sanatorium/doctors/prescriptions/partials/prescription_scripts.html' %}
+{% endblock %}

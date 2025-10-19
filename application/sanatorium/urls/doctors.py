@@ -4,6 +4,7 @@ from application.sanatorium.views.doctors_viewset.doctors_appointments import do
 from application.sanatorium.views.doctors_viewset.illness_history import assigned_patients_list, all_patients_list
 
 
+
 urlpatterns = [
     path('main_screen/', assigned_patients_list, name='doctors_main_screen'),
     path('patients-list/', all_patients_list, name='patients_list'),

@@ -43,7 +43,7 @@
                 <a href="{% url "sanatorium.nurses:nurses_main_screen" %}" class="nav-link">Главная</a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url 'sanatorium.nurses:prescription_list' history.id %}" class="nav-link">Основноый лист назначений</a>
+                <a href="{% url 'sanatorium.nurses:prescription_consultings' history.id %}" class="nav-link">Основной лист назначений</a>
             </li>
         </ul>
 
@@ -273,7 +273,7 @@
                 </ul>
 
                 <li class="nav-item">
-                    <a href="#"
+                    <a href="{% url 'sanatorium.nurses:prescription_list' history.id %}"
                        class="nav-link {{ active_page.proc_main_list_page }}">
                         <i class="nav-icon fas fa-clipboard-list"></i>
                         <p>
@@ -283,28 +283,28 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="{% url 'sanatorium.nurses:prescription_list' history.id %}#consultations"
+                            <a href="{% url 'sanatorium.nurses:prescription_consultings' history.id %}"
                                class="nav-link {{ active_page.consultings }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Консультации</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'sanatorium.nurses:prescription_list' history.id %}#labs"
+                            <a href="{% url 'sanatorium.nurses:prescription_labs' history.id %}"
                                class="nav-link {{ active_page.labs }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Исследования</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'sanatorium.nurses:prescription_list' history.id %}#procedures"
+                            <a href="{% url 'sanatorium.nurses:prescription_procedures' history.id %}"
                                class="nav-link {{ active_page.procedures }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Лечебные процедуры</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'sanatorium.nurses:prescription_list' history.id %}#medications"
+                            <a href="{% url 'sanatorium.nurses:prescription_medications' history.id %}"
                                class="nav-link {{ active_page.medications }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Медикаменты</p>
@@ -393,4 +393,3 @@
 {% block extra_js %}{% endblock %}
 </body>
 </html>
-

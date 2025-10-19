@@ -1,0 +1,103 @@
+{% extends 'sanatorium/nurses/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Исследования | Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+    {% include 'sanatorium/nurses/prescriptions/partials/prescription_styles.html' %}
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Исследования</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:illness_history_detail' history.id %}">История
+                            болезни #{{ history.series_number }}</a></li>
+                        <li class="breadcrumb-item active">Исследования</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Info boxes -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info elevation-1"><i class="fas fa-flask"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Исследования</span>
+                            <span class="info-box-number">{{ lab_count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box mb-3">
+                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Завершено</span>
+                            <span class="info-box-number">{{ completed_lab_tests }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ lab_completion_percent }}%"></div>
+                            </div>
+                            <span class="progress-description">
+                                {{ lab_completion_percent|floatformat:1 }}% завершено
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box mb-3">
+                        <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-clock"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">В ожидании</span>
+                            <span class="info-box-number">{{ pending_lab_tests }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box mb-3">
+                        <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-times-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Отменено</span>
+                            <span class="info-box-number">{{ cancelled_lab_tests }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Исследования</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#assignLabModal">
+                            <i class="fas fa-plus"></i> Назначить исследование
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% include 'sanatorium/nurses/prescriptions/partials/labs/lab_research.html' %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Dialogs -->
+    {% include 'sanatorium/nurses/prescriptions/partials/labs/lab_modals.html' %}
+{% endblock %}
+
+{% block extra_js %}
+    {% include 'sanatorium/nurses/prescriptions/partials/prescription_scripts.html' %}
+{% endblock %}

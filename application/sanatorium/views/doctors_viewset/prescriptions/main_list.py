@@ -406,6 +406,17 @@ def view_appointment(request, model_name, appointment_id):
 
 @doctor_required
 def main_prescription_list_view(request, history_id):
+    """
+    Main prescription list view that redirects to the consultings view
+    """
+    return redirect('sanatorium.doctors:prescription_consultings', history_id=history_id)
+
+
+@doctor_required
+def prescription_consultings_view(request, history_id):
+    """
+    View for displaying consultations
+    """
     # Get the illness history
     history = get_object_or_404(IllnessHistory, id=history_id)
 
@@ -414,58 +425,12 @@ def main_prescription_list_view(request, history_id):
         illness_history=history
     ).select_related('medical_service', 'consulted_doctor')
 
-    # Get all procedures
-    procedures = ProcedureServiceModel.objects.filter(
-        illness_history=history
-    ).select_related('medical_service', 'therapist').prefetch_related('individual_sessions')
-
     # Calculate consultation statistics
     consultation_count = consultations.count()
     completed_consultations = consultations.filter(state='dispatched').count()
     completed_consultations_percent = 0
     if consultation_count > 0:
         completed_consultations_percent = (completed_consultations / consultation_count) * 100
-
-    # Get all medications with their sessions
-    try:
-        medications = PrescribedMedication.objects.filter(illness_history=history).prefetch_related('sessions')
-
-        # Calculate additional properties for each medication
-        today = timezone.now().date()
-        for med in medications:
-            # Calculate total days of treatment
-            if med.end_date and med.start_date:
-                med.total_days = (med.end_date - med.start_date).days + 1
-            else:
-                med.total_days = 0
-
-            # Calculate days elapsed
-            if med.start_date and med.start_date <= today:
-                med.days_elapsed = (min(today, med.end_date or today) - med.start_date).days + 1
-            else:
-                med.days_elapsed = 0
-
-            # Calculate progress percentage
-            if med.total_days > 0:
-                med.progress_percent = min(100, (med.days_elapsed / med.total_days) * 100)
-            else:
-                med.progress_percent = 0
-    except:
-        medications = []
-
-    # Get lab tests using the new AssignedLabs model
-    assigned_labs = AssignedLabs.objects.filter(
-        illness_history=history
-    ).select_related('lab', 'created_by', 'modified_by')
-
-    # Get all available labs for the assign modal
-    available_labs = LabResearchModel.objects.filter(is_active=True)
-
-    # Group labs by category
-    lab_categories = LabResearchCategoryModel.objects.all()
-
-    # Process lab filter parameter if provided
-    selected_category = request.GET.get('lab_category', 'all')
 
     doctors = Account.objects.filter(roles__name="Doctor")
 
@@ -534,6 +499,48 @@ def main_prescription_list_view(request, history_id):
     # Sort appointments by creation date (newest first)
     appointments.sort(key=lambda x: x['created_at'], reverse=True)
 
+    active_page = {
+        'proc_main_list_page': 'active',
+        'consultings': 'active',
+    }
+
+    # Include context data
+    context = {
+        'history': history,
+        'consultations': consultations,
+        'completed_consultations': completed_consultations,
+        'completed_consultations_percent': completed_consultations_percent,
+        'consultation_count': consultation_count,
+        'active_page': active_page,
+        'appointments': appointments,
+        'doctors': doctors
+    }
+
+    return render(request, 'sanatorium/doctors/prescriptions/consultings.html', context)
+
+
+@doctor_required
+def prescription_labs_view(request, history_id):
+    """
+    View for displaying lab tests
+    """
+    # Get the illness history
+    history = get_object_or_404(IllnessHistory, id=history_id)
+
+    # Get lab tests using the new AssignedLabs model
+    assigned_labs = AssignedLabs.objects.filter(
+        illness_history=history
+    ).select_related('lab', 'created_by', 'modified_by')
+
+    # Get all available labs for the assign modal
+    available_labs = LabResearchModel.objects.filter(is_active=True)
+
+    # Group labs by category
+    lab_categories = LabResearchCategoryModel.objects.all()
+
+    # Process lab filter parameter if provided
+    selected_category = request.GET.get('lab_category', 'all')
+
     # Apply filtering
     if selected_category != 'all' and selected_category in lab_categories:
         filtered_labs = lab_categories[selected_category]
@@ -541,12 +548,8 @@ def main_prescription_list_view(request, history_id):
         filtered_labs = assigned_labs
         selected_category = 'all'  # Ensure we set to 'all' if category doesn't exist
 
-    # Calculate statistics
-    consultation_count = consultations.count()
-    lab_count = assigned_labs.count()
-    total_count = consultation_count + lab_count
-
     # Calculate lab test statistics
+    lab_count = assigned_labs.count()
     completed_lab_tests = assigned_labs.filter(state='results').count()
     cancelled_lab_tests = assigned_labs.filter(state__in=['cancelled', 'stopped']).count()
     pending_lab_tests = lab_count - completed_lab_tests - cancelled_lab_tests
@@ -555,10 +558,42 @@ def main_prescription_list_view(request, history_id):
     if lab_count > 0:
         lab_completion_percent = (completed_lab_tests / lab_count) * 100
 
-    completed_total = completed_consultations + completed_lab_tests
-    completed_total_percent = 0
-    if total_count > 0:
-        completed_total_percent = (completed_total / total_count) * 100
+    active_page = {
+        'proc_main_list_page': 'active',
+        'labs': 'active',
+    }
+
+    # Include context data
+    context = {
+        'history': history,
+        'assigned_labs': assigned_labs,
+        'filtered_labs': filtered_labs,
+        'lab_categories': lab_categories,
+        'selected_category': selected_category,
+        'available_labs': available_labs,
+        'lab_count': lab_count,
+        'completed_lab_tests': completed_lab_tests,
+        'cancelled_lab_tests': cancelled_lab_tests,
+        'pending_lab_tests': pending_lab_tests,
+        'lab_completion_percent': lab_completion_percent,
+        'active_page': active_page,
+    }
+
+    return render(request, 'sanatorium/doctors/prescriptions/labs.html', context)
+
+
+@doctor_required
+def prescription_procedures_view(request, history_id):
+    """
+    View for displaying procedures
+    """
+    # Get the illness history
+    history = get_object_or_404(IllnessHistory, id=history_id)
+
+    # Get all procedures
+    procedures = ProcedureServiceModel.objects.filter(
+        illness_history=history
+    ).select_related('medical_service', 'therapist').prefetch_related('individual_sessions')
 
     # Calculate procedure statistics
     procedure_count = procedures.count()
@@ -573,6 +608,60 @@ def main_prescription_list_view(request, history_id):
     if total_sessions > 0:
         total_procedures_percent = (total_completed_sessions / total_sessions) * 100
 
+    active_page = {
+        'proc_main_list_page': 'active',
+        'procedures': 'active',
+    }
+
+    # Include context data
+    context = {
+        'history': history,
+        'procedures': procedures,
+        'procedure_count': procedure_count,
+        'total_sessions': total_sessions,
+        'total_completed_sessions': total_completed_sessions,
+        'total_procedures_percent': total_procedures_percent,
+        'active_page': active_page,
+    }
+
+    return render(request, 'sanatorium/doctors/prescriptions/procedures.html', context)
+
+
+@doctor_required
+def prescription_medications_view(request, history_id):
+    """
+    View for displaying medications
+    """
+    # Get the illness history
+    history = get_object_or_404(IllnessHistory, id=history_id)
+
+    # Get all medications with their sessions
+    try:
+        medications = PrescribedMedication.objects.filter(illness_history=history).prefetch_related('sessions')
+
+        # Calculate additional properties for each medication
+        today = timezone.now().date()
+        for med in medications:
+            # Calculate total days of treatment
+            if med.end_date and med.start_date:
+                med.total_days = (med.end_date - med.start_date).days + 1
+            else:
+                med.total_days = 0
+
+            # Calculate days elapsed
+            if med.start_date and med.start_date <= today:
+                med.days_elapsed = (min(today, med.end_date or today) - med.start_date).days + 1
+            else:
+                med.days_elapsed = 0
+
+            # Calculate progress percentage
+            if med.total_days > 0:
+                med.progress_percent = min(100, (med.days_elapsed / med.total_days) * 100)
+            else:
+                med.progress_percent = 0
+    except:
+        medications = []
+
     # Calculate medication statistics
     medication_count = len(medications)
     active_medications = 0
@@ -583,47 +672,17 @@ def main_prescription_list_view(request, history_id):
 
     active_page = {
         'proc_main_list_page': 'active',
+        'medications': 'active',
     }
 
     # Include context data
     context = {
         'history': history,
-        'consultations': consultations,
-        'procedures': procedures,
         'medications': medications,
-
-        # Lab-related context
-        'assigned_labs': assigned_labs,
-        'filtered_labs': filtered_labs,
-        'lab_categories': lab_categories,
-        'selected_category': selected_category,
-        'available_labs': available_labs,
-
-        # Statistics
-        'consultation_count': consultation_count,
-        'lab_count': lab_count,
-        'total_consultations_count': total_count,
-        'completed_total': completed_total,
-        'completed_total_percent': completed_total_percent,
-
-        'completed_lab_tests': completed_lab_tests,
-        'cancelled_lab_tests': cancelled_lab_tests,
-        'pending_lab_tests': pending_lab_tests,
-        'lab_completion_percent': lab_completion_percent,
-
-        'procedure_count': procedure_count,
         'medication_count': medication_count,
-        'completed_consultations': completed_consultations,
-        'completed_consultations_percent': completed_consultations_percent,
-        'total_sessions': total_sessions,
-        'total_completed_sessions': total_completed_sessions,
-        'total_procedures_percent': total_procedures_percent,
         'active_medications': active_medications,
         'active_medications_percent': active_medications_percent,
         'active_page': active_page,
-
-        'appointments': appointments,
-        'doctors': doctors
     }
 
-    return render(request, 'sanatorium/doctors/prescriptions/main_prescription_list.html', context)
+    return render(request, 'sanatorium/doctors/prescriptions/medications.html', context)

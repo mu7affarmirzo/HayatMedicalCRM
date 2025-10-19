@@ -710,11 +710,30 @@ def prescription_medications_view(request, history_id):
 
     # Calculate medication statistics
     medication_count = len(medications)
-    active_medications = 0
 
+    # Count active medications (those with status 'active' and not overdue)
+    active_medications = sum(1 for med in medications if med.is_active)
+
+    # Calculate percentage of active medications
     active_medications_percent = 0
     if medication_count > 0:
         active_medications_percent = (active_medications / medication_count) * 100
+
+    # Get today's pending sessions for quick access
+    today = timezone.now().date()
+    today_sessions = []
+    for med in medications:
+        for session in med.sessions.filter(session_datetime__date=today, status='pending'):
+            today_sessions.append({
+                'id': session.id,
+                'medication_name': med.medication.item.name if hasattr(med.medication, 'item') else 'Unknown',
+                'dosage': med.dosage,
+                'time': session.session_datetime.strftime('%H:%M'),
+                'session': session
+            })
+
+    # Sort today's sessions by time
+    today_sessions.sort(key=lambda x: x['time'])
 
     active_page = {
         'proc_main_list_page': 'active',
@@ -728,6 +747,7 @@ def prescription_medications_view(request, history_id):
         'medication_count': medication_count,
         'active_medications': active_medications,
         'active_medications_percent': active_medications_percent,
+        'today_sessions': today_sessions,
         'active_page': active_page,
     }
 

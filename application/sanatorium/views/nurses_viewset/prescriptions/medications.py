@@ -1,6 +1,7 @@
 # views.py
 from HayatMedicalCRM.auth.decorators import nurse_required
-from django.db.models import Q
+from django.db.models import Q, F
+from django.db.models.functions import Lower
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -61,7 +62,6 @@ class PrescribedMedicationDetailView(NurseRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Add administrations to context
-        print('hi')
         context['sessions'] = self.object.sessions.all().order_by('-created_at')
         context['illness_history'] = self.object.illness_history
         context['history'] = self.object.illness_history
@@ -295,9 +295,10 @@ def api_medications_search(request):
     query = MedicationsInStockModel.objects.select_related('item', 'warehouse').filter(warehouse__is_main=True)
     # Фильтрация по поисковому запросу
     if search_term:
-        # Используем более простой поиск без вложенных полей
+        # Используем более простой поиск без вложенных полей с явным приведением к нижнему регистру
         query = query.filter(
-            Q(item__name__icontains=search_term)
+            Q(item__name__icontains=search_term) | 
+            Q(item__name__contains=Lower(search_term))
         )
         # query = query.filter(
         #     Q(item__name__icontains=search_term) |

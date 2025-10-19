@@ -1,93 +1,4 @@
-<!-- Add Medication Modal -->
-<div class="modal fade" id="addMedicationModal" tabindex="-1" role="dialog" aria-labelledby="addMedicationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="addMedicationModalLabel">
-                    <i class="fas fa-pills mr-2"></i>Назначить медикамент
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="medicationForm">
-                    <div class="form-group">
-                        <label for="medicationName">Название препарата</label>
-                        <input type="text" class="form-control" id="medicationName" required placeholder="Введите название препарата">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="dosage">Дозировка</label>
-                                <input type="text" class="form-control" id="dosage" required placeholder="Например: 500 мг">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="frequency">Режим приема</label>
-                                <input type="text" class="form-control" id="frequency" required placeholder="Например: 3 раза в день">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="startDate">Дата начала</label>
-                                <input type="date" class="form-control" id="startDate" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="endDate">Дата окончания</label>
-                                <input type="date" class="form-control" id="endDate" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Способ применения</label>
-                        <select class="form-control" id="adminRoute">
-                            <option value="oral">Перорально</option>
-                            <option value="injection">Инъекционно</option>
-                            <option value="topical">Местно</option>
-                            <option value="inhalation">Ингаляционно</option>
-                            <option value="rectal">Ректально</option>
-                            <option value="other">Другое</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="medNotes">Примечания</label>
-                        <textarea class="form-control" id="medNotes" rows="3" placeholder="Дополнительные инструкции, примечания"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="criticalMed">
-                            <label class="custom-control-label" for="criticalMed">Жизненно важный препарат</label>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="alert alert-warning mt-3">
-                    <h6><i class="fas fa-exclamation-triangle mr-2"></i>Информация о препарате:</h6>
-                    <div id="medicationInfo">
-                        Введите название препарата для получения информации.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-primary" id="saveMedication">
-                    <i class="fas fa-save mr-1"></i> Назначить
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Nurses can only give medication, not add new ones -->
 
 <!-- View Medication Modal -->
 {% for med in medications %}
@@ -153,11 +64,7 @@
                 {% endif %}
             </div>
             <div class="modal-footer">
-                {% if med.state == 'assigned' or med.state == 'recommended' %}
-                <button type="button" class="btn btn-danger" data-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i> Отменить назначение
-                </button>
-                {% endif %}
+                <!-- Nurses can only give medication, not delete assigned ones -->
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
             </div>
         </div>

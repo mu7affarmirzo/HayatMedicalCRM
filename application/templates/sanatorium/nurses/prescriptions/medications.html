@@ -59,15 +59,11 @@
                 </div>
             </div>
 
-            <!-- Main content -->
+
+            <!-- All Medications -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Медикаменты</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addMedicationModal">
-                            <i class="fas fa-plus"></i> Добавить медикамент
-                        </button>
-                    </div>
+                    <h3 class="card-title">Все назначенные медикаменты</h3>
                 </div>
                 <div class="card-body">
                     {% include 'sanatorium/nurses/prescriptions/partials/medications.html' %}
@@ -78,8 +74,75 @@
 
     <!-- Modal Dialogs -->
     {% include 'sanatorium/nurses/prescriptions/partials/medication_modals.html' %}
+
+    <!-- Session Status Modal -->
+    <div class="modal fade" id="sessionStatusModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Изменить статус приема медикамента</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="sessionStatusForm" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Медикамент: <span id="medicationName" class="font-weight-bold"></span></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionStatus">Статус:</label>
+                            <select class="form-control" id="sessionStatus" name="status" required>
+                                <option value="administered">Выдано</option>
+                                <option value="missed">Пропущено</option>
+                                <option value="refused">Отказано</option>
+                                <option value="canceled">Отменено</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionNotes">Примечания:</label>
+                            <textarea class="form-control" id="sessionNotes" name="notes" rows="3" 
+                                      placeholder="Укажите причину или дополнительную информацию..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
     {% include 'sanatorium/nurses/prescriptions/partials/prescription_scripts.html' %}
+
+    <script>
+        $(document).ready(function() {
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Handle session status modal
+            $('#sessionStatusModal').on('show.bs.modal', function(event) {
+                const button = $(event.relatedTarget);
+                const sessionId = button.data('session-id');
+                const medicationName = button.data('medication');
+
+                // Set the medication name in the modal
+                $('#medicationName').text(medicationName);
+
+                // Set the form action URL
+                const form = $('#sessionStatusForm');
+                form.attr('action', `/sanatorium/nurses/medications/session/${sessionId}/update-status/`);
+            });
+
+            // Clear form when modal is hidden
+            $('#sessionStatusModal').on('hidden.bs.modal', function() {
+                $('#sessionNotes').val('');
+                $('#sessionStatus').val('administered');
+            });
+        });
+    </script>
 {% endblock %}

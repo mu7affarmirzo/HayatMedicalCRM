@@ -112,11 +112,6 @@
                                     </div>
                                     <hr>
                                     <div class="row">
-                                        <div class="col-sm-4 text-bold">Стоимость:</div>
-                                        <div class="col-sm-8">{{ assigned_lab.lab.price }} руб.</div>
-                                    </div>
-                                    <hr>
-                                    <div class="row">
                                         <div class="col-sm-4 text-bold">Время выполнения:</div>
                                         <div class="col-sm-8">
                                             {% if assigned_lab.lab.cito %}
@@ -158,6 +153,7 @@
                                                 <tr>
                                                     <th>Дата</th>
                                                     <th>Комментарии</th>
+                                                    <th>Добавил</th>
                                                     <th>Файл</th>
                                                     <th>Действия</th>
                                                 </tr>
@@ -167,6 +163,7 @@
                                                 <tr>
                                                     <td>{{ result.result_date|date:"M d, Y H:i" }}</td>
                                                     <td>{{ result.comments|default:"Без комментариев" }}</td>
+                                                    <td>{{ result.created_by.full_name|default:"--" }}</td>
                                                     <td>
                                                         {% if result.attached_file %}
                                                         <a href="{{ result.attached_file.url }}" target="_blank" class="btn btn-sm btn-info">

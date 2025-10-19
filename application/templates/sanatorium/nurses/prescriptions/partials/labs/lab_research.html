@@ -57,7 +57,7 @@
                 <td>{{ lab.created_at|date:"d.m.Y H:i" }}</td>
                 <td>
                   {% if lab.state == 'results' %}
-                    <button type="button" class="btn btn-sm btn-info view-results-btn" data-id="{{ lab.id }}">
+                    <button type="button" class="btn btn-sm btn-info view-results-btn" data-id="{{ lab.id }}" data-name="{{ lab.lab.name }}">
                       <i class="fas fa-eye"></i> Просмотр
                     </button>
                   {% elif lab.state == 'cancelled' or lab.state == 'stopped' %}
@@ -137,6 +137,70 @@
 
       // Navigate to the new URL
       window.location.href = url.href;
+    });
+
+    // Handle upload results button click
+    $('.upload-results-btn').on('click', function() {
+      const labId = $(this).data('id');
+      const labName = $(this).data('name');
+
+      // Set the lab ID in the form
+      $('#assigned_lab_id').val(labId);
+
+      // Update the modal title with the lab name
+      $('#addLabResultModalLabel').text('Добавить результат исследования: ' + labName);
+
+      // Show the modal
+      $('#addLabResultModal').modal('show');
+    });
+
+    // Handle view results button click
+    $('.view-results-btn').on('click', function() {
+      const labId = $(this).data('id');
+      const labName = $(this).data('name');
+
+      // Update the modal title with the lab name
+      $('#viewLabResultsModalLabel').text('Результаты исследования: ' + labName);
+
+      // Load lab results into the modal
+      const labResults = JSON.parse('{{ serialized_lab_results|escapejs }}');
+      const results = labResults[labId] || [];
+
+      let resultsHtml = '';
+
+      if (results.length > 0) {
+        resultsHtml += '<div class="table-responsive"><table class="table table-bordered table-striped">';
+        resultsHtml += '<thead><tr><th>Дата</th><th>Комментарии</th><th>Файл</th></tr></thead><tbody>';
+
+        for (const result of results) {
+          resultsHtml += '<tr>';
+          resultsHtml += '<td>' + result.created_at + '</td>';
+          resultsHtml += '<td>' + (result.comments || 'Нет комментариев') + '</td>';
+
+          if (result.attached_file) {
+            resultsHtml += '<td><a href="' + result.attached_file + '" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> Скачать</a></td>';
+          } else {
+            resultsHtml += '<td>Нет файла</td>';
+          }
+
+          resultsHtml += '</tr>';
+        }
+
+        resultsHtml += '</tbody></table></div>';
+      } else {
+        resultsHtml = '<div class="alert alert-info">Нет результатов для этого исследования.</div>';
+      }
+
+      $('#labResultsContainer').html(resultsHtml);
+
+      // Show the modal
+      $('#viewLabResultsModal').modal('show');
+    });
+
+    // Custom file input
+    $(document).on('change', '.custom-file-input', function() {
+      let fileName = $(this).val().split('\\').pop();
+      $(this).next('.custom-file-label').addClass("selected").html(fileName);
     });
   });
 </script>

@@ -58,6 +58,66 @@
   </div>
 </div>
 
+<!-- Add Lab Result Modal -->
+<div class="modal fade" id="addLabResultModal" tabindex="-1" role="dialog" aria-labelledby="addLabResultModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success">
+        <h5 class="modal-title" id="addLabResultModalLabel">Добавить результат исследования</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="labResultForm" method="post" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="add_lab_result" value="1">
+        <input type="hidden" name="assigned_lab_id" id="assigned_lab_id" value="">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="comments">Комментарии:</label>
+            <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="attached_file">Прикрепить файл:</label>
+            <div class="input-group">
+              <div class="custom-file">
+                <input type="file" class="custom-file-input" id="attached_file" name="attached_file">
+                <label class="custom-file-label" for="attached_file">Выберите файл</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-success">Сохранить результат</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- View Lab Results Modal -->
+<div class="modal fade" id="viewLabResultsModal" tabindex="-1" role="dialog" aria-labelledby="viewLabResultsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info">
+        <h5 class="modal-title" id="viewLabResultsModalLabel">Результаты исследования</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="labResultsContainer">
+          <!-- Results will be loaded here dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Add this script for category filtering in the modal -->
 <script>
 $(document).ready(function() {

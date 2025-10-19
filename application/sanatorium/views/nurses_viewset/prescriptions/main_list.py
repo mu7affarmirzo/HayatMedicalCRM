@@ -1,6 +1,7 @@
 # views.py
 from datetime import datetime
-
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from HayatMedicalCRM.auth.decorators import nurse_required
@@ -18,7 +19,7 @@ from core.models import (
     FinalAppointmentWithDoctorModel,
     Account,
     IllnessHistory, MedicalServiceModel, ProcedureServiceModel, LabResult, AssignedLabs,
-    LabResearchModel, LabResearchCategoryModel, PrescribedMedication
+    LabResearchModel, LabResearchCategoryModel, PrescribedMedication, AssignedLabResult
 )
 
 
@@ -535,10 +536,42 @@ def prescription_consultings_view(request, history_id):
 @nurse_required
 def prescription_labs_view(request, history_id):
     """
-    View for displaying lab tests
+    View for displaying lab tests and handling lab results
     """
     # Get the illness history
     history = get_object_or_404(IllnessHistory, id=history_id)
+
+    # Handle lab result submission
+    if request.method == 'POST' and 'add_lab_result' in request.POST:
+        assigned_lab_id = request.POST.get('assigned_lab_id')
+        assigned_lab = get_object_or_404(AssignedLabs, id=assigned_lab_id)
+
+        # Check if the assigned lab is in a state where results can be added
+        if assigned_lab.state not in ['dispatched', 'results']:
+            messages.error(request, "Lab results can only be added for dispatched labs.")
+        else:
+            try:
+                # Extract data from the form
+                comments = request.POST.get('comments', '')
+                attached_file = request.FILES.get('attached_file', None)
+
+                # Create a new lab result
+                lab_result = AssignedLabResult(
+                    assigned_lab=assigned_lab,
+                    comments=comments,
+                    attached_file=attached_file,
+                    created_by=request.user,
+                    modified_by=request.user
+                )
+                lab_result.save()
+
+                # Update the state of the assigned lab
+                assigned_lab.state = 'results'
+                assigned_lab.save()
+
+                messages.success(request, "Lab result added successfully.")
+            except Exception as e:
+                messages.error(request, f"Error adding lab result: {str(e)}")
 
     # Get lab tests using the new AssignedLabs model
     assigned_labs = AssignedLabs.objects.filter(
@@ -560,6 +593,25 @@ def prescription_labs_view(request, history_id):
     else:
         filtered_labs = assigned_labs
         selected_category = 'all'  # Ensure we set to 'all' if category doesn't exist
+
+    # Get lab results for each assigned lab
+    lab_results = {}
+    serialized_lab_results = {}
+    for lab in assigned_labs:
+        results = AssignedLabResult.objects.filter(assigned_lab=lab).order_by('-created_at')
+        lab_results[lab.id] = results
+
+        # Create a serializable version of the results
+        serialized_results = []
+        for result in results:
+            serialized_results.append({
+                'id': result.id,
+                'comments': result.comments,
+                'created_at': result.created_at.strftime('%d.%m.%Y %H:%M'),
+                'attached_file': result.attached_file.url if result.attached_file else None,
+                'file_format': result.file_format
+            })
+        serialized_lab_results[str(lab.id)] = serialized_results
 
     # Calculate lab test statistics
     lab_count = assigned_labs.count()
@@ -590,6 +642,8 @@ def prescription_labs_view(request, history_id):
         'pending_lab_tests': pending_lab_tests,
         'lab_completion_percent': lab_completion_percent,
         'active_page': active_page,
+        'lab_results': lab_results,
+        'serialized_lab_results': json.dumps(serialized_lab_results, cls=DjangoJSONEncoder),
     }
 
     return render(request, 'sanatorium/nurses/prescriptions/labs.html', context)

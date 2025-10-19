@@ -195,6 +195,9 @@ def expiring_medications(request):
     # Filter parameters
     warehouse_id = request.GET.get('warehouse')
 
+    # Get page number from request
+    page = request.GET.get('page', 1)
+
     # Calculate the target date
     target_date = timezone.now().date() + timezone.timedelta(days=days)
 
@@ -219,11 +222,20 @@ def expiring_medications(request):
         expire_date__lte=target_date
     )
 
+    # Paginate the stock items
+    paginator = Paginator(stock_items, 10)  # Show 10 items per page
+
+    try:
+        paginated_items = paginator.page(page)
+    except:
+        paginated_items = paginator.page(1)
+
     # Get context data
     warehouses = Warehouse.objects.all()
 
     context = {
         'stock_items': stock_items,
+        'paginated_items': paginated_items,
         'warehouses': warehouses,
         'selected_warehouse': warehouse_id,
         'days': days,
@@ -231,6 +243,9 @@ def expiring_medications(request):
         'expiring_warning': expiring_warning,
         'expiring_notice': expiring_notice,
         'target_date': target_date,
+        'now': timezone.now().date(),
+        'critical_date': timezone.now().date() + timezone.timedelta(days=30),
+        'warning_date': timezone.now().date() + timezone.timedelta(days=60),
         # For notifications
         'expiring_soon_count': stock_items.count(),
         'low_stock_count': MedicationsInStockModel.objects.filter(quantity__lt=10).count(),
@@ -250,6 +265,9 @@ def low_stock(request):
     # Filter parameters
     warehouse_id = request.GET.get('warehouse')
 
+    # Get page number from request
+    page = request.GET.get('page', 1)
+
     # Get all medications with stock below threshold
     stock_items = MedicationsInStockModel.objects.filter(quantity__lt=threshold).order_by('quantity')
 
@@ -261,16 +279,26 @@ def low_stock(request):
     critical_stock = stock_items.filter(quantity__lt=5)
     low_stock = stock_items.filter(quantity__gte=5, quantity__lt=threshold)
 
+    # Paginate the stock items
+    paginator = Paginator(stock_items, 10)  # Show 10 items per page
+
+    try:
+        paginated_items = paginator.page(page)
+    except:
+        paginated_items = paginator.page(1)
+
     # Get context data
     warehouses = Warehouse.objects.all()
 
     context = {
         'stock_items': stock_items,
+        'paginated_items': paginated_items,
         'warehouses': warehouses,
         'selected_warehouse': warehouse_id,
         'threshold': threshold,
         'critical_stock': critical_stock,
         'low_stock': low_stock,
+        'critical_threshold': 5,
         # For notifications
         'expiring_soon_count': MedicationsInStockModel.objects.filter(
             expire_date__lte=timezone.now().date() + timezone.timedelta(days=90),

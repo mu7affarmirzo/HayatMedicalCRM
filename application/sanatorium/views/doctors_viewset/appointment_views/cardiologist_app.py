@@ -46,7 +46,7 @@ class CardiologistConsultingCreateView(DoctorRequiredMixin, CreateView):
     template_name = 'sanatorium/doctors/appointments/cardiologist/form.html'
 
     def get_success_url(self):
-        return reverse_lazy('cardiologist_consulting_detail',
+        return reverse_lazy('sanatorium.doctors:cardiologist_consulting_detail',
                             kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
@@ -69,7 +69,7 @@ class CardiologistConsultingUpdateView(DoctorRequiredMixin, UpdateView):
     template_name = 'sanatorium/doctors/appointments/cardiologist/form.html'
 
     def get_success_url(self):
-        return reverse_lazy('cardiologist_consulting_detail',
+        return reverse_lazy('sanatorium.doctors:cardiologist_consulting_detail',
                             kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):

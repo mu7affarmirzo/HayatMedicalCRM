@@ -45,7 +45,7 @@ def initial_appointment_update(request, history_id):
             appointment.modified_by = request.user
             appointment.save()
             messages.success(request, 'Первичный прием успешно обновлен')
-            return redirect('initial_appointment_detail', history_id=history_id)
+            return redirect('sanatorium.doctors:initial_appointment_detail', history_id=history_id)
     else:
         form = InitialAppointmentForm(instance=initial_appointment)
 

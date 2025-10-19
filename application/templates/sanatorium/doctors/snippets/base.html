@@ -47,20 +47,20 @@
                     Создать <span class="caret"></span>
                 </a>
                 <div class="dropdown-menu">
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'cardiologist_consulting_create' history.id %}">Консультация
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:cardiologist_consulting_create' history.id %}">Консультация
                         кардиолога первичная</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'neurologist_consulting_create' history.id %}">Консультация
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:neurologist_consulting_create' history.id %}">Консультация
                         невролога первичная</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_arrival_consulting_create' history.id %}">Осмотр
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:on_arrival_consulting_create' history.id %}">Осмотр
                         дежурного врача при поступлении</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'repeated_appointment_create' history.id %}">Повторный
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:repeated_appointment_create' history.id %}">Повторный
                         приём лечащего врача</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'on_duty_appointment_create' history.id %}">Прием
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:on_duty_appointment_create' history.id %}">Прием
                         дежурного врача</a>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'ekg_appointment_create' history.id %}">ЭКГ
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:ekg_appointment_create' history.id %}">ЭКГ
                         (Электрокардиограмма)</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" tabindex="-1" href="{% url 'final_appointment_create' history.id %}">Заключительный
+                    <a class="dropdown-item" tabindex="-1" href="{% url 'sanatorium.doctors:final_appointment_create' history.id %}">Заключительный
                         прием лечащего врача</a>
                 </div>
             </li>
@@ -124,14 +124,14 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                     data-accordion="false">
                     <li class="nav-item">
-                        <a href="{% url 'illness_history_detail' history.id %}"
+                        <a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}"
                            class="nav-link {{ active_page.title_page }}">
                             <i class="nav-icon fas fa-home"></i>
                             <p>Титульная страница</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'initial_appointment_detail' history.id %}"
+                        <a href="{% url 'sanatorium.doctors:initial_appointment_detail' history.id %}"
                            class="nav-link {{ active_page.initial_appointment }}">
                             <i class="nav-icon fas fa-user-md"></i>
                             <p>Первичный прием лечащего врача</p>
@@ -157,7 +157,7 @@
                                 <ul class="nav nav-treeview">
                                     {% for consulting in history.cardiologist_consulting.all %}
                                         <li class="nav-item">
-                                            <a href="{% url 'cardiologist_consulting_detail' consulting.id %}"
+                                            <a href="{% url 'sanatorium.doctors:cardiologist_consulting_detail' consulting.id %}"
                                                class="nav-link">
                                                 <i class="far"></i>
                                                 <p>Консультация кардиолога | {{ consulting.created_at }}</p>
@@ -177,7 +177,7 @@
                                 <ul class="nav nav-treeview">
                                     {% for consulting in history.neurologist_consulting.all %}
                                         <li class="nav-item">
-                                            <a href="{% url 'neurologist_consulting_detail' consulting.id %}"
+                                            <a href="{% url 'sanatorium.doctors:neurologist_consulting_detail' consulting.id %}"
                                                class="nav-link">
                                                 <i class="far"></i>
                                                 <p>Консультация невролога | {{ consulting.created_at }}</p>
@@ -197,7 +197,7 @@
                                 <ul class="nav nav-treeview">
                                     {% for consulting in history.on_duty_doctor_on_arr_appointment.all %}
                                         <li class="nav-item">
-                                            <a href="{% url 'on_arrival_consulting_detail' consulting.id %}"
+                                            <a href="{% url 'sanatorium.doctors:on_arrival_consulting_detail' consulting.id %}"
                                                class="nav-link">
                                                 <i class="far"></i>
                                                 <p>Осмотр дежурного врача при поступлении
@@ -220,7 +220,7 @@
                             <div class="dropdown-divider"></div>
                             {% for consulting in history.repeated_appointment.all %}
                                 <li class="nav-item">
-                                    <a href="{% url 'repeated_appointment_detail' consulting.id %}"
+                                    <a href="{% url 'sanatorium.doctors:repeated_appointment_detail' consulting.id %}"
                                        class="nav-link">
                                         <i class="far"></i>
                                         <p>Повторный приём лечащего врача | {{ consulting.created_at }}</p>
@@ -241,7 +241,7 @@
                             <div class="dropdown-divider"></div>
                             {% for consulting in history.on_duty_doctor_appointment.all %}
                                 <li class="nav-item">
-                                    <a href="{% url 'on_duty_appointment_detail' consulting.id %}"
+                                    <a href="{% url 'sanatorium.doctors:on_duty_appointment_detail' consulting.id %}"
                                        class="nav-link">
                                         <i class="far"></i>
                                         <p>Прием дежурного врача | {{ consulting.created_at }}</p>
@@ -262,7 +262,7 @@
                             <div class="dropdown-divider"></div>
                             {% for consulting in history.ekg_app.all %}
                                 <li class="nav-item">
-                                    <a href="{% url 'ekg_appointment_detail' consulting.id %}"
+                                    <a href="{% url 'sanatorium.doctors:ekg_appointment_detail' consulting.id %}"
                                        class="nav-link">
                                         <i class="far"></i>
                                         <p>ЭКГ (Электрокардиограмма) | {{ consulting.created_at }}</p>
@@ -281,7 +281,7 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{% url 'final_appointment_create' history.id %}" class="nav-link {{ active_page.final_appointment_create }}">
+                                <a href="{% url 'sanatorium.doctors:final_appointment_create' history.id %}" class="nav-link {{ active_page.final_appointment_create }}">
                                     <i class="fas fa-plus nav-icon text-success"></i>
                                     <p>Создать/Редактировать</p>
                                 </a>
@@ -289,7 +289,7 @@
                             {% if history.final_appointment.exists %}
                                 {% for appointment in history.final_appointment.all %}
                                     <li class="nav-item">
-                                        <a href="{% url 'final_appointment_detail' history.id %}" class="nav-link {{ active_page.final_appointment_detail }}">
+                                        <a href="{% url 'sanatorium.doctors:final_appointment_detail' history.id %}" class="nav-link {{ active_page.final_appointment_detail }}">
                                             <i class="fas fa-file-medical nav-icon text-primary"></i>
                                             <p>Прием от {{ appointment.created_at|date:"d.m.Y" }}</p>
                                         </a>
@@ -301,7 +301,7 @@
                 </ul>
 
                 <li class="nav-item">
-                    <a href="{% url 'prescription_list' history.id %}"
+                    <a href="{% url 'sanatorium.doctors:prescription_list' history.id %}"
                        class="nav-link {{ active_page.proc_main_list_page }}">
                         <i class="nav-icon fas fa-clipboard-list"></i>
                         <p>
@@ -341,7 +341,7 @@
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'documents_view' history.id %}" class="nav-link {{ active_page.documents_page }}">
+                    <a href="{% url 'sanatorium.doctors:documents_view' history.id %}" class="nav-link {{ active_page.documents_page }}">
                         <i class="nav-icon fas fa-file-alt"></i>
                         <p>
                             Документы
@@ -350,7 +350,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'diet_list' history.id %}" class="nav-link {{ active_page.diet_page }}">
+                    <a href="{% url 'sanatorium.doctors:diet_list' history.id %}" class="nav-link {{ active_page.diet_page }}">
                         <i class="nav-icon fas fa-utensils"></i>
                         <p>
                             Питание

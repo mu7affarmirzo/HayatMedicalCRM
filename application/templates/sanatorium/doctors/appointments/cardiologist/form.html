@@ -28,7 +28,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">История болезни</a></li>
                     <li class="breadcrumb-item active">Консультация кардиолога</li>
                 </ol>
             </div>
@@ -625,7 +625,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Сохранить
                 </button>
-                <a href="{% url "illness_history_detail" history.id %}" class="btn btn-default float-right">
+                <a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}" class="btn btn-default float-right">
                     <i class="fas fa-times"></i> Отмена
                 </a>
             </div>

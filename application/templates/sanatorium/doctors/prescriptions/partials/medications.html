@@ -1,6 +1,6 @@
 <div class="row mb-3">
     <div class="col-md-12">
-        <a href="{% url 'prescribed_medication_create' history.id %}" class="btn btn-primary">
+        <a href="{% url 'sanatorium.doctors:prescribed_medication_create' history.id %}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Добавить медикамент
         </a>
     </div>
@@ -56,10 +56,10 @@
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
-                            <a href="{% url 'medication_sessions_list' med.id %}" class="btn btn-info" data-target="#viewMedicationModal{{ med.id }}">
+                            <a href="{% url 'sanatorium.doctors:medication_sessions_list' med.id %}" class="btn btn-info" data-target="#viewMedicationModal{{ med.id }}">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{% url 'medications_update' med.id %}" class="btn btn-warning">
+                            <a href="{% url 'sanatorium.doctors:medications_update' med.id %}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <a href="#" class="btn btn-danger">

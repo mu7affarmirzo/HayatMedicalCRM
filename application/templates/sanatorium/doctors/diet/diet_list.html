@@ -63,7 +63,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:doctors_main_screen' %}">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
                         <li class="breadcrumb-item active">Питание</li>
                     </ol>
                 </div>
@@ -103,7 +103,7 @@
                                 </h3>
                             </div>
                             <div class="card-body">
-                                <a href="{% url 'diet_create' history.id %}" class="btn btn-primary btn-block mb-2">
+                                <a href="{% url 'sanatorium.doctors:diet_create' history.id %}" class="btn btn-primary btn-block mb-2">
                                     <i class="fas fa-plus mr-1"></i> Назначить диету
                                 </a>
                                 <button type="button" class="btn btn-info btn-block mb-2" data-toggle="modal" data-target="#quick-diet-modal">
@@ -343,7 +343,7 @@
                         <span>&times;</span>
                     </button>
                 </div>
-                <form method="post" action="{% url 'diet_create' history.id %}">
+                <form method="post" action="{% url 'sanatorium.doctors:diet_create' history.id %}">
                     {% csrf_token %}
                     <div class="modal-body">
                         <div class="form-group">
@@ -417,11 +417,11 @@
         });
 
         function viewDietDetails(dietId) {
-            window.location.href = "{% url 'diet_detail' history.id 0 %}".replace('0', dietId);
+            window.location.href = "{% url 'sanatorium.doctors:diet_detail' history.id 0 %}".replace('0', dietId);
         }
 
         function editDiet(dietId) {
-            window.location.href = "{% url 'diet_update' history.id 0 %}".replace('0', dietId);
+            window.location.href = "{% url 'sanatorium.doctors:diet_update' history.id 0 %}".replace('0', dietId);
         }
 
         function copyDiet(dietId) {
@@ -441,7 +441,7 @@
                 // Create form and submit
                 const form = $('<form>', {
                     'method': 'POST',
-                    'action': "{% url 'diet_delete' history.id 0 %}".replace('0', dietToDelete)
+                    'action': "{% url 'sanatorium.doctors:diet_delete' history.id 0 %}".replace('0', dietToDelete)
                 });
                 form.append($('<input>', {
                     'type': 'hidden',

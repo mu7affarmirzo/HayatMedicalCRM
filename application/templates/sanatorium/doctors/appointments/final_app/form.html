@@ -262,7 +262,7 @@
                         <i class="fas fa-save"></i> Сохранить
                     </button>
                     {% if object %}
-                    <a href="{% url 'final_appointment_detail' object.id %}" class="btn btn-default">
+                    <a href="{% url 'sanatorium.doctors:final_appointment_detail' object.id %}" class="btn btn-default">
                         <i class="fas fa-times"></i> Отмена
                     </a>
                     {% else %}

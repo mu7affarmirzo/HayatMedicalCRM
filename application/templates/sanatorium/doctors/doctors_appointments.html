@@ -59,7 +59,7 @@
                     </div>
                     <div class="form-group col-md-2 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary mr-2">Применить</button>
-                        <a href="{% url 'doctor_appointments' %}" class="btn btn-secondary">Сбросить</a>
+                        <a href="{% url 'sanatorium.doctors:doctor_appointments' %}" class="btn btn-secondary">Сбросить</a>
                     </div>
                 </form>
             </div>
@@ -91,7 +91,7 @@
                                 <td>{{ appointment.type }}</td>
                                 <td>
                                     {% if appointment.patient_id %}
-                                        <a href="{% url 'patient_detail' appointment.patient_id %}">{{ appointment.patient_name }}</a>
+                                        <a href="{% url 'sanatorium.doctors:patient_detail' appointment.patient_id %}">{{ appointment.patient_name }}</a>
                                     {% else %}
                                         {{ appointment.patient_name }}
                                     {% endif %}

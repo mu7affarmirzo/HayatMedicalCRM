@@ -498,19 +498,19 @@
         }
 
         function viewAppointment(appointmentId) {
-            window.location.href = "{% url 'final_appointment_enhanced_detail' 0 %}".replace('0', appointmentId);
+            window.location.href = "{% url 'sanatorium.doctors:final_appointment_enhanced_detail' 0 %}".replace('0', appointmentId);
         }
 
         function editAppointment(appointmentId) {
-            window.location.href = "{% url 'final_appointment_enhanced_update' 0 %}".replace('0', appointmentId);
+            window.location.href = "{% url 'sanatorium.doctors:final_appointment_enhanced_update' 0 %}".replace('0', appointmentId);
         }
 
         function exportPDF(appointmentId) {
-            window.open("{% url 'final_appointment_export_pdf' 0 %}".replace('0', appointmentId), '_blank');
+            window.open("{% url 'sanatorium.doctors:final_appointment_export_pdf' 0 %}".replace('0', appointmentId), '_blank');
         }
 
         function exportWord(appointmentId) {
-            window.open("{% url 'final_appointment_export_word' 0 %}".replace('0', appointmentId), '_blank');
+            window.open("{% url 'sanatorium.doctors:final_appointment_export_word' 0 %}".replace('0', appointmentId), '_blank');
         }
 
         function exportToExcel() {

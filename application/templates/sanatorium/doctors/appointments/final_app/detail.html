@@ -330,19 +330,19 @@
             </div>
 
             <div class="card-footer">
-                <a href="{% url 'final_appointment_update' appointment.id %}" class="btn btn-warning">
+                <a href="{% url 'sanatorium.doctors:final_appointment_update' appointment.id %}" class="btn btn-warning">
                     <i class="fas fa-edit mr-1"></i> Редактировать
                 </a>
-{#                <a href="{% url 'repeated_appointment_delete' appointment.id %}" class="btn btn-danger">#}
+{#                <a href="{% url 'sanatorium.doctors:repeated_appointment_delete' appointment.id %}" class="btn btn-danger">#}
 {#                    <i class="fas fa-trash mr-1"></i> Удалить#}
 {#                </a>#}
-                <a href="{% url 'illness_history_detail' appointment.illness_history.id %}" class="btn btn-default float-right">
+                <a href="{% url 'sanatorium.doctors:illness_history_detail' appointment.illness_history.id %}" class="btn btn-default float-right">
                     <i class="fas fa-arrow-left mr-1"></i> Назад к истории болезни
                 </a>
                 <button onclick="window.print();" class="btn btn-info ml-2">
                     <i class="fas fa-print mr-1"></i> Печать
                 </button>
-                <a href="{% url 'final_appointment_download' appointment.id %}" class="btn btn-success ml-2">
+                <a href="{% url 'sanatorium.doctors:final_appointment_download' appointment.id %}" class="btn btn-success ml-2">
                     <i class="fas fa-file-word mr-1"></i> Скачать в DOC
                 </a>
             </div>

@@ -139,7 +139,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:doctors_main_screen' %}">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
                         <li class="breadcrumb-item active">Заключительный прием</li>
                     </ol>
                 </div>
@@ -199,10 +199,10 @@
                                 </h3>
                             </div>
                             <div class="card-body">
-                                <a href="{% url 'final_appointment_export_pdf' appointment.pk %}" class="btn btn-danger btn-block mb-2" target="_blank">
+                                <a href="{% url 'sanatorium.doctors:final_appointment_export_pdf' appointment.pk %}" class="btn btn-danger btn-block mb-2" target="_blank">
                                     <i class="fas fa-file-pdf mr-1"></i> Скачать PDF
                                 </a>
-                                <a href="{% url 'final_appointment_export_word' appointment.pk %}" class="btn btn-primary btn-block mb-2" target="_blank">
+                                <a href="{% url 'sanatorium.doctors:final_appointment_export_word' appointment.pk %}" class="btn btn-primary btn-block mb-2" target="_blank">
                                     <i class="fas fa-file-word mr-1"></i> Скачать Word
                                 </a>
                                 <button type="button" class="btn btn-info btn-block mb-2" onclick="window.print()">
@@ -222,16 +222,16 @@
                                 </h3>
                             </div>
                             <div class="card-body">
-                                <a href="{% url 'final_appointment_enhanced_update' appointment.pk %}" class="btn btn-warning btn-block mb-2">
+                                <a href="{% url 'sanatorium.doctors:final_appointment_enhanced_update' appointment.pk %}" class="btn btn-warning btn-block mb-2">
                                     <i class="fas fa-edit mr-1"></i> Редактировать
                                 </a>
-                                <a href="{% url 'final_appointment_enhanced_delete' appointment.pk %}" class="btn btn-danger btn-block mb-2">
+                                <a href="{% url 'sanatorium.doctors:final_appointment_enhanced_delete' appointment.pk %}" class="btn btn-danger btn-block mb-2">
                                     <i class="fas fa-trash-alt mr-1"></i> Удалить
                                 </a>
                                 <button type="button" class="btn btn-outline-info btn-block mb-2" onclick="copyToClipboard()">
                                     <i class="fas fa-copy mr-1"></i> Копировать текст
                                 </button>
-                                <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-outline-secondary btn-block">
+                                <a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}" class="btn btn-outline-secondary btn-block">
                                     <i class="fas fa-arrow-left mr-1"></i> К истории болезни
                                 </a>
                             </div>
@@ -548,17 +548,17 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <a href="{% url 'final_appointment_enhanced_update' appointment.pk %}" class="btn btn-warning btn-lg">
+                                    <a href="{% url 'sanatorium.doctors:final_appointment_enhanced_update' appointment.pk %}" class="btn btn-warning btn-lg">
                                         <i class="fas fa-edit mr-2"></i>Редактировать
                                     </a>
                                 </div>
                                 <div class="col-md-4 text-center">
-                                    <a href="{% url 'final_appointment_enhanced_delete' appointment.pk %}" class="btn btn-danger btn-lg">
+                                    <a href="{% url 'sanatorium.doctors:final_appointment_enhanced_delete' appointment.pk %}" class="btn btn-danger btn-lg">
                                         <i class="fas fa-trash-alt mr-2"></i>Удалить
                                     </a>
                                 </div>
                                 <div class="col-md-4 text-right">
-                                    <a href="{% url 'illness_history_detail' history.id %}" class="btn btn-secondary btn-lg">
+                                    <a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}" class="btn btn-secondary btn-lg">
                                         <i class="fas fa-arrow-left mr-2"></i>К истории
                                     </a>
                                 </div>
@@ -588,7 +588,7 @@
 
             // Fetch vitals history data
             $.ajax({
-                url: "{% url 'final_appointment_vitals_history' history.id %}",
+                url: "{% url 'sanatorium.doctors:final_appointment_vitals_history' history.id %}",
                 type: 'GET',
                 success: function(data) {
                     const appointments = data.appointments;

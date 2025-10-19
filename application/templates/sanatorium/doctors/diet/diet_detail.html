@@ -131,8 +131,8 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:doctors_main_screen' %}">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'diet_list' history.id %}">Питание</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:diet_list' history.id %}">Питание</a></li>
                         <li class="breadcrumb-item active">Детали диеты</li>
                     </ol>
                 </div>
@@ -184,7 +184,7 @@
                                 </h3>
                             </div>
                             <div class="card-body">
-                                <a href="{% url 'diet_update' history.id diet_id %}" class="btn btn-warning btn-block mb-2">
+                                <a href="{% url 'sanatorium.doctors:diet_update' history.id diet_id %}" class="btn btn-warning btn-block mb-2">
                                     <i class="fas fa-edit mr-1"></i> Редактировать
                                 </a>
                                 <button type="button" class="btn btn-success btn-block mb-2" onclick="copyDiet()">
@@ -573,12 +573,12 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <a href="{% url 'diet_update' history.id diet_id %}" class="btn btn-warning btn-lg">
+                                    <a href="{% url 'sanatorium.doctors:diet_update' history.id diet_id %}" class="btn btn-warning btn-lg">
                                         <i class="fas fa-edit mr-2"></i>Редактировать диету
                                     </a>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <a href="{% url 'diet_list' history.id %}" class="btn btn-secondary btn-lg">
+                                    <a href="{% url 'sanatorium.doctors:diet_list' history.id %}" class="btn btn-secondary btn-lg">
                                         <i class="fas fa-list mr-2"></i>Назад к списку
                                     </a>
                                 </div>
@@ -624,7 +624,7 @@
         function copyDiet() {
             if (confirm('Создать копию этой диеты?')) {
                 // Implement copy functionality
-                window.location.href = "{% url 'diet_create' history.id %}?copy_from={{ diet_id }}";
+                window.location.href = "{% url 'sanatorium.doctors:diet_create' history.id %}?copy_from={{ diet_id }}";
             }
         }
 

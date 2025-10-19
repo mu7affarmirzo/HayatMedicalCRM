@@ -100,8 +100,8 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:doctors_main_screen' %}">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'diet_list' history.id %}">Питание</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:diet_list' history.id %}">Питание</a></li>
                         <li class="breadcrumb-item active">Редактировать диету</li>
                     </ol>
                 </div>
@@ -420,10 +420,10 @@
                                         </button>
                                     </div>
                                     <div class="col-md-6 text-right">
-                                        <a href="{% url 'diet_detail' history.id diet_id %}" class="btn btn-secondary btn-lg mr-2">
+                                        <a href="{% url 'sanatorium.doctors:diet_detail' history.id diet_id %}" class="btn btn-secondary btn-lg mr-2">
                                             <i class="fas fa-arrow-left mr-2"></i>К просмотру диеты
                                         </a>
-                                        <a href="{% url 'diet_list' history.id %}" class="btn btn-outline-secondary btn-lg">
+                                        <a href="{% url 'sanatorium.doctors:diet_list' history.id %}" class="btn btn-outline-secondary btn-lg">
                                             <i class="fas fa-list mr-2"></i>К списку
                                         </a>
                                     </div>

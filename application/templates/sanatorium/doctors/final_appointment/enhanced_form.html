@@ -136,7 +136,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:doctors_main_screen' %}">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">{{ patient.full_name }}</a></li>
                         <li class="breadcrumb-item active">{% if is_update %}Редактировать{% else %}Создать{% endif %} заключительный прием</li>
                     </ol>
                 </div>
@@ -483,7 +483,7 @@
                                         </button>
                                     </div>
                                     <div class="col-md-4 text-right">
-                                        <a href="{% if is_update %}{% url 'final_appointment_enhanced_detail' form.instance.pk %}{% else %}{% url 'illness_history_detail' history.id %}{% endif %}" class="btn btn-outline-secondary btn-lg">
+                                        <a href="{% if is_update %}{% url 'sanatorium.doctors:final_appointment_enhanced_detail' form.instance.pk %}{% else %}{% url 'sanatorium.doctors:illness_history_detail' history.id %}{% endif %}" class="btn btn-outline-secondary btn-lg">
                                             <i class="fas fa-arrow-left mr-2"></i>Назад
                                         </a>
                                     </div>

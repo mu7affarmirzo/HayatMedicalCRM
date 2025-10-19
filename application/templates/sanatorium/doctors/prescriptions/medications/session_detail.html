@@ -276,7 +276,7 @@
                                 <a href="#" class="btn btn-outline-primary btn-lg mb-2">
                                     <i class="fas fa-arrow-left"></i> Back to Sessions
                                 </a>
-                                <a href="{% url 'patient_medications' session.prescribed_medication.illness_history.patient.id %}"
+                                <a href="{% url 'sanatorium.doctors:patient_medications' session.prescribed_medication.illness_history.patient.id %}"
                                    class="btn btn-outline-info btn-lg mb-2">
                                     <i class="fas fa-user"></i> Patient Medications
                                 </a>

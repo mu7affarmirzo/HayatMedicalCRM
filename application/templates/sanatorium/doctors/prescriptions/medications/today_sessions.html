@@ -56,7 +56,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="#">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'medication_sessions_list' %}">Medications</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:medication_sessions_list' %}">Medications</a></li>
                     <li class="breadcrumb-item active">Today's Sessions</li>
                 </ol>
             </div>
@@ -174,7 +174,7 @@
                                             data-session-id="{{ session.id }}">
                                         <i class="fas fa-times"></i> Missed
                                     </button>
-                                    <a href="{% url 'session_detail' session.id %}" 
+                                    <a href="{% url 'sanatorium.doctors:session_detail' session.id %}"
                                        class="btn btn-info btn-sm quick-action-btn">
                                         <i class="fas fa-eye"></i> Details
                                     </a>
@@ -220,7 +220,7 @@
                                 <td>{{ session.prescribed_medication.medication.item.name }}</td>
                                 <td>{{ session.prescribed_medication.dosage }}</td>
                                 <td>
-                                    <a href="{% url 'session_detail' session.id %}" 
+                                    <a href="{% url 'sanatorium.doctors:session_detail' session.id %}"
                                        class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i> View
                                     </a>
@@ -266,7 +266,7 @@
                                 <td>{{ session.prescribed_medication.medication.item.name }}</td>
                                 <td>{{ session.prescribed_medication.dosage }}</td>
                                 <td>
-                                    <a href="{% url 'session_detail' session.id %}" 
+                                    <a href="{% url 'sanatorium.doctors:session_detail' session.id %}"
                                        class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i> View
                                     </a>
@@ -291,7 +291,7 @@
                 <i class="fas fa-calendar-check fa-4x text-muted mb-3"></i>
                 <h4 class="text-muted">No medication sessions scheduled for today</h4>
                 <p class="text-muted">All medication sessions have been completed or there are no scheduled sessions.</p>
-                <a href="{% url 'medication_sessions_list' %}" class="btn btn-primary">
+                <a href="{% url 'sanatorium.doctors:medication_sessions_list' %}" class="btn btn-primary">
                     <i class="fas fa-list"></i> View All Sessions
                 </a>
             </div>
@@ -310,12 +310,12 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3">
-                                <a href="{% url 'medication_sessions_list' %}" class="btn btn-outline-primary btn-block">
+                                <a href="{% url 'sanatorium.doctors:medication_sessions_list' %}" class="btn btn-outline-primary btn-block">
                                     <i class="fas fa-list"></i> All Sessions
                                 </a>
                             </div>
                             <div class="col-md-3">
-                                <a href="{% url 'medication_statistics' %}" class="btn btn-outline-info btn-block">
+                                <a href="{% url 'sanatorium.doctors:medication_statistics' %}" class="btn btn-outline-info btn-block">
                                     <i class="fas fa-chart-line"></i> Statistics
                                 </a>
                             </div>

@@ -100,7 +100,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'medications_list' %}">Медикаменты</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:medications_list' %}">Медикаменты</a></li>
                         <li class="breadcrumb-item active">Назначение медикаментов</li>
                     </ol>
                 </div>
@@ -382,7 +382,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Сохранить назначение
                         </button>
-                        <a href="{% url 'medications_list' %}" class="btn btn-default">
+                        <a href="{% url 'sanatorium.doctors:medications_list' %}" class="btn btn-default">
                             <i class="fas fa-arrow-left"></i> Назад
                         </a>
                     </div>
@@ -636,7 +636,7 @@
                 "processing": true,
                 "serverSide": true,
                 "ajax": {
-                    "url": "{% url 'api_medications_search' %}",
+                    "url": "{% url 'sanatorium.doctors:api_medications_search' %}",
                     "type": "POST",
                     "data": function(d) {
                         d.search_term = $('#search-term').val();
@@ -719,7 +719,7 @@
 
                 // Load medication details via AJAX
                 $.ajax({
-                    url: "{% url 'api_medication_details' %}",
+                    url: "{% url 'sanatorium.doctors:api_medication_details' %}",
                     type: "POST",
                     data: {
                         medication_id: medicationId,

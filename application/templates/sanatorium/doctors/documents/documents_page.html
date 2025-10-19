@@ -44,7 +44,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История болезни #{{ history.id }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:illness_history_detail' history.id %}">История болезни #{{ history.id }}</a></li>
                     <li class="breadcrumb-item active">Документы</li>
                 </ol>
             </div>
@@ -122,7 +122,7 @@ $(function () {
     Dropzone.autoDiscover = false;
     
     var myDropzone = new Dropzone("#document-dropzone", {
-        url: "{% url 'document_upload' history.id %}",
+        url: "{% url 'sanatorium.doctors:document_upload' history.id %}",
         paramName: "file",
         maxFilesize: 10, // MB
         acceptedFiles: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx",
@@ -177,7 +177,7 @@ $(function () {
         var documentName = $(this).data("document-name");
         
         $("#deleteDocumentName").text(documentName);
-        $("#deleteDocumentForm").attr("action", "{% url 'document_delete' 0 %}".replace("0", documentId));
+        $("#deleteDocumentForm").attr("action", "{% url 'sanatorium.doctors:document_delete' 0 %}".replace("0", documentId));
         
         $("#documentDeleteModal").modal("show");
     });

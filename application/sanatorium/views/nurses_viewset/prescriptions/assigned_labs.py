@@ -104,7 +104,7 @@ class AssignedLabsUpdateView(NurseRequiredMixin, UpdateView):
     context_object_name = 'assigned_lab'
 
     def get_success_url(self):
-        return reverse('prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+        return reverse('sanatorium.nurses:prescription_labs', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -132,7 +132,7 @@ class AssignedLabsDeleteView(NurseRequiredMixin, DeleteView):
         messages.success(self.request, "Lab assignment successfully deleted.")
         if self.object.illness_history:
             return reverse('sanatorium.nurses:main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
-        return reverse('assigned_labs_list')
+        return reverse('sanatorium.nurses:assigned_labs_list')
 
 
 @nurse_required

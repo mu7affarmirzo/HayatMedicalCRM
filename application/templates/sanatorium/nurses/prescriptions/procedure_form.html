@@ -286,7 +286,7 @@
 {#                var selectedType = $(this).val();#}
 {##}
 {#                $.ajax({#}
-{#                    url: "{% url "load_services" %}",  // We'll define a URL pattern for this#}
+{#                    url: "{% url "sanatorium.nurses:load_services" %}",  // We'll define a URL pattern for this#}
 {#                    data: {#}
 {#                        'service_type_id': selectedType#}
 {#                    },#}
@@ -334,7 +334,7 @@
 {##}
 {#                // Fetch services for the selected type#}
 {#                $.ajax({#}
-{#                    url: '{% url "get_services_by_type" %}',#}
+{#                    url: '{% url "sanatorium.nurses:get_services_by_type" %}',#}
 {#                    type: 'GET',#}
 {#                    data: {#}
 {#                        'service_type_id': serviceTypeId#}

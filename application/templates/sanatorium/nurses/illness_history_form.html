@@ -276,7 +276,7 @@
       if (patientId) {
         // AJAX call to get bookings for this patient
         $.ajax({
-          url: '{% url "get_patient_bookings" %}',
+          url: '{% url "sanatorium.nurses:get_patient_bookings" %}',
           data: {
             'patient_id': patientId
           },

@@ -252,7 +252,7 @@
 
             // Make AJAX request
             $.ajax({
-                url: '{% url "get_labs_by_category" %}',
+                url: '{% url "sanatorium.nurses:get_labs_by_category" %}',
                 data: {
                     category_id: categoryId,
                     search_term: searchTerm

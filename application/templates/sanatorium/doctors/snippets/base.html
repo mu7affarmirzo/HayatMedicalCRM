@@ -40,7 +40,7 @@
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url "doctors_main_screen" %}" class="nav-link">Главная</a>
+                <a href="{% url "sanatorium.doctors:doctors_main_screen" %}" class="nav-link">Главная</a>
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
@@ -100,7 +100,7 @@
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo -->
-        <a href="{% url 'doctors_main_screen' %}" class="brand-link">
+        <a href="{% url 'sanatorium.doctors:doctors_main_screen' %}" class="brand-link">
             <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="Hayat Medical Center"
                  style="height: 40px; max-height: none; opacity: 0.9;">
             <span class="brand-text font-weight-light"></span>

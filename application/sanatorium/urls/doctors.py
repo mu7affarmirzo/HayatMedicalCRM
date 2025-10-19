@@ -3,7 +3,7 @@ from django.urls import path, include
 from application.sanatorium.views.doctors_viewset.doctors_appointments import doctor_appointments
 from application.sanatorium.views.doctors_viewset.illness_history import assigned_patients_list, all_patients_list
 
-
+app_name = 'sanatorium.doctors'
 
 urlpatterns = [
     path('main_screen/', assigned_patients_list, name='doctors_main_screen'),

@@ -11,7 +11,7 @@ from core.forms import LoginForm  # We'll create this next
 
 # Move this to settings.py for better organization
 USER_ROLE_REDIRECTS = {
-    'doctor': 'doctors_main_screen',
+    'doctor': 'sanatorium.doctors:doctors_main_screen',
     'nurse': 'sanatorium.nurses:nurses_main_screen',
 }
 
@@ -79,7 +79,7 @@ def redirect_by_role(user):
     elif main_role == RolesModel.RECEPTIONIST:
         return redirect('logus:logus_dashboard')
     elif main_role == RolesModel.DOCTOR:
-        return redirect('doctors_main_screen')
+        return redirect('sanatorium.doctors:doctors_main_screen')
     elif main_role == RolesModel.NURSE:
         return redirect('sanatorium.nurses:nurses_main_screen')
     elif main_role.name == "massagist":

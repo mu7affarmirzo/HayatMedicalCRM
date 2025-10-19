@@ -315,3 +315,53 @@ def view_lab_results(request, assigned_lab_id):
     return render(request, 'sanatorium/nurses/prescriptions/labs/view_lab_results.html', context)
 
 
+@nurse_required
+def edit_lab_result(request, result_id):
+    """
+    View to edit an existing lab result.
+    """
+    lab_result = get_object_or_404(AssignedLabResult, id=result_id)
+    assigned_lab = lab_result.assigned_lab
+
+    if request.method == 'POST':
+        comments = request.POST.get('comments', '')
+        attached_file = request.FILES.get('attached_file', None)
+
+        lab_result.comments = comments
+        if attached_file:
+            lab_result.attached_file = attached_file
+        lab_result.modified_by = request.user
+        lab_result.save()
+
+        messages.success(request, "Lab result updated successfully.")
+        return redirect('sanatorium.nurses:assigned_labs_detail', pk=assigned_lab.id)
+
+    context = {
+        'lab_result': lab_result,
+        'assigned_lab': assigned_lab,
+        'history': assigned_lab.illness_history,
+    }
+
+    return render(request, 'sanatorium/nurses/prescriptions/labs/edit_lab_result.html', context)
+
+
+@nurse_required
+def delete_lab_result(request, result_id):
+    """
+    View to delete a lab result.
+    """
+    lab_result = get_object_or_404(AssignedLabResult, id=result_id)
+    assigned_lab = lab_result.assigned_lab
+
+    if request.method == 'POST':
+        lab_result.delete()
+        messages.success(request, "Lab result deleted successfully.")
+        return redirect('sanatorium.nurses:assigned_labs_detail', pk=assigned_lab.id)
+
+    context = {
+        'lab_result': lab_result,
+        'assigned_lab': assigned_lab,
+        'history': assigned_lab.illness_history,
+    }
+
+    return render(request, 'sanatorium/nurses/prescriptions/labs/delete_lab_result.html', context)

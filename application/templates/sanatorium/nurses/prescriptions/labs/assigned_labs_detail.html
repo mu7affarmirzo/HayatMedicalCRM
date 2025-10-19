@@ -151,9 +151,9 @@
                                         <table class="table table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <th>Дата</th>
+                                                    <th>Дата создания</th>
                                                     <th>Комментарии</th>
-                                                    <th>Добавил</th>
+                                                    <th>Создано</th>
                                                     <th>Файл</th>
                                                     <th>Действия</th>
                                                 </tr>
@@ -161,7 +161,7 @@
                                             <tbody>
                                                 {% for result in assigned_lab.lab_results.all %}
                                                 <tr>
-                                                    <td>{{ result.result_date|date:"M d, Y H:i" }}</td>
+                                                    <td>{{ result.created_at|date:"M d, Y H:i" }}</td>
                                                     <td>{{ result.comments|default:"Без комментариев" }}</td>
                                                     <td>{{ result.created_by.full_name|default:"--" }}</td>
                                                     <td>
@@ -176,10 +176,10 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group">
-                                                            <a href="#" class="btn btn-warning btn-sm">
+                                                            <a href="{% url 'sanatorium.nurses:edit_lab_result' result.id %}" class="btn btn-warning btn-sm">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                            <a href="#" class="btn btn-danger btn-sm">
+                                                            <a href="{% url 'sanatorium.nurses:delete_lab_result' result.id %}" class="btn btn-danger btn-sm">
                                                                 <i class="fas fa-trash"></i>
                                                             </a>
                                                         </div>
@@ -240,4 +240,3 @@
     </div>
 </div>
 {% endblock %}
-

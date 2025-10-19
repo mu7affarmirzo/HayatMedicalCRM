@@ -1,0 +1,59 @@
+{% extends 'sanatorium/nurses/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Edit Lab Result{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit mr-2"></i>Edit Lab Result
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'sanatorium.nurses:assigned_labs_detail' assigned_lab.id %}" class="btn btn-default btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to Lab Details
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form action="{% url 'sanatorium.nurses:edit_lab_result' lab_result.id %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="result-comments">Comments</label>
+                            <textarea class="form-control" id="result-comments" name="comments" rows="3">{{ lab_result.comments }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="result-file">Attach File</label>
+                            <div class="input-group">
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="result-file" name="attached_file">
+                                    <label class="custom-file-label" for="result-file">
+                                        {% if lab_result.attached_file %}
+                                            Current file: {{ lab_result.get_file_name }}
+                                        {% else %}
+                                            Choose file
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% if lab_result.attached_file %}
+                            <small class="form-text text-muted">
+                                Leave empty to keep the current file. Upload a new file to replace it.
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="{% url 'sanatorium.nurses:assigned_labs_detail' assigned_lab.id %}" class="btn btn-default">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

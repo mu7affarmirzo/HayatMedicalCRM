@@ -1,0 +1,73 @@
+{% extends 'sanatorium/nurses/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Delete Lab Result{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger">
+                    <h3 class="card-title">
+                        <i class="fas fa-trash mr-2"></i>Delete Lab Result
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'sanatorium.nurses:assigned_labs_detail' assigned_lab.id %}" class="btn btn-default btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to Lab Details
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> Warning!</h5>
+                        Are you sure you want to delete this lab result? This action cannot be undone.
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Lab Result Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-3 text-bold">Date Created:</div>
+                                <div class="col-sm-9">{{ lab_result.created_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-3 text-bold">Created By:</div>
+                                <div class="col-sm-9">{{ lab_result.created_by.full_name|default:"--" }}</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-3 text-bold">Comments:</div>
+                                <div class="col-sm-9">{{ lab_result.comments|default:"No comments" }}</div>
+                            </div>
+                            {% if lab_result.attached_file %}
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-3 text-bold">Attached File:</div>
+                                <div class="col-sm-9">
+                                    <a href="{{ lab_result.attached_file.url }}" target="_blank">
+                                        {{ lab_result.get_file_name }}
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form action="{% url 'sanatorium.nurses:delete_lab_result' lab_result.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                            <a href="{% url 'sanatorium.nurses:assigned_labs_detail' assigned_lab.id %}" class="btn btn-default">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

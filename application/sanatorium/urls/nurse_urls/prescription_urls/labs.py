@@ -17,5 +17,7 @@ urlpatterns = [
 
     path('add-lab-result/<int:assigned_lab_id>/', assigned_labs.add_lab_result, name='add_lab_result'),
     path('view-lab-results/<int:assigned_lab_id>/', assigned_labs.view_lab_results, name='view_lab_results'),
+    path('edit-lab-result/<int:result_id>/', assigned_labs.edit_lab_result, name='edit_lab_result'),
+    path('delete-lab-result/<int:result_id>/', assigned_labs.delete_lab_result, name='delete_lab_result'),
 
 ]

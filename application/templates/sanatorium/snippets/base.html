@@ -43,11 +43,11 @@
             </li>
             {% if request.user.is_superuser %}
                 <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{% url 'doctor_appointments' %}" class="nav-link">Консультации</a>
+                    <a href="{% url 'sanatorium.doctors:doctor_appointments' %}" class="nav-link">Консультации</a>
                 </li>
             {% endif %}
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url 'patients_list' %}" class="nav-link">Пациенты</a>
+                <a href="{% url 'sanatorium.doctors:patients_list' %}" class="nav-link">Пациенты</a>
             </li>
         </ul>
 
@@ -112,7 +112,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'patients_list' %}" class="nav-link">
+                        <a href="{% url 'sanatorium.doctors:patients_list' %}" class="nav-link">
                             <i class="nav-icon fas fa-search"></i>
                             <p>Поиск пациентов</p>
                         </a>

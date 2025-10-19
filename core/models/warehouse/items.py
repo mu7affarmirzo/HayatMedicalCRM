@@ -16,6 +16,51 @@ class CompanyModel(BaseAuditModel):
         verbose_name_plural = "Warehouses | Company"
 
 
+class DeliveryCompanyModel(BaseAuditModel):
+    name = models.CharField(max_length=255)
+    contact_person = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=50, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+
+    # Address information
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
+
+    # Contract information
+    contract_number = models.CharField(max_length=100, blank=True, null=True)
+    contract_start_date = models.DateField(blank=True, null=True)
+    contract_end_date = models.DateField(blank=True, null=True)
+
+    # Status
+    is_active = models.BooleanField(default=True)
+
+    # Additional information
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    @property
+    def contract_status(self):
+        """Check if contract is active based on end date"""
+        if not self.contract_end_date:
+            return True
+        return self.contract_end_date >= timezone.now().date()
+
+    class Meta:
+        verbose_name = "Warehouses | Delivery Company"
+        verbose_name_plural = "Warehouses | Delivery Companies"
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['is_active']),
+        ]
+
+
+
+
+
 class MedicationModel(BaseAuditModel):
     # Common unit choices for medications
     UNIT_CHOICES = [
@@ -94,6 +139,7 @@ class MedicationModel(BaseAuditModel):
 class MedicationsInStockModel(BaseAuditModel):
     income_seria = models.CharField(max_length=255, null=True, blank=True)
     item = models.ForeignKey(MedicationModel, on_delete=models.CASCADE, related_name="in_stock", null=True, blank=True)
+    delivery_company = models.ForeignKey(DeliveryCompanyModel, on_delete=models.SET_NULL, related_name="delivered_medications", null=True, blank=True)
 
     quantity = models.IntegerField()
     unit_quantity = models.IntegerField(default=0)
@@ -103,6 +149,10 @@ class MedicationsInStockModel(BaseAuditModel):
 
     expire_date = models.DateField(null=True)
     warehouse = models.ForeignKey('Warehouse', on_delete=models.CASCADE)
+
+    # Delivery information
+    delivery_date = models.DateField(null=True, blank=True)
+    invoice_number = models.CharField(max_length=100, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Get the in_pack value from the related item
@@ -137,4 +187,3 @@ class MedicationsInStockModel(BaseAuditModel):
 
         verbose_name_plural = "Warehouses | In Stock Medication"
         verbose_name = "Warehouses | In Stock Medication"
-

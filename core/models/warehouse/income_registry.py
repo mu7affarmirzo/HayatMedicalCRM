@@ -13,7 +13,7 @@ class IncomeModel(BaseAuditModel):
         ('отказано', 'отказано'),
     )
     serial = models.CharField(default=uuid.uuid4, max_length=255, unique=True)
-    delivery_company = models.ForeignKey('CompanyModel', on_delete=models.SET_NULL, null=True, blank=True)
+    delivery_company = models.ForeignKey('DeliveryCompanyModel', on_delete=models.SET_NULL, null=True, blank=True)
     receiver = models.ForeignKey('Warehouse', on_delete=models.CASCADE)
     bill_amount = models.BigIntegerField(default=0, null=True, blank=True)
     state = models.CharField(choices=STATE_CHOICES, max_length=50, default='принято')

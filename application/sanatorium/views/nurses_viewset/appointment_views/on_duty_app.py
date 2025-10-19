@@ -70,7 +70,7 @@ class AppointmentWithOnDutyDoctorUpdateView(NurseRequiredMixin, UpdateView):
     context_object_name = 'appointment'
 
     def get_success_url(self):
-        return reverse('appointment_with_on_duty_doctor_detail', kwargs={'pk': self.object.pk})
+        return reverse('sanatorium.doctors:appointment_with_on_duty_doctor_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

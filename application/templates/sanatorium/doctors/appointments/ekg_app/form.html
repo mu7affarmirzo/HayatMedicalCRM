@@ -238,7 +238,7 @@
                             <button type="submit" class="btn btn-primary">
                                 {% if appointment %}Сохранить изменения{% else %}Создать запись{% endif %}
                             </button>
-                            <a href="{% if appointment %}{% url 'ekg_appointment_detail' appointment.id %}{% else %}{% url 'illness_history_detail' history.id %}{% endif %}" class="btn btn-default">
+                            <a href="{% if appointment %}{% url 'sanatorium.doctors:ekg_appointment_detail' appointment.id %}{% else %}{% url 'sanatorium.doctors:illness_history_detail' history.id %}{% endif %}" class="btn btn-default">
                                 Отмена
                             </a>
                         </div>

@@ -1,7 +1,8 @@
 # views.py
 from HayatMedicalCRM.auth.decorators import doctor_required
 
-from django.db.models import Q
+from django.db.models import Q, F
+from django.db.models.functions import Lower
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -289,15 +290,10 @@ def api_medications_search(request):
     query = MedicationsInStockModel.objects.select_related('item', 'warehouse').filter(warehouse__is_main=True)
     # Фильтрация по поисковому запросу
     if search_term:
-        # Используем более простой поиск без вложенных полей
+        # Используем более простой поиск без вложенных полей с явным приведением к нижнему регистру
         query = query.filter(
             Q(item__name__icontains=search_term)
         )
-        # query = query.filter(
-        #     Q(item__name__icontains=search_term) |
-        #     Q(income_seria__icontains=search_term)
-        # )
-        print(query)
 
     # Применяем фильтры
     if category:

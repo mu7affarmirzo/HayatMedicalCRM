@@ -636,31 +636,7 @@ def prescription_medications_view(request, history_id):
     history = get_object_or_404(IllnessHistory, id=history_id)
 
     # Get all medications with their sessions
-    try:
-        medications = PrescribedMedication.objects.filter(illness_history=history).prefetch_related('sessions')
-
-        # Calculate additional properties for each medication
-        today = timezone.now().date()
-        for med in medications:
-            # Calculate total days of treatment
-            if med.end_date and med.start_date:
-                med.total_days = (med.end_date - med.start_date).days + 1
-            else:
-                med.total_days = 0
-
-            # Calculate days elapsed
-            if med.start_date and med.start_date <= today:
-                med.days_elapsed = (min(today, med.end_date or today) - med.start_date).days + 1
-            else:
-                med.days_elapsed = 0
-
-            # Calculate progress percentage
-            if med.total_days > 0:
-                med.progress_percent = min(100, (med.days_elapsed / med.total_days) * 100)
-            else:
-                med.progress_percent = 0
-    except:
-        medications = []
+    medications = PrescribedMedication.objects.filter(illness_history=history).prefetch_related('sessions')
 
     # Calculate medication statistics
     medication_count = len(medications)

@@ -334,7 +334,7 @@ $(document).ready(function() {
         const notes = $('#session-notes').val();
 
         $.ajax({
-            url: `/application/logus/medications/sessions/{{ session.id }}/update/`,
+            url: `/application/sanatorium/doctor/prescription/medications/sessions/{{ session.id }}/update/`,
             method: 'POST',
             headers: {
                 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),

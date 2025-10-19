@@ -146,10 +146,7 @@
                                 <a href="{% url 'sanatorium.doctors:procedure_edit' procedure.id %}" class="btn btn-warning">
                                     <i class="fas fa-edit mr-1"></i> Редактировать
                                 </a>
-                                <button type="button" class="btn btn-primary" data-toggle="modal"
-                                        data-target="#sessionModal{{ procedure.id }}">
-                                    <i class="fas fa-calendar-check mr-1"></i> Управление сеансами
-                                </button>
+
                                 <a href="{% url 'sanatorium.doctors:procedure_delete' procedure.id %}" class="btn btn-danger">
                                     <i class="fas fa-trash mr-1"></i> Удалить
                                 </a>

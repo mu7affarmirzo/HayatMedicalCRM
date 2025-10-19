@@ -401,7 +401,7 @@ $(document).ready(function() {
     
     function updateSessionStatus(sessionId, status, notes = '') {
         $.ajax({
-            url: `/application/logus/medications/sessions/${sessionId}/update/`,
+            url: `/application/sanatorium/doctor/prescription/medications/sessions/${sessionId}/update/`,
             method: 'POST',
             headers: {
                 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),

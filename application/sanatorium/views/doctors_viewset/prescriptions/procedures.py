@@ -85,7 +85,7 @@ def procedure_edit(request, procedure_id):
                 delete_excess_sessions(new_procedure)
 
             messages.success(request, f'Лечебная процедура "{new_procedure.medical_service.name}" успешно обновлена.')
-            return redirect('sanatorium.doctors:main_prescription_list', history_id=history.id)
+            return redirect('sanatorium.doctors:prescription_procedures', history_id=history.id)
     else:
         form = ProcedureForm(instance=procedure)
 

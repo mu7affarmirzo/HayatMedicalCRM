@@ -309,7 +309,9 @@ def view_lab_results(request, assigned_lab_id):
     context = {
         'assigned_lab': assigned_lab,
         'lab_results': lab_results,
+        'history': assigned_lab.illness_history,
     }
+
     return render(request, 'sanatorium/nurses/prescriptions/labs/view_lab_results.html', context)
 
 

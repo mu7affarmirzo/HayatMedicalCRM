@@ -57,9 +57,9 @@
                 <td>{{ lab.created_at|date:"d.m.Y H:i" }}</td>
                 <td>
                   {% if lab.state == 'results' %}
-                    <button type="button" class="btn btn-sm btn-info view-results-btn" data-id="{{ lab.id }}" data-name="{{ lab.lab.name }}">
-                      <i class="fas fa-eye"></i> Просмотр
-                    </button>
+                      <a href="{% url 'sanatorium.nurses:assigned_labs_detail' lab.id %}" class="btn btn-sm btn-info">
+                          <i class="fas fa-eye"></i> Просмотр
+                      </a>
                   {% elif lab.state == 'cancelled' or lab.state == 'stopped' %}
                     <span class="text-muted">Недоступно</span>
                   {% else %}

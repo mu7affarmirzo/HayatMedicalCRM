@@ -78,7 +78,7 @@ class AssignedLabsCreateView(DoctorRequiredMixin, CreateView):
     template_name = 'sanatorium/doctors/prescriptions/labs/assigned_labs_form.html'
 
     def get_success_url(self):
-        return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+        return reverse('sanatorium.doctors:main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -105,7 +105,7 @@ class AssignedLabsUpdateView(DoctorRequiredMixin, UpdateView):
     context_object_name = 'assigned_lab'
 
     def get_success_url(self):
-        return reverse('prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+        return reverse('sanatorium.doctors:prescription_list', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -132,8 +132,8 @@ class AssignedLabsDeleteView(DoctorRequiredMixin, DeleteView):
     def get_success_url(self):
         messages.success(self.request, "Lab assignment successfully deleted.")
         if self.object.illness_history:
-            return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
-        return reverse('assigned_labs_list')
+            return reverse('sanatorium.doctors:main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+        return reverse('sanatorium.doctors:assigned_labs_list')
 
 
 @doctor_required

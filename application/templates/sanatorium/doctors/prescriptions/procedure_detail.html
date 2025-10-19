@@ -61,7 +61,7 @@
                         <li class="breadcrumb-item"><a href="#">Главная</a></li>
                         <li class="breadcrumb-item"><a href="{% url 'illness_history_detail' history.id %}">История
                             болезни #{{ history.series_number }}</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'main_prescription_list' history.id %}">Лист
+                        <li class="breadcrumb-item"><a href="{% url 'sanatorium.doctors:main_prescription_list' history.id %}">Лист
                             назначений</a></li>
                         <li class="breadcrumb-item active">Детали процедуры</li>
                     </ol>
@@ -153,7 +153,7 @@
                                 <a href="{% url 'procedure_delete' procedure.id %}" class="btn btn-danger">
                                     <i class="fas fa-trash mr-1"></i> Удалить
                                 </a>
-                                <a href="{% url 'main_prescription_list' history.id %}" class="btn btn-default">
+                                <a href="{% url 'sanatorium.doctors:main_prescription_list' history.id %}" class="btn btn-default">
                                     <i class="fas fa-arrow-left mr-1"></i> Назад к списку
                                 </a>
                             </div>
@@ -254,7 +254,7 @@
                                         {#                                </form>#}
 
                                         <form id="updateSessionForm{{ session.id }}" method="post"
-                                              action="{% url 'update_session_status' session.id %}">
+                                              action="{% url 'sanatorium.doctors:update_session_status' session.id %}">
                                             {% csrf_token %}
                                             <!-- Hidden field to store current URL -->
                                             <input type="hidden"

@@ -116,7 +116,7 @@ class PrescribedMedicationCreateView(NurseRequiredMixin, SuccessMessageMixin, Cr
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+        return reverse('sanatorium.nurses:main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -142,7 +142,7 @@ class PrescribedMedicationUpdateView(NurseRequiredMixin, SuccessMessageMixin, Up
         return context
 
     def get_success_url(self):
-        return reverse_lazy('prescribed_medication_detail', kwargs={'pk': self.object.id})
+        return reverse_lazy('sanatorium.nurses:prescribed_medication_detail', kwargs={'pk': self.object.id})
 
 
 class PrescribedMedicationDeleteView(NurseRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -153,8 +153,8 @@ class PrescribedMedicationDeleteView(NurseRequiredMixin, SuccessMessageMixin, De
     def get_success_url(self):
         # Redirect to illness history detail if available
         if self.object.illness_history:
-            return reverse_lazy('illness_history_detail', kwargs={'pk': self.object.illness_history.id})
-        return reverse_lazy('prescribed_medication_list')
+            return reverse_lazy('sanatorium.nurses:illness_history_detail', kwargs={'pk': self.object.illness_history.id})
+        return reverse_lazy('sanatorium.nurses:prescribed_medication_list')
 
 
 # MedicationSession Views
@@ -259,7 +259,7 @@ class MedicationSessionUpdateView(NurseRequiredMixin, SuccessMessageMixin, Updat
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('medication_administration_detail', kwargs={'pk': self.object.id})
+        return reverse_lazy('sanatorium.nurses:medication_administration_detail', kwargs={'pk': self.object.id})
 
 
 class MedicationSessionDeleteView(NurseRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -268,7 +268,7 @@ class MedicationSessionDeleteView(NurseRequiredMixin, SuccessMessageMixin, Delet
     context_object_name = 'administration'
 
     def get_success_url(self):
-        return reverse_lazy('prescribed_medication_detail',
+        return reverse_lazy('sanatorium.nurses:prescribed_medication_detail',
                             kwargs={'pk': self.object.prescribed_medication.id})
 
 

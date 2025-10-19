@@ -422,7 +422,7 @@ $(document).ready(function() {
         $('#confirm-status-update').html('<i class="fas fa-spinner fa-spin"></i> Updating...').prop('disabled', true);
 
         $.ajax({
-            url: `{% url 'update_session_status' 0 %}`.replace('0', sessionId),
+            url: `{% url 'sanatorium.doctors:update_session_status' 0 %}`.replace('0', sessionId),
             method: 'POST',
             headers: {
                 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),

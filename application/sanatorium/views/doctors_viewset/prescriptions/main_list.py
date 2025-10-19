@@ -240,7 +240,7 @@ def schedule_appointment(appointment, scheduled_date):
 def create_appointment(request, history_id):
     """View for creating a new appointment"""
     if request.method != 'POST':
-        return redirect('main_prescription_list', history_id=history_id)
+        return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
     history = get_object_or_404(IllnessHistory, id=history_id)
 
@@ -248,7 +248,7 @@ def create_appointment(request, history_id):
     form_data = parse_appointment_form(request)
     if not form_data:
         messages.error(request, 'Неверные данные формы')
-        return redirect('main_prescription_list', history_id=history_id)
+        return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
     # Get doctor
     doctor = get_object_or_404(Account, id=form_data['doctor_id'])
@@ -257,7 +257,7 @@ def create_appointment(request, history_id):
     model_class = get_appointment_model_class(form_data['consultation_type'])
     if not model_class:
         messages.error(request, 'Неверный тип консультации')
-        return redirect('main_prescription_list', history_id=history_id)
+        return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
     # Create appointment
     appointment = create_appointment_instance(
@@ -272,7 +272,7 @@ def create_appointment(request, history_id):
     schedule_appointment(appointment, form_data['scheduled_date'])
 
     messages.success(request, f'Консультация успешно назначена на {form_data["scheduled_date_str"]}')
-    return redirect('main_prescription_list', history_id=history_id)
+    return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
 
 # Helper functions for cancel_appointment view
@@ -306,7 +306,7 @@ def get_appointment_instance(model_name, appointment_id):
 def cancel_appointment(request, history_id):
     """View for canceling an appointment"""
     if request.method != 'POST':
-        return redirect('main_prescription_list', history_id=history_id)
+        return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
     # Get form data
     appointment_id = request.POST.get('appointment_id')
@@ -317,7 +317,7 @@ def cancel_appointment(request, history_id):
     appointment = get_appointment_instance(model_name, appointment_id)
     if not appointment:
         messages.error(request, 'Неверный тип консультации')
-        return redirect('main_prescription_list', history_id=history_id)
+        return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
     # Update appointment status
     appointment.state = 'Пациент на прием не явился'
@@ -333,7 +333,7 @@ def cancel_appointment(request, history_id):
     # )
 
     messages.success(request, 'Консультация отменена')
-    return redirect('main_prescription_list', history_id=history_id)
+    return redirect('sanatorium.doctors:main_prescription_list', history_id=history_id)
 
 
 def get_appointment_detail_template(model_name):

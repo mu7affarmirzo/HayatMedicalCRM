@@ -41,7 +41,6 @@ def procedure_create(request, history_id):
 
     if request.method == 'POST':
         form = ProcedureForm(request.POST)
-        print('here we are')
         if form.is_valid():
             procedure = form.save(commit=False)
             procedure.illness_history = history
@@ -49,9 +48,8 @@ def procedure_create(request, history_id):
             procedure.save()
 
             messages.success(request, f'Лечебная процедура "{procedure.medical_service.name}" успешно добавлена.')
-            return redirect('main_prescription_list', history_id=history.id)
+            return redirect('sanatorium.doctors:main_prescription_list', history_id=history.id)
     else:
-        print('not wanted')
         form = ProcedureForm()
 
     context = {
@@ -87,7 +85,7 @@ def procedure_edit(request, procedure_id):
                 delete_excess_sessions(new_procedure)
 
             messages.success(request, f'Лечебная процедура "{new_procedure.medical_service.name}" успешно обновлена.')
-            return redirect('main_prescription_list', history_id=history.id)
+            return redirect('sanatorium.doctors:main_prescription_list', history_id=history.id)
     else:
         form = ProcedureForm(instance=procedure)
 
@@ -113,7 +111,7 @@ def procedure_delete(request, procedure_id):
         procedure_name = procedure.medical_service.name
         procedure.delete()
         messages.success(request, f'Лечебная процедура "{procedure_name}" успешно удалена.')
-        return redirect('main_prescription_list', history_id=history.id)
+        return redirect('sanatorium.doctors:main_prescription_list', history_id=history.id)
 
     context = {
         'procedure': procedure,
@@ -207,7 +205,7 @@ def update_session_status(request, session_id):
         return redirect(next_url)
 
     url = reverse(
-        'prescription_list',
+        'sanatorium.doctors:prescription_list',
         kwargs={'history_id': procedure.illness_history.pk}  # →  "prescription_urls/1"
     )
 

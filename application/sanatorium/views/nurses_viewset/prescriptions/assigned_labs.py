@@ -27,7 +27,7 @@ def assign_lab_create(request, history_id):
             lab_assignment.save()
 
             messages.success(request, f'Лабораторный тест "{lab_assignment.lab.name}" успешно назначен.')
-            return redirect('illness_history_detail', pk=history.id)
+            return redirect('sanatorium.nurses:illness_history_detail', pk=history.id)
     else:
         # Pre-populate form with the illness history
         form = AssignedLabsForm(initial={'illness_history': history.id})
@@ -77,7 +77,7 @@ class AssignedLabsCreateView(NurseRequiredMixin, CreateView):
     template_name = 'sanatorium/nurses/prescriptions/labs/assigned_labs_form.html'
 
     def get_success_url(self):
-        return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+        return reverse('sanatorium.nurses:main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -131,7 +131,7 @@ class AssignedLabsDeleteView(NurseRequiredMixin, DeleteView):
     def get_success_url(self):
         messages.success(self.request, "Lab assignment successfully deleted.")
         if self.object.illness_history:
-            return reverse('main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
+            return reverse('sanatorium.nurses:main_prescription_list', kwargs={'history_id': self.object.illness_history.pk})
         return reverse('assigned_labs_list')
 
 
@@ -259,7 +259,7 @@ def add_lab_result(request, assigned_lab_id):
     # Check if the assigned lab is in a state where results can be added
     if assigned_lab.state not in ['dispatched', 'results']:
         messages.error(request, "Lab results can only be added for dispatched labs.")
-        return redirect('assigned_labs_detail', pk=assigned_lab.id)
+        return redirect('sanatorium.nurses:assigned_labs_detail', pk=assigned_lab.id)
 
     try:
         # Extract data from the form
@@ -286,7 +286,7 @@ def add_lab_result(request, assigned_lab_id):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'success', 'message': 'Lab result added successfully'})
 
-        return redirect('assigned_labs_detail', pk=assigned_lab.id)
+        return redirect('sanatorium.nurses:assigned_labs_detail', pk=assigned_lab.id)
 
     except Exception as e:
         messages.error(request, f"Error adding lab result: {str(e)}")
@@ -295,7 +295,7 @@ def add_lab_result(request, assigned_lab_id):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         print('Exception occured!')
-        return redirect('assigned_labs_detail', pk=assigned_lab.id)
+        return redirect('sanatorium.nurses:assigned_labs_detail', pk=assigned_lab.id)
 
 
 @nurse_required

@@ -50,17 +50,6 @@
                             <a href="{% url 'sanatorium.nurses:procedure_detail' procedure.id %}" class="btn btn-info" title="Просмотр">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{% url 'sanatorium.nurses:procedure_edit' procedure.id %}" class="btn btn-warning"
-                               title="Редактировать">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-primary" data-toggle="modal"
-                                    data-target="#sessionModal{{ procedure.id }}" title="Управление сеансами">
-                                <i class="fas fa-calendar-check"></i>
-                            </button>
-                            <a href="{% url 'sanatorium.nurses:procedure_delete' procedure.id %}" class="btn btn-danger" title="Удалить">
-                                <i class="fas fa-trash"></i>
-                            </a>
                         </div>
                     </td>
                 </tr>

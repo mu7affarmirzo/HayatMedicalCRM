@@ -143,17 +143,7 @@
                     <div class="row mt-3">
                         <div class="col-12">
                             <div class="btn-group">
-                                <a href="{% url 'sanatorium.nurses:procedure_edit' procedure.id %}" class="btn btn-warning">
-                                    <i class="fas fa-edit mr-1"></i> Редактировать
-                                </a>
-                                <button type="button" class="btn btn-primary" data-toggle="modal"
-                                        data-target="#sessionModal{{ procedure.id }}">
-                                    <i class="fas fa-calendar-check mr-1"></i> Управление сеансами
-                                </button>
-                                <a href="{% url 'sanatorium.nurses:procedure_delete' procedure.id %}" class="btn btn-danger">
-                                    <i class="fas fa-trash mr-1"></i> Удалить
-                                </a>
-                                <a href="{% url 'sanatorium.nurses:main_prescription_list' history.id %}" class="btn btn-default">
+                                <a href="{% url 'sanatorium.nurses:prescription_procedures' history.id %}" class="btn btn-default">
                                     <i class="fas fa-arrow-left mr-1"></i> Назад к списку
                                 </a>
                             </div>
@@ -208,14 +198,7 @@
                                             </div>
                                         {% endif %}
                                     </div>
-                                    <div class="card-footer">
-                                        <button class="btn btn-sm btn-primary update-session-btn"
-                                                data-session-id="{{ session.id }}"
-                                                data-toggle="modal"
-                                                data-target="#editSessionModal{{ session.id }}">
-                                            <i class="fas fa-edit mr-1"></i> Изменить статус
-                                        </button>
-                                    </div>
+
                                 </div>
                             </div>
 

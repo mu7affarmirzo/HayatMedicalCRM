@@ -61,7 +61,6 @@
                                 <th style="width: 20%">Статус</th>
                                 <th style="width: 25%">Терапевт</th>
                                 <th style="width: 25%">Дата выполнения</th>
-                                <th style="width: 25%">Действия</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -75,15 +74,7 @@
                                 </td>
                                 <td id="session-therapist-{{ session.id }}">{{ session.therapist.full_name|default:"-" }}</td>
                                 <td id="session-completed-date-{{ session.id }}">{{ session.completed_at|date:"d.m.Y H:i"|default:"-" }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary update-session-btn"
-                                            data-toggle="modal"
-                                            data-target="#editSessionModal{{ session.id }}"
-                                            data-session-id="{{ session.id }}"
-                                            data-procedure-id="{{ procedure.id }}">
-                                        <i class="fas fa-edit mr-1"></i> Изменить статус
-                                    </button>
-                                </td>
+
                             </tr>
                             {% endfor %}
                         </tbody>

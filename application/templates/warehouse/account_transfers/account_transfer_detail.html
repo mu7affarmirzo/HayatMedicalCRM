@@ -1,0 +1,195 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Детали перемещения на счет - Медицинский центр Хаят{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Детали перемещения на счет</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:account_transfer_list' %}">Перемещения на счета</a></li>
+                    <li class="breadcrumb-item active">{{ transfer.serial }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Transfer Details -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о перемещении</h3>
+                        <div class="card-tools">
+                            {% if transfer.state == 'в ожидании' %}
+                            <a href="{% url 'warehouse:account_transfer_add_items' transfer.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'warehouse:account_transfer_list' %}" class="btn btn-default btn-sm">
+                                <i class="fas fa-arrow-left"></i> Назад к списку
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th style="width: 30%">Серийный номер</th>
+                                        <td>{{ transfer.serial }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Склад-отправитель</th>
+                                        <td>{{ transfer.sender.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Получатель</th>
+                                        <td>{{ transfer.receiver.full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Статус</th>
+                                        <td>
+                                            <span class="badge {% if transfer.state == 'принято' %}badge-success{% elif transfer.state == 'в ожидании' %}badge-warning{% elif transfer.state == 'возвращено' %}badge-info{% else %}badge-danger{% endif %}">
+                                                {{ transfer.state }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th style="width: 30%">Дата создания</th>
+                                        <td>{{ transfer.created_at|date:"d.m.Y H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Период лечения</th>
+                                        <td>{{ transfer.treatment_period|default:"Не указан" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ожидаемая дата возврата</th>
+                                        <td>{{ transfer.expected_return_date|date:"d.m.Y"|default:"Не указана" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Примечания</th>
+                                        <td>{{ transfer.notes|default:"Нет примечаний" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Update State Form -->
+                        {% if transfer.state == 'в ожидании' %}
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="card card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Изменить статус перемещения</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="post" action="{% url 'warehouse:account_transfer_update_state' transfer.id %}">
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label>Новый статус:</label>
+                                                        <select class="form-control" name="state">
+                                                            {% for state_value, state_label in states %}
+                                                                {% if state_value != transfer.state %}
+                                                                <option value="{{ state_value }}">{{ state_label }}</option>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 d-flex align-items-end">
+                                                    <button type="submit" class="btn btn-warning">
+                                                        <i class="fas fa-sync-alt"></i> Обновить статус
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfer Items -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Товары в перемещении</h3>
+                        <div class="card-tools">
+                            <span class="badge badge-info">Общая сумма: {{ transfer.overall_sum|intcomma }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Наименование</th>
+                                    <th>Партия</th>
+                                    <th>Срок годности</th>
+                                    <th>Количество (упаковки)</th>
+                                    <th>Количество (единицы)</th>
+                                    <th>Цена за единицу</th>
+                                    <th>Общая сумма</th>
+                                    {% if transfer.state == 'принято' or transfer.state == 'возвращено' %}
+                                    <th>Использовано (упаковки)</th>
+                                    <th>Использовано (единицы)</th>
+                                    <th>Возвращено (упаковки)</th>
+                                    <th>Возвращено (единицы)</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in transfer_items %}
+                                <tr>
+                                    <td>{{ item.item.item.name }}</td>
+                                    <td>{{ item.income_seria }}</td>
+                                    <td>{{ item.expire_date|date:"d.m.Y" }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.unit_quantity }}</td>
+                                    <td>{{ item.unit_price|intcomma }}</td>
+                                    <td>{{ item.overall_price|intcomma }}</td>
+                                    {% if transfer.state == 'принято' or transfer.state == 'возвращено' %}
+                                    <td>{{ item.used_quantity }}</td>
+                                    <td>{{ item.used_unit_quantity }}</td>
+                                    <td>{{ item.returned_quantity }}</td>
+                                    <td>{{ item.returned_unit_quantity }}</td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if transfer.state == 'принято' or transfer.state == 'возвращено' %}11{% else %}7{% endif %}" class="text-center">Товары не найдены</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

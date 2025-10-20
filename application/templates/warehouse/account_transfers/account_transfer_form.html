@@ -1,0 +1,106 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Новое перемещение на счет - Медицинский центр Хаят{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Новое перемещение на счет</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:account_transfer_list' %}">Перемещения на счета</a></li>
+                    <li class="breadcrumb-item active">Новое перемещение</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Создание нового перемещения на счет</h3>
+                    </div>
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="sender">Склад-отправитель</label>
+                                        <select class="form-control select2bs4" id="sender" name="sender" required>
+                                            <option value="">Выберите склад</option>
+                                            {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}">
+                                                    {{ warehouse.name }} {% if warehouse.is_main %}(Основной){% endif %}{% if warehouse.is_emergency %}(Экстренный){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="receiver">Получатель (сотрудник)</label>
+                                        <select class="form-control select2bs4" id="receiver" name="receiver" required>
+                                            <option value="">Выберите сотрудника</option>
+                                            {% for account in accounts %}
+                                                <option value="{{ account.id }}">
+                                                    {{ account.full_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="treatment_period">Период лечения</label>
+                                        <input type="text" class="form-control" id="treatment_period" name="treatment_period" placeholder="Например: 1 неделя, 2 месяца и т.д.">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="expected_return_date">Ожидаемая дата возврата</label>
+                                        <input type="date" class="form-control" id="expected_return_date" name="expected_return_date">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="notes">Примечания</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Дополнительная информация о перемещении"></textarea>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Создать перемещение</button>
+                            <a href="{% url 'warehouse:account_transfer_list' %}" class="btn btn-default">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

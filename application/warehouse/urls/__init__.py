@@ -6,3 +6,4 @@ from .patient_expenses_urls import urlpatterns as patient_expenses_urls
 from .prescribed_medications_url import urlpatterns as prescribed_medications_url
 from .transfers_url import urlpatterns as transfers_url
 from .income_urls import urlpatterns as income_urls
+from .account_transfers_url import urlpatterns as account_transfers_url

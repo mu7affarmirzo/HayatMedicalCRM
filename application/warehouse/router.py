@@ -2,7 +2,7 @@ from django.urls import path
 from django.urls.conf import include
 
 from .views import dashboard
-from .urls import medications_url, warehouses_url, companies_url, reports_url, patient_expenses_urls, prescribed_medications_url, transfers_url, income_urls
+from .urls import medications_url, warehouses_url, companies_url, reports_url, patient_expenses_urls, prescribed_medications_url, transfers_url, income_urls, account_transfers_url
 
 app_name = 'warehouse'
 
@@ -25,4 +25,7 @@ urlpatterns = [
 
     # Transfers
     path('transfers/', include(transfers_url)),
+
+    # Account Transfers
+    path('account-transfers/', include(account_transfers_url)),
 ]

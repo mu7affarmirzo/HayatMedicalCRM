@@ -228,7 +228,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a href="#" class="nav-link {% if 'transfer' in request.resolver_match.url_name %}active{% endif %}">
+                        <a href="#" class="nav-link {% if 'transfer' in request.resolver_match.url_name and not 'account_transfer' in request.resolver_match.url_name %}active{% endif %}">
                             <i class="nav-icon fas fa-truck-loading"></i>
                             <p>
                                 Перемещения
@@ -244,6 +244,30 @@
                             </li>
                             <li class="nav-item">
                                 <a href="{% url 'warehouse:transfer_create' %}" class="nav-link {% if request.resolver_match.url_name == 'transfer_create' %}active{% endif %}">
+                                    <i class="fas fa-plus nav-icon"></i>
+                                    <p>Новое перемещение</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if 'account_transfer' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="nav-icon fas fa-user-md"></i>
+                            <p>
+                                Перемещения на счета
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:account_transfer_list' %}" class="nav-link {% if request.resolver_match.url_name == 'account_transfer_list' %}active{% endif %}">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список перемещений</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:account_transfer_create' %}" class="nav-link {% if request.resolver_match.url_name == 'account_transfer_create' %}active{% endif %}">
                                     <i class="fas fa-plus nav-icon"></i>
                                     <p>Новое перемещение</p>
                                 </a>

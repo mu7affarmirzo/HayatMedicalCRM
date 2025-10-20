@@ -23,9 +23,6 @@ urlpatterns = [
     path('patients/', include(patient_expenses_urls)),
     path('prescribtions/', include(prescribed_medications_url)),
 
-    # Transfers
-    path('transfers/', include(transfers_url)),
-
     # Account Transfers
     path('account-transfers/', include(account_transfers_url)),
 ]

@@ -8,7 +8,6 @@ from application.sanatorium.views.nurses_viewset.account_transfers import (
     account_transfer_usage
 )
 
-app_name = 'sanatorium.nurses.account_transfers'
 
 urlpatterns = [
     path('', account_transfer_list, name='list'),

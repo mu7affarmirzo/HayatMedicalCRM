@@ -157,6 +157,26 @@
                         </ul>
                     </li>
 
+                    <!-- Transfers Section -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-exchange-alt"></i>
+                            <p>
+                                Перемещения
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+
+                            <li class="nav-item">
+                                <a href="{% url 'sanatorium.nurses:list' %}" class="nav-link">
+                                    <i class="fas fa-user-md nav-icon"></i>
+                                    <p>Перемещения на аккаунт</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                 </ul>
             </nav>
             <!-- /.sidebar-menu -->
@@ -211,4 +231,3 @@
 {% block extra_js %}{% endblock %}
 </body>
 </html>
-

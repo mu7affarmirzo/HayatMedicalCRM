@@ -15,7 +15,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:nurses_main_screen' %}">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:account_transfers:list' %}">Перемещения медикаментов</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sanatorium.nurses:list' %}">Перемещения медикаментов</a></li>
                     <li class="breadcrumb-item active">{{ transfer.serial }}</li>
                 </ol>
             </div>
@@ -34,7 +34,7 @@
                     <div class="card-header">
                         <h3 class="card-title">Информация о перемещении</h3>
                         <div class="card-tools">
-                            <a href="{% url 'sanatorium.nurses:account_transfers:list' %}" class="btn btn-default btn-sm">
+                            <a href="{% url 'sanatorium.nurses:list' %}" class="btn btn-default btn-sm">
                                 <i class="fas fa-arrow-left"></i> Назад к списку
                             </a>
                         </div>
@@ -96,7 +96,7 @@
                                         <h3 class="card-title">Изменить статус перемещения</h3>
                                     </div>
                                     <div class="card-body">
-                                        <form method="post" action="{% url 'sanatorium.nurses:account_transfers:update_state' transfer.id %}">
+                                        <form method="post" action="{% url 'sanatorium.nurses:update_state' transfer.id %}">
                                             {% csrf_token %}
                                             <div class="row">
                                                 <div class="col-md-6">
@@ -130,7 +130,7 @@
                                         <h3 class="card-title">Записать использование медикаментов</h3>
                                     </div>
                                     <div class="card-body">
-                                        <form method="post" action="{% url 'sanatorium.nurses:account_transfers:usage' transfer.id %}">
+                                        <form method="post" action="{% url 'sanatorium.nurses:usage' transfer.id %}">
                                             {% csrf_token %}
                                             <div class="table-responsive">
                                                 <table class="table table-bordered">
@@ -199,7 +199,7 @@
                                         <h3 class="card-title">Вернуть неиспользованные медикаменты</h3>
                                     </div>
                                     <div class="card-body">
-                                        <form method="post" action="{% url 'sanatorium.nurses:account_transfers:return' transfer.id %}">
+                                        <form method="post" action="{% url 'sanatorium.nurses:return' transfer.id %}">
                                             {% csrf_token %}
                                             <div class="table-responsive">
                                                 <table class="table table-bordered">

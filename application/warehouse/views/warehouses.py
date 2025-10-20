@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from django.contrib import messages
 from django.db.models import Sum, F, Q
 from django.utils import timezone
@@ -11,7 +11,7 @@ from core.models import MedicationModel, Warehouse, MedicationsInStockModel, Com
 from ..forms.warehouse_form import WarehouseForm, TransferForm
 
 
-@login_required
+@warehouse_manager_required
 def warehouse_list(request):
     """
     View to display list of all warehouses
@@ -31,7 +31,7 @@ def warehouse_list(request):
     return render(request, 'warehouse/warehouse/warehouse_list.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def warehouse_detail(request, pk):
     """
     View to display details of a specific warehouse and its inventory
@@ -85,7 +85,7 @@ def warehouse_detail(request, pk):
     return render(request, 'warehouse/warehouse/warehouse_detail.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def warehouse_create(request):
     """
     View to create a new warehouse
@@ -123,7 +123,7 @@ def warehouse_create(request):
     return render(request, 'warehouse/warehouse/warehouse_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def warehouse_update(request, pk):
     """
     View to update an existing warehouse
@@ -163,7 +163,7 @@ def warehouse_update(request, pk):
     return render(request, 'warehouse/warehouse/warehouse_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def warehouse_transfer(request):
     """
     View to transfer medications between warehouses
@@ -274,7 +274,7 @@ def warehouse_transfer(request):
 
 
 # AJAX endpoint to get batches for a specific warehouse and medication
-@login_required
+@warehouse_manager_required
 def get_batches(request):
     """
     AJAX view to get batches for a specific warehouse and medication
@@ -311,7 +311,7 @@ def get_batches(request):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
-@login_required
+@warehouse_manager_required
 def get_medication_info(request):
     """
     AJAX endpoint to get basic information about a medication.
@@ -409,7 +409,7 @@ def get_medication_info(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-@login_required
+@warehouse_manager_required
 def warehouse_stats(request):
     """
     AJAX endpoint to get warehouse statistics.

@@ -47,8 +47,6 @@ def role_required(*allowed_roles, redirect_to_dashboard=True):
                         has_permission = True
                         break
                 else:
-                    # It's a string (role name)
-                    print(user_role)
                     if user_role == allowed_role:
                         has_permission = True
                         break
@@ -68,7 +66,6 @@ def role_required(*allowed_roles, redirect_to_dashboard=True):
                         '<h1>403 Forbidden</h1>'
                         '<p>У вас нет доступа к этому разделу.</p>'
                     )
-
             return view_func(request, *args, **kwargs)
 
         return wrapper
@@ -115,6 +112,14 @@ def doctor_required(view_func):
     """
     from core.models import RolesModel
     return role_required(RolesModel.DOCTOR, RolesModel.ADMIN)(view_func)
+
+
+def warehouse_manager_required(view_func):
+    """
+    Decorator to check if user is warehouse manager or admin.
+    """
+    from core.models import RolesModel
+    return role_required(RolesModel.WAREHOUSE, RolesModel.ADMIN)(view_func)
 
 
 def manager_required(view_func):
@@ -200,3 +205,13 @@ class DoctorRequiredMixin(UserPassesTestMixin):
         # Check if user has NURSE or ADMIN role
         from core.models import RolesModel
         return user.has_role(RolesModel.DOCTOR) or user.has_role(RolesModel.ADMIN) or user.is_superuser
+
+
+class WarehouseManagerRequiredMixin(UserPassesTestMixin):
+    """Mixin to ensure that only nurses or admins can access the view"""
+
+    def test_func(self):
+        user = self.request.user
+        # Check if user has NURSE or ADMIN role
+        from core.models import RolesModel
+        return user.has_role(RolesModel.WAREHOUSE) or user.has_role(RolesModel.ADMIN) or user.is_superuser

@@ -1,6 +1,6 @@
 # warehouse/views/medication_expenses.py
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from django.db.models import Sum, Count, Q, F, DecimalField, Case, When
 from django.utils import timezone
 from datetime import timedelta, date
@@ -11,7 +11,7 @@ from core.models import PrescribedMedication, MedicationSession
 from core.models import MedicationsInStockModel  # Adjust import path as needed
 
 
-@login_required
+@warehouse_manager_required
 def medication_expenses_dashboard(request):
     """
     Dashboard view showing expected medication expenses based on prescribed medications
@@ -323,7 +323,7 @@ def get_patient_medication_summary(prescriptions):
     return dict(patient_summary)
 
 
-@login_required
+@warehouse_manager_required
 def medication_expenses_export(request):
     """
     Export medication expenses data to CSV/Excel

@@ -1,6 +1,6 @@
 import json
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 
 from core.models import Warehouse, TransferModel, TransferItemsModel, MedicationsInStockModel, MedicationModel
 
-@login_required
+@warehouse_manager_required
 def transfer_list(request):
     """
     View to display a list of all transfers between warehouses
@@ -52,7 +52,7 @@ def transfer_list(request):
 
     return render(request, 'warehouse/transfers/transfer_list.html', context)
 
-@login_required
+@warehouse_manager_required
 def transfer_detail(request, pk):
     """
     View to display details of a specific transfer
@@ -74,7 +74,7 @@ def transfer_detail(request, pk):
 
     return render(request, 'warehouse/transfers/transfer_detail.html', context)
 
-@login_required
+@warehouse_manager_required
 def transfer_create(request):
     """
     View to create a new transfer between warehouses
@@ -119,7 +119,7 @@ def transfer_create(request):
 
     return render(request, 'warehouse/transfers/transfer_form.html', context)
 
-@login_required
+@warehouse_manager_required
 def transfer_add_items(request, pk):
     """
     View to add items to a transfer
@@ -197,7 +197,7 @@ def transfer_add_items(request, pk):
 
     return render(request, 'warehouse/transfers/transfer_add_items.html', context)
 
-@login_required
+@warehouse_manager_required
 def transfer_update_state(request, pk):
     """
     View to update the state of a transfer
@@ -224,7 +224,7 @@ def transfer_update_state(request, pk):
 
     return redirect('warehouse:transfer_detail', pk=transfer.id)
 
-@login_required
+@warehouse_manager_required
 def get_medication_batches(request):
     """
     AJAX endpoint to get batches for a specific medication in a warehouse
@@ -260,7 +260,7 @@ def get_medication_batches(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-@login_required
+@warehouse_manager_required
 def remove_transfer_item(request, pk, item_pk):
     """
     View to remove an item from a transfer

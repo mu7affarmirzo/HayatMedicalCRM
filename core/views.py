@@ -13,6 +13,15 @@ from core.forms import LoginForm  # We'll create this next
 USER_ROLE_REDIRECTS = {
     'doctor': 'sanatorium.doctors:doctors_main_screen',
     'nurse': 'sanatorium.nurses:nurses_main_screen',
+    'warehouse': 'warehouse:warehouse_dashboard',
+    'massagist': 'massagist:massagist_dashboard',
+    'massagist_dispatcher': 'massagist:dispatcher_dashboard',
+    'admin': 'admin_dashboard',
+    'manager': 'manager_dashboard',
+    'therapist': 'therapist_dashboard',
+    'receptionist': 'reception_dashboard',
+    'default': 'default_dashboard',
+    'massagist.dispatcher': 'massagist:dispatcher_dashboard',
 }
 
 # Default if no role match is found
@@ -21,6 +30,7 @@ DEFAULT_REDIRECT = 'home'
 
 def get_redirect_url_for_role(user):
     """Get the appropriate redirect URL based on user's role"""
+    print('get_redirect_url_for_rol')
     try:
         target_role = user.roles.first()
         if target_role and target_role.name in USER_ROLE_REDIRECTS:
@@ -69,7 +79,6 @@ def logout_view(request):
 def redirect_by_role(user):
     """Redirect user based on their primary role"""
     main_role = user.get_main_role()
-
     if main_role == RolesModel.ADMIN:
         return redirect('admin_dashboard')
     elif main_role == RolesModel.MANAGER:
@@ -82,10 +91,10 @@ def redirect_by_role(user):
         return redirect('sanatorium.doctors:doctors_main_screen')
     elif main_role == RolesModel.NURSE:
         return redirect('sanatorium.nurses:nurses_main_screen')
+    elif main_role == RolesModel.WAREHOUSE or main_role.name == "warehouse":
+        return redirect('warehouse:warehouse_dashboard')
     elif main_role.name == "massagist":
         return redirect('massagist:massagist_dashboard')
-    elif main_role.name == "warehouse":
-        return redirect('warehouse:warehouse_dashboard')
     elif main_role.name == "massagist_dispatcher":
         return redirect('massagist:dispatcher_dashboard')
 

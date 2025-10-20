@@ -1,15 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.forms import formset_factory, modelformset_factory
 from django.db import transaction
 from django.utils import timezone
 from django.core.paginator import Paginator
+
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from core.models import IncomeModel, IncomeItemsModel, MedicationModel, Warehouse, MedicationsInStockModel, CompanyModel
 from ..forms.income_forms import IncomeForm, IncomeItemForm, IncomeItemFormSet
 
 
-@login_required
+@warehouse_manager_required
 def income_list(request):
     """
     View to display list of all income receipts with filtering and sorting options
@@ -65,7 +66,7 @@ def income_list(request):
     return render(request, 'warehouse/income/income_list.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def income_detail(request, pk):
     """
     View to display details of a specific income receipt
@@ -87,7 +88,7 @@ def income_detail(request, pk):
     return render(request, 'warehouse/income/income_detail.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def income_create(request):
     """
     View to create a new income receipt with items
@@ -192,7 +193,7 @@ def income_create(request):
     return render(request, 'warehouse/income/income_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def income_update(request, pk):
     """
     View to update an existing income receipt
@@ -289,7 +290,7 @@ def income_update(request, pk):
     return render(request, 'warehouse/income/income_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def income_accept(request, pk):
     """
     View to accept a pending income receipt and update stock
@@ -345,7 +346,7 @@ def income_accept(request, pk):
     return redirect('warehouse:income_detail', pk=income.id)
 
 
-@login_required
+@warehouse_manager_required
 def income_reject(request, pk):
     """
     View to reject a pending income receipt

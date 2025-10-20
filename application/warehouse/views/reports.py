@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from django.db.models import Sum, F, Q, Count, Value, Case, When, IntegerField, DecimalField
 from django.db.models.functions import Coalesce, TruncMonth, TruncYear
 from django.utils import timezone
@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from core.models import MedicationsInStockModel, MedicationModel, Warehouse, IncomeModel, IncomeItemsModel, CompanyModel
 
 
-@login_required
+@warehouse_manager_required
 def stock_report(request):
     """
     Generate a comprehensive report of current stock levels across all warehouses.
@@ -152,7 +152,7 @@ def stock_report(request):
     return render(request, 'warehouse/reports/stock_report.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def expiry_report(request):
     """
     Generate a report focused on medications that are expired or will expire soon.
@@ -296,7 +296,7 @@ def expiry_report(request):
     return render(request, 'warehouse/reports/expiry_report.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def income_report(request):
     """
     Generate a report on incoming deliveries with trend analysis.

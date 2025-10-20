@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
@@ -11,7 +11,7 @@ from core.models import CompanyModel, MedicationModel, IncomeModel, MedicationsI
 from ..forms.company_form import CompanyForm  # You'll need to create this form
 
 
-@login_required
+@warehouse_manager_required
 def company_list(request):
     """
     Display a list of all companies with search and filtering capabilities.
@@ -59,7 +59,7 @@ def company_list(request):
     return render(request, 'warehouse/company/company_list.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def company_detail(request, pk):
     """
     View company details including associated medications and income records.
@@ -98,7 +98,7 @@ def company_detail(request, pk):
     return render(request, 'warehouse/company/company_detail.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def company_create(request):
     """
     Create a new company.
@@ -125,7 +125,7 @@ def company_create(request):
     return render(request, 'warehouse/company/company_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def company_update(request, pk):
     """
     Update an existing company.

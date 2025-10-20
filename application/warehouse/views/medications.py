@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+
 from django.contrib import messages
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from core.models import MedicationModel, Warehouse, MedicationsInStockModel, CompanyModel
 from ..forms.medications_form import MedicationForm
 
 
-@login_required
+@warehouse_manager_required
 def medication_list(request):
     """
     View to display list of all medications with filtering and sorting options
@@ -62,7 +64,7 @@ def medication_list(request):
     return render(request, 'warehouse/medications/medication_list.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def medication_detail(request, pk):
     """
     View to display details of a specific medication and its stock information
@@ -109,7 +111,7 @@ def medication_detail(request, pk):
     return render(request, 'warehouse/medications/medication_detail.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def medication_create(request):
     """
     View to create a new medication
@@ -147,7 +149,7 @@ def medication_create(request):
     return render(request, 'warehouse/medications/medication_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def medication_update(request, pk):
     """
     View to update an existing medication
@@ -187,7 +189,7 @@ def medication_update(request, pk):
     return render(request, 'warehouse/medications/medication_form.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def expiring_medications(request):
     """
     View to display medications that will expire soon
@@ -256,7 +258,7 @@ def expiring_medications(request):
     return render(request, 'warehouse/medications/expiring_medications.html', context)
 
 
-@login_required
+@warehouse_manager_required
 def expiring_medications_export_excel(request):
     """
     Export expiring medications to an Excel file using current filters (days, warehouse).
@@ -331,7 +333,7 @@ def expiring_medications_export_excel(request):
     return response
 
 
-@login_required
+@warehouse_manager_required
 def low_stock(request):
     """
     View to display medications with low stock levels

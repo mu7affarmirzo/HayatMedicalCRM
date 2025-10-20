@@ -4,9 +4,11 @@ from datetime import timedelta
 from django.shortcuts import render
 from django.utils import timezone
 
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from core.models import Warehouse, MedicationModel, IncomeModel, MedicationsInStockModel
 
 
+@warehouse_manager_required
 def warehouse_dashboard(request):
     # Get filter parameters
     warehouse_id = request.GET.get('warehouse')

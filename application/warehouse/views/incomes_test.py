@@ -3,7 +3,7 @@ import traceback
 import uuid
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -16,7 +16,7 @@ from datetime import datetime
 from core.models import IncomeModel, IncomeItemsModel, CompanyModel, Warehouse, MedicationModel
 
 
-@login_required
+@warehouse_manager_required
 def create_income(request):
     """
     Create new income registry with multiple items
@@ -130,7 +130,7 @@ def create_income(request):
     return render(request, 'warehouse/income/income_create.html', context)
 
 
-@login_required
+@warehouse_manager_required
 @require_POST
 @csrf_exempt
 def search_medication_by_qr(request):
@@ -165,7 +165,7 @@ def search_medication_by_qr(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-@login_required
+@warehouse_manager_required
 def get_medication_info(request, medication_id):
     """
     Get medication information by ID

@@ -5,45 +5,22 @@
 {% block title %}{% if is_update %}Редактирование{% else %}Создание{% endif %} поступления - Hayat Medical Center{% endblock %}
 
 {% block extra_css %}
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<!-- Tempusdominus Bootstrap 4 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
 <style>
-    .remove-item {
-        color: #dc3545;
-        cursor: pointer;
-    }
-    .add-item {
-        cursor: pointer;
-    }
-    .card-title-bold {
-        font-weight: 600;
-    }
-    .formset-table th {
-        vertical-align: middle;
-    }
-    .select2-container--bootstrap4 .select2-selection--single {
-        height: calc(2.25rem + 2px) !important;
-    }
     .item-row {
-        background-color: #f8f9fa;
-        padding: 15px;
         margin-bottom: 15px;
-        border-radius: 5px;
-        border-left: 3px solid #007bff;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
     }
-    .price-summary {
-        background-color: #f2f2f2;
-        padding: 10px;
-        border-radius: 5px;
+    .remove-item-btn {
+        margin-top: 32px;
+    }
+    .add-item-btn {
         margin-top: 15px;
-    }
-    .form-help-text {
-        color: #6c757d;
-        font-size: 0.875rem;
-        margin-top: 5px;
-    }
-    .item-total {
-        font-weight: bold;
-        font-size: 1.1rem;
-        color: #28a745;
     }
 </style>
 {% endblock %}
@@ -59,8 +36,8 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'warehouse:income_list' %}">Поступления</a></li>
-                    <li class="breadcrumb-item active">{% if is_update %}Редактирование{% else %}Создание{% endif %}</li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:income_list' %}">Список поступлений</a></li>
+                    <li class="breadcrumb-item active">{% if is_update %}Редактирование{% else %}Создание{% endif %} поступления</li>
                 </ol>
             </div>
         </div>
@@ -80,417 +57,218 @@
             {% endfor %}
         {% endif %}
 
-        <form method="post" id="income-form">
-            {% csrf_token %}
-            
-            <!-- Income Main Info Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title card-title-bold">Основная информация</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ income_form.delivery_company.id_for_label }}">{{ income_form.delivery_company.label }}</label>
-                                {{ income_form.delivery_company }}
-                                {% if income_form.delivery_company.errors %}
-                                    <div class="text-danger">
-                                        {{ income_form.delivery_company.errors }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ income_form.receiver.id_for_label }}">{{ income_form.receiver.label }} <span class="text-danger">*</span></label>
-                                {{ income_form.receiver }}
-                                {% if income_form.receiver.errors %}
-                                    <div class="text-danger">
-                                        {{ income_form.receiver.errors }}
-                                    </div>
-                                {% endif %}
-                                <div class="form-help-text">Выберите склад, на который будет оформлено поступление</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ income_form.bill_amount.id_for_label }}">{{ income_form.bill_amount.label }}</label>
-                                {{ income_form.bill_amount }}
-                                {% if income_form.bill_amount.errors %}
-                                    <div class="text-danger">
-                                        {{ income_form.bill_amount.errors }}
-                                    </div>
-                                {% endif %}
-                                <div class="form-help-text">Укажите сумму по счету (необязательно)</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ income_form.state.id_for_label }}">{{ income_form.state.label }}</label>
-                                {{ income_form.state }}
-                                {% if income_form.state.errors %}
-                                    <div class="text-danger">
-                                        {{ income_form.state.errors }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Income Form Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% if is_update %}Редактирование{% else %}Создание{% endif %} поступления</h3>
             </div>
-
-            <!-- Income Items Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title card-title-bold">Позиции поступления</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-success btn-sm" id="add-item-btn">
-                            <i class="fas fa-plus"></i> Добавить позицию
-                        </button>
-                    </div>
-                </div>
+            <form method="post" id="income-form">
+                {% csrf_token %}
                 <div class="card-body">
-                    {{ item_formset.management_form }}
-                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="receiver">Склад-получатель <span class="text-danger">*</span></label>
+                                <select class="form-control select2bs4" name="receiver" id="receiver" required>
+                                    <option value="">Выберите склад</option>
+                                    {% for warehouse in warehouses %}
+                                        <option value="{{ warehouse.id }}" {% if income and income.receiver.id == warehouse.id %}selected{% endif %}>{{ warehouse.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="delivery_company">Компания-поставщик</label>
+                                <select class="form-control select2bs4" name="delivery_company" id="delivery_company">
+                                    <option value="">Выберите компанию</option>
+                                    {% for company in companies %}
+                                        <option value="{{ company.id }}" {% if income and income.delivery_company and income.delivery_company.id == company.id %}selected{% endif %}>{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="bill_amount">Сумма по счету</label>
+                                <input type="number" class="form-control" name="bill_amount" id="bill_amount" value="{{ income.bill_amount|default:0 }}" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="state">Статус</label>
+                                <select class="form-control select2bs4" name="state" id="state">
+                                    {% for state_code, state_name in state_choices %}
+                                        <option value="{{ state_code }}" {% if income and income.state == state_code %}selected{% elif not income and state_code == 'принято' %}selected{% endif %}>{{ state_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not is_update %}
+                    <hr>
+                    <h4>Товары</h4>
                     <div id="items-container">
-                        {% for form in item_formset %}
-                            <div class="item-row">
-                                <div class="row">
-                                    <div class="col-md-11">
-                                        {% if form.non_field_errors %}
-                                            <div class="alert alert-danger">
-                                                {{ form.non_field_errors }}
-                                            </div>
-                                        {% endif %}
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="{{ form.item.id_for_label }}">{{ form.item.label }} <span class="text-danger">*</span></label>
-                                                    {{ form.item }}
-                                                    {% if form.item.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.item.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="{{ form.expire_date.id_for_label }}">{{ form.expire_date.label }} <span class="text-danger">*</span></label>
-                                                    {{ form.expire_date }}
-                                                    {% if form.expire_date.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.expire_date.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }} <span class="text-danger">*</span></label>
-                                                    {{ form.quantity }}
-                                                    {% if form.quantity.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.quantity.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="{{ form.unit_quantity.id_for_label }}">{{ form.unit_quantity.label }}</label>
-                                                    {{ form.unit_quantity }}
-                                                    {% if form.unit_quantity.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.unit_quantity.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="{{ form.price.id_for_label }}">{{ form.price.label }}</label>
-                                                    {{ form.price }}
-                                                    {% if form.price.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.price.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="{{ form.unit_price.id_for_label }}">{{ form.unit_price.label }}</label>
-                                                    {{ form.unit_price }}
-                                                    {% if form.unit_price.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.unit_price.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="{{ form.nds.id_for_label }}">{{ form.nds.label }}</label>
-                                                    {{ form.nds }}
-                                                    {% if form.nds.errors %}
-                                                        <div class="text-danger">
-                                                            {{ form.nds.errors }}
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <div class="price-summary">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <p>Количество: <span class="item-quantity">0</span> упаковок + <span class="item-unit-quantity">0</span> единиц</p>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <p>Итого: <span class="item-total">0 сум</span></p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Hidden fields -->
-                                        {% for hidden_field in form.hidden_fields %}
-                                            {{ hidden_field }}
-                                        {% endfor %}
+                        <div class="item-row" id="item-row-1">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Лекарство <span class="text-danger">*</span></label>
+                                        <select class="form-control select2bs4 item-select" name="item_id" required>
+                                            <option value="">Выберите лекарство</option>
+                                            {% for medication in medications %}
+                                                <option value="{{ medication.id }}">{{ medication.name }} ({{ medication.get_unit_display }})</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
-                                    <div class="col-md-1 text-right">
-                                        <button type="button" class="btn btn-danger remove-item-btn">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Количество (упаковок) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" name="quantity" required min="1" value="1">
                                     </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Единиц в остатке</label>
+                                        <input type="number" class="form-control" name="unit_quantity" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Цена за упаковку</label>
+                                        <input type="number" class="form-control" name="price" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger remove-item-btn" onclick="removeItem(1)" style="display: none;"><i class="fas fa-trash"></i></button>
                                 </div>
                             </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <!-- Empty form template for JavaScript -->
-                    <div id="empty-form" class="d-none">
-                        <div class="item-row">
                             <div class="row">
-                                <div class="col-md-11">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.item.id_for_label }}">{{ item_formset.empty_form.item.label }} <span class="text-danger">*</span></label>
-                                                {{ item_formset.empty_form.item }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.expire_date.id_for_label }}">{{ item_formset.empty_form.expire_date.label }} <span class="text-danger">*</span></label>
-                                                {{ item_formset.empty_form.expire_date }}
-                                            </div>
-                                        </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Цена за единицу</label>
+                                        <input type="number" class="form-control" name="unit_price" min="0" value="0">
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.quantity.id_for_label }}">{{ item_formset.empty_form.quantity.label }} <span class="text-danger">*</span></label>
-                                                {{ item_formset.empty_form.quantity }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.unit_quantity.id_for_label }}">{{ item_formset.empty_form.unit_quantity.label }}</label>
-                                                {{ item_formset.empty_form.unit_quantity }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.price.id_for_label }}">{{ item_formset.empty_form.price.label }}</label>
-                                                {{ item_formset.empty_form.price }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.unit_price.id_for_label }}">{{ item_formset.empty_form.unit_price.label }}</label>
-                                                {{ item_formset.empty_form.unit_price }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label for="{{ item_formset.empty_form.nds.id_for_label }}">{{ item_formset.empty_form.nds.label }}</label>
-                                                {{ item_formset.empty_form.nds }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-9">
-                                            <div class="price-summary">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <p>Количество: <span class="item-quantity">0</span> упаковок + <span class="item-unit-quantity">0</span> единиц</p>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <p>Итого: <span class="item-total">0 сум</span></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Hidden fields -->
-                                    {% for hidden_field in item_formset.empty_form.hidden_fields %}
-                                        {{ hidden_field }}
-                                    {% endfor %}
                                 </div>
-                                <div class="col-md-1 text-right">
-                                    <button type="button" class="btn btn-danger remove-item-btn">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>НДС (%)</label>
+                                        <input type="number" class="form-control" name="nds" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Срок годности</label>
+                                        <div class="input-group date" id="expire_date_1" data-target-input="nearest">
+                                            <input type="text" class="form-control datetimepicker-input" data-target="#expire_date_1" name="expire_date">
+                                            <div class="input-group-append" data-target="#expire_date_1" data-toggle="datetimepicker">
+                                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="text-center mt-3 {% if item_formset.forms %}d-none{% endif %}" id="no-items-message">
-                        <p class="text-muted">Нет добавленных позиций. Нажмите "Добавить позицию", чтобы начать.</p>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-success add-item-btn" id="add-item-btn"><i class="fas fa-plus"></i> Добавить товар</button>
+                        </div>
                     </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <a href="{% url 'warehouse:income_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Вернуться к списку
-                            </a>
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> {% if is_update %}Обновить{% else %}Создать{% endif %} поступление
-                            </button>
-                        </div>
-                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <a href="{% if income %}{% url 'warehouse:income_detail' income.id %}{% else %}{% url 'warehouse:income_list' %}{% endif %}" class="btn btn-default">Отмена</a>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Moment.js -->
+<script src="{% static 'adminlte3_assets/plugins/moment/moment.min.js' %}"></script>
+<!-- Tempusdominus Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+
 <script>
-    $(function() {
+    $(function () {
         // Initialize Select2 Elements
         $('.select2bs4').select2({
             theme: 'bootstrap4'
         });
-        
-        // Keep track of form count
-        let formCount = {{ item_formset.total_form_count }};
-        const emptyForm = $('#empty-form').html();
-        
-        // Show/hide no items message
-        function toggleNoItemsMessage() {
-            if ($('.item-row:visible').length === 0) {
-                $('#no-items-message').removeClass('d-none');
-            } else {
-                $('#no-items-message').addClass('d-none');
+
+        // Initialize date picker
+        $('.date').datetimepicker({
+            format: 'YYYY-MM-DD',
+            icons: {
+                time: 'far fa-clock'
             }
-        }
-        
-        // Calculate item total
-        function calculateItemTotal(row) {
-            const quantity = parseInt($(row).find('.quantity-input').val()) || 0;
-            const unitQuantity = parseInt($(row).find('.unit-quantity-input').val()) || 0;
-            const price = parseFloat($(row).find('.price-input').val()) || 0;
-            const unitPrice = parseFloat($(row).find('.unit-price-input').val()) || 0;
-            
-            const total = (quantity * price) + (unitQuantity * unitPrice);
-            
-            $(row).find('.item-quantity').text(quantity);
-            $(row).find('.item-unit-quantity').text(unitQuantity);
-            $(row).find('.item-total').text(total.toLocaleString() + ' сум');
-        }
-        
-        // Add new item
-        $('#add-item-btn').click(function() {
-            const newForm = emptyForm.replace(/__prefix__/g, formCount);
-            $('#items-container').append(newForm);
-            
-            // Update total forms count
-            $('#id_items-TOTAL_FORMS').val(formCount + 1);
-            formCount++;
-            
-            // Initialize Select2 for the new row
-            $('#items-container .item-row:last-child .select2bs4').select2({
-                theme: 'bootstrap4'
-            });
-            
-            toggleNoItemsMessage();
-            
-            // Initialize change handlers for new row
-            initItemRowHandlers($('#items-container .item-row:last-child'));
         });
-        
-        // Remove item
-        $(document).on('click', '.remove-item-btn', function() {
-            const itemRow = $(this).closest('.item-row');
-            
-            // If the form has an ID field, mark it for deletion
-            const idInput = itemRow.find('input[name$="-id"]');
-            if (idInput.length) {
-                itemRow.hide();
-                itemRow.find('input[name$="-DELETE"]').val('on');
-            } else {
-                // Otherwise, just remove the row
-                itemRow.remove();
-                
-                // Renumber the forms
-                $('.item-row').each(function(index) {
-                    const prefix = 'items-' + index + '-';
-                    $(this).find('input, select').each(function() {
-                        const name = $(this).attr('name');
-                        if (name) {
-                            const newName = name.replace(/items-\d+-/, prefix);
-                            $(this).attr('name', newName);
-                            $(this).attr('id', 'id_' + newName);
-                        }
-                    });
-                });
-                
-                // Update total forms count
-                $('#id_items-TOTAL_FORMS').val($('.item-row').length);
-                formCount = $('.item-row').length;
-            }
-            
-            toggleNoItemsMessage();
-        });
-        
-        // Initialize handlers for item row calculations
-        function initItemRowHandlers(row) {
-            $(row).find('.quantity-input, .unit-quantity-input, .price-input, .unit-price-input').on('input', function() {
-                calculateItemTotal($(this).closest('.item-row'));
-            });
-            
-            // Initialize with current values
-            calculateItemTotal(row);
-        }
-        
-        // Initialize handlers for existing rows
-        $('.item-row').each(function() {
-            initItemRowHandlers($(this));
-        });
-        
-        // Initial check for no items message
-        toggleNoItemsMessage();
     });
+
+    {% if not is_update %}
+    // Item management
+    let itemCount = 1;
+
+    // Add new item row
+    $('#add-item-btn').click(function() {
+        itemCount++;
+        const newRow = $('#item-row-1').clone();
+        newRow.attr('id', 'item-row-' + itemCount);
+        
+        // Update IDs and clear values
+        newRow.find('select, input').val('');
+        newRow.find('select').attr('id', '').removeClass('select2-hidden-accessible');
+        newRow.find('span.select2').remove();
+        
+        // Update date picker
+        const datePicker = newRow.find('.date');
+        datePicker.attr('id', 'expire_date_' + itemCount);
+        datePicker.find('input').attr('data-target', '#expire_date_' + itemCount);
+        datePicker.find('.input-group-append').attr('data-target', '#expire_date_' + itemCount);
+        
+        // Show remove button
+        newRow.find('.remove-item-btn').attr('onclick', 'removeItem(' + itemCount + ')').show();
+        
+        // Append to container
+        $('#items-container').append(newRow);
+        
+        // Reinitialize Select2 and date picker for the new row
+        newRow.find('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+        
+        newRow.find('.date').datetimepicker({
+            format: 'YYYY-MM-DD',
+            icons: {
+                time: 'far fa-clock'
+            }
+        });
+    });
+
+    // Show remove button for first row if more than one item
+    function updateRemoveButtons() {
+        if ($('.item-row').length > 1) {
+            $('.remove-item-btn').show();
+        } else {
+            $('.remove-item-btn').hide();
+        }
+    }
+
+    // Remove item row
+    function removeItem(id) {
+        $('#item-row-' + id).remove();
+        updateRemoveButtons();
+    }
+    {% endif %}
 </script>
 {% endblock %}

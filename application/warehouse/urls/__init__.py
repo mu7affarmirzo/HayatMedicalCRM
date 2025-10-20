@@ -1,0 +1,8 @@
+from .medications_url import urlpatterns as medications_url
+from .warehouses_url import urlpatterns as warehouses_url
+from .companies_url import urlpatterns as companies_url
+from .reports_url import urlpatterns as reports_url
+from .patient_expenses_urls import urlpatterns as patient_expenses_urls
+from .prescribed_medications_url import urlpatterns as prescribed_medications_url
+from .transfers_url import urlpatterns as transfers_url
+from .income_urls import urlpatterns as income_urls

@@ -1,8 +1,8 @@
 from django.urls import path
 from django.urls.conf import include
 
-from .urls import incomes_url, medications_url, warehouses_url, companies_url, reports_url, patient_expenses_urls, prescribed_medications_url, transfers_url
-from .views import dashboard, income, medications, warehouses, company, reports, transfers
+from .views import dashboard
+from .urls import medications_url, warehouses_url, companies_url, reports_url, patient_expenses_urls, prescribed_medications_url, transfers_url, income_urls
 
 app_name = 'warehouse'
 
@@ -11,7 +11,7 @@ urlpatterns = [
     path('', dashboard.warehouse_dashboard, name='warehouse_dashboard'),
 
     # Income/Receipts Management
-    path('income/', include(incomes_url)),
+    path('income/', include(income_urls)),
     path('medications/', include(medications_url)),
     path('warehouses/', include(warehouses_url)),
     path('companies/', include(companies_url)),

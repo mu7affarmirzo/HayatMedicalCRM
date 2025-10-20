@@ -1,0 +1,190 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Список перемещений - Медицинский центр Хаят{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Список перемещений между складами</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Перемещения</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Section -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Параметры фильтрации</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Склад-отправитель:</label>
+                                        <select class="form-control select2bs4" name="sender">
+                                            <option value="">Все склады</option>
+                                            {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}" {% if selected_sender == warehouse.id|stringformat:"i" %}selected{% endif %}>
+                                                    {{ warehouse.name }} {% if warehouse.is_main %}(Основной){% endif %}{% if warehouse.is_emergency %}(Экстренный){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Склад-получатель:</label>
+                                        <select class="form-control select2bs4" name="receiver">
+                                            <option value="">Все склады</option>
+                                            {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}" {% if selected_receiver == warehouse.id|stringformat:"i" %}selected{% endif %}>
+                                                    {{ warehouse.name }} {% if warehouse.is_main %}(Основной){% endif %}{% if warehouse.is_emergency %}(Экстренный){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Статус:</label>
+                                        <select class="form-control select2bs4" name="state">
+                                            <option value="">Все статусы</option>
+                                            {% for state_value, state_label in states %}
+                                                <option value="{{ state_value }}" {% if selected_state == state_value %}selected{% endif %}>
+                                                    {{ state_label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <div class="form-group w-100">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-filter"></i> Применить фильтры
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers List -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Перемещения между складами</h3>
+                        <div class="card-tools">
+                            <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-plus"></i> Новое перемещение
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Серийный номер</th>
+                                    <th>Склад-отправитель</th>
+                                    <th>Склад-получатель</th>
+                                    <th>Статус</th>
+                                    <th>Дата создания</th>
+                                    <th>Общая сумма</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transfer in transfers %}
+                                <tr>
+                                    <td>{{ transfer.serial }}</td>
+                                    <td>{{ transfer.sender.name }}</td>
+                                    <td>{{ transfer.receiver.name }}</td>
+                                    <td>
+                                        <span class="badge {% if transfer.state == 'принято' %}badge-success{% elif transfer.state == 'в ожидании' %}badge-warning{% else %}badge-danger{% endif %}">
+                                            {{ transfer.state }}
+                                        </span>
+                                    </td>
+                                    <td>{{ transfer.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td>{{ transfer.overall_sum|intcomma }}</td>
+                                    <td>
+                                        <a href="{% url 'warehouse:transfer_detail' transfer.id %}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i> Просмотр
+                                        </a>
+                                        {% if transfer.state == 'в ожидании' %}
+                                        <a href="{% url 'warehouse:transfer_add_items' transfer.id %}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Редактировать
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Перемещения не найдены</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer clearfix">
+                        <ul class="pagination pagination-sm m-0 float-right">
+                            {% if transfers.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page=1{% if selected_sender %}&sender={{ selected_sender }}{% endif %}{% if selected_receiver %}&receiver={{ selected_receiver }}{% endif %}{% if selected_state %}&state={{ selected_state }}{% endif %}">&laquo;</a></li>
+                                <li class="page-item"><a class="page-link" href="?page={{ transfers.previous_page_number }}{% if selected_sender %}&sender={{ selected_sender }}{% endif %}{% if selected_receiver %}&receiver={{ selected_receiver }}{% endif %}{% if selected_state %}&state={{ selected_state }}{% endif %}">Предыдущая</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>
+                                <li class="page-item disabled"><a class="page-link" href="#">Предыдущая</a></li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <a class="page-link" href="#">
+                                    Страница {{ transfers.number }} из {{ transfers.paginator.num_pages }}
+                                </a>
+                            </li>
+                            
+                            {% if transfers.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ transfers.next_page_number }}{% if selected_sender %}&sender={{ selected_sender }}{% endif %}{% if selected_receiver %}&receiver={{ selected_receiver }}{% endif %}{% if selected_state %}&state={{ selected_state }}{% endif %}">Следующая</a></li>
+                                <li class="page-item"><a class="page-link" href="?page={{ transfers.paginator.num_pages }}{% if selected_sender %}&sender={{ selected_sender }}{% endif %}{% if selected_receiver %}&receiver={{ selected_receiver }}{% endif %}{% if selected_state %}&state={{ selected_state }}{% endif %}">&raquo;</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><a class="page-link" href="#">Следующая</a></li>
+                                <li class="page-item disabled"><a class="page-link" href="#">&raquo;</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

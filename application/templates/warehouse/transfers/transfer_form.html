@@ -1,0 +1,114 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Новое перемещение - Медицинский центр Хаят{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Новое перемещение между складами</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:transfer_list' %}">Перемещения</a></li>
+                    <li class="breadcrumb-item active">Новое перемещение</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о перемещении</h3>
+                    </div>
+                    <form method="post" action="{% url 'warehouse:transfer_create' %}">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="sender">Склад-отправитель</label>
+                                        <select class="form-control select2bs4" id="sender" name="sender" required>
+                                            <option value="">-- Выберите склад-отправитель --</option>
+                                            {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}">
+                                                    {{ warehouse.name }} {% if warehouse.is_main %}(Основной){% endif %}{% if warehouse.is_emergency %}(Экстренный){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="receiver">Склад-получатель</label>
+                                        <select class="form-control select2bs4" id="receiver" name="receiver" required>
+                                            <option value="">-- Выберите склад-получатель --</option>
+                                            {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}">
+                                                    {{ warehouse.name }} {% if warehouse.is_main %}(Основной){% endif %}{% if warehouse.is_emergency %}(Экстренный){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="notes">Примечания</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Введите примечания к перемещению"></textarea>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Создать перемещение</button>
+                            <a href="{% url 'warehouse:transfer_list' %}" class="btn btn-default float-right">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Prevent selecting the same warehouse for sender and receiver
+        $('#sender, #receiver').on('change', function() {
+            var sender = $('#sender').val();
+            var receiver = $('#receiver').val();
+            
+            if (sender && receiver && sender === receiver) {
+                alert('Склад-отправитель и склад-получатель должны быть разными.');
+                $(this).val('').trigger('change');
+            }
+        });
+    });
+</script>
+{% endblock %}

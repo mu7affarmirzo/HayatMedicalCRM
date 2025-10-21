@@ -5,39 +5,140 @@
 
 {% block extra_css %}
     <style>
+        /* Status badges */
         .status-pending {
             background-color: #fff3cd;
             color: #856404;
         }
-
         .status-completed {
             background-color: #d4edda;
             color: #155724;
         }
-
         .status-canceled {
             background-color: #f8d7da;
             color: #721c24;
         }
 
+        /* Cards */
         .dashboard-card {
             transition: all 0.3s;
         }
-
         .dashboard-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
-
         .stat-card {
             border-radius: 10px;
             border-left: 5px solid #4e73df;
         }
-
         .procedure-progress {
             height: 8px;
             border-radius: 4px;
         }
+
+        /* Responsive helpers for tablet */
+        @media (max-width: 991.98px) { /* Bootstrap md/lg breakpoint for tablets */
+            /* Header wraps nicely on tablets */
+            .mb-4.d-flex.justify-content-between.align-items-center {
+                flex-wrap: wrap;
+                gap: .5rem 1rem;
+            }
+            .mb-4.d-flex.justify-content-between.align-items-center h1 {
+                font-size: 1.25rem;
+                margin-bottom: .25rem !important;
+            }
+
+            /* Make tables scroll horizontally if needed */
+            .card-body > .table-responsive,
+            .table-responsive {
+                -webkit-overflow-scrolling: touch;
+            }
+            .table td .btn,
+            .table th .btn {
+                margin-bottom: .35rem;
+            }
+            .table td,
+            .table th {
+                white-space: nowrap;
+            }
+
+            /* List group items: allow wrapping of header row */
+            .list-group-item .d-flex.w-100.justify-content-between {
+                flex-wrap: wrap;
+                row-gap: .25rem;
+            }
+
+            /* Modals: use most of the screen width on tablets */
+            .modal-dialog {
+                max-width: 95%;
+                margin: .5rem auto;
+            }
+            .modal-header .close {
+                padding: .5rem .75rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            /* On small screens, let table cells wrap text to avoid overflow */
+            .table td,
+            .table th {
+                white-space: normal;
+            }
+            /* Stack action buttons full width for readability */
+            .table td .btn {
+                display: inline-block;
+                min-width: 44px; /* better tap target */
+            }
+            /* Smaller paddings in cards */
+            .card .card-body { padding: .75rem; }
+            .card .card-header { padding: .5rem .75rem; }
+        }
+        /* Modern hero header */
+        .page-hero {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 60%, #06b6d4 100%);
+            color: #fff;
+            padding: 1.25rem 1.25rem 1rem;
+        }
+        .page-hero__bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(1200px 600px at 110% -10%, rgba(255,255,255,.25), rgba(255,255,255,0)),
+                        radial-gradient(800px 400px at -10% 110%, rgba(255,255,255,.15), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+        .page-hero__title { font-weight: 800; color: #fff; }
+        .page-hero__subtitle { font-weight: 400; }
+        .page-hero .btn { border-radius: 999px; }
+        .gap-2 > * { margin-right: .5rem; }
+        .gap-2 > *:last-child { margin-right: 0; }
+
+        /* Card polish */
+        .card { border-radius: 12px; }
+        .card.shadow, .shadow { box-shadow: 0 8px 24px rgba(15, 23, 42, .08) !important; }
+        .card-header { background: transparent; border-bottom: 1px dashed rgba(0,0,0,.08); }
+
+        /* Stat cards with soft gradients per position */
+        .stat-card { border: 0; color: #0f172a; background: #ffffff; }
+        .row.mb-4 > div:nth-child(1) .stat-card { background: linear-gradient(180deg, #eef2ff, #ffffff); }
+        .row.mb-4 > div:nth-child(2) .stat-card { background: linear-gradient(180deg, #ecfeff, #ffffff); }
+        .row.mb-4 > div:nth-child(3) .stat-card { background: linear-gradient(180deg, #fff7ed, #ffffff); }
+        .row.mb-4 > div:nth-child(4) .stat-card { background: linear-gradient(180deg, #f0f9ff, #ffffff); }
+
+        /* Progress bar via CSS variable (avoids inline % parsing) */
+        .procedure-progress .progress-bar { width: calc(var(--pct, 0) * 1%); transition: width .3s ease; }
+
+        /* Tables */
+        .table thead th { border-top: 0; background: #f8fafc; }
+        .table tbody tr:hover { background: #f9fafb; }
+
+        /* Badges */
+        .badge { border-radius: 999px; font-weight: 600; }
+
+        /* Anchors spacing fix when using hero quick links */
+        span[id] { position: relative; top: -6px; display: block; }
     </style>
 {% endblock %}
 
@@ -53,11 +154,21 @@
              data-get-procedure="/application/sanatorium/massagist/dashboard/api/procedures/">
         </div>
 
-        <!-- Header and Welcome -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Панель массажистов</h1>
-            <span class="d-none d-md-inline">Добро пожаловать, {{ nurse.first_name }} {{ nurse.last_name }}</span>
-        </div>
+        <!-- Hero Header -->
+        <section class="page-hero mb-4">
+            <div class="page-hero__bg"></div>
+            <div class="page-hero__content d-flex flex-column flex-md-row align-items-md-end align-items-start justify-content-between">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="page-hero__title mb-1">Панель массажиста</h1>
+                    <div class="page-hero__subtitle text-white-50">Добро пожаловать, {{ nurse.first_name }} {{ nurse.last_name }}</div>
+                </div>
+                <div class="page-hero__quick d-flex gap-2">
+                    <a href="#today" class="btn btn-light btn-sm mr-2"><i class="fas fa-calendar-day mr-1"></i> Сегодня</a>
+                    <a href="#procedures" class="btn btn-outline-light btn-sm mr-2"><i class="fas fa-stethoscope mr-1"></i> Процедуры</a>
+                    <a href="#upcoming" class="btn btn-outline-light btn-sm"><i class="fas fa-list mr-1"></i> Сеансы</a>
+                </div>
+            </div>
+        </section>
 
         <!-- Stats Cards -->
         <div class="row mb-4">
@@ -134,6 +245,7 @@
             </div>
         </div>
 
+        <span id="today"></span>
         <!-- Today's Sessions -->
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -200,7 +312,7 @@
                     </div>
                 {% else %}
                     <div class="text-center py-4">
-                        <img src="{% static 'img/no-sessions.svg' %}" alt="Нет сеансов" style="max-width: 150px;"
+                        <img src="{% static 'static/adminlte3_assets/dist/img/no-sessions.svg' %}" alt="Нет сеансов" style="max-width: 150px;"
                              class="mb-3">
                         <h5>Сегодня нет запланированных сеансов</h5>
                         <p class="text-muted">Все ваши сеансы на сегодня будут отображаться здесь</p>
@@ -211,6 +323,7 @@
 
         <!-- Row for Procedures and Upcoming Sessions -->
         <div class="row">
+            <span id="procedures"></span>
             <!-- Assigned Procedures -->
             <div class="col-lg-6">
                 <div class="card shadow mb-4">
@@ -246,7 +359,7 @@
                                                 </div>
                                                 <div class="progress procedure-progress mb-3">
                                                     <div class="progress-bar bg-success" role="progressbar"
-                                                         style="width: {{ procedure.progres_percentile }}%"
+                                                         style="--pct: {{ procedure.progres_percentile }}"
                                                          aria-valuenow="{{ procedure.progres_percentile }}"
                                                          aria-valuemin="0" aria-valuemax="100"></div>
                                                 </div>
@@ -280,6 +393,7 @@
                 </div>
             </div>
 
+            <span id="upcoming"></span>
             <!-- Upcoming Sessions -->
             <div class="col-lg-6">
                 <div class="card shadow mb-4">

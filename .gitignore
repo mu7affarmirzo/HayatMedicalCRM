@@ -411,6 +411,6 @@ fabric.properties
 static
 static_cdn
 
-migrations
-/migrations/*
-core/migrations
+#migrations
+#/migrations/*
+#core/migrations

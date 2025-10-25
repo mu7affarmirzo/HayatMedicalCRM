@@ -1,0 +1,267 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ delivery_company.name }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ delivery_company.name }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:delivery_company_list' %}">Компании доставки</a></li>
+                    <li class="breadcrumb-item active">{{ delivery_company.name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Action buttons -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{% url 'warehouse:delivery_company_update' delivery_company.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <a href="{% url 'warehouse:delivery_company_delete' delivery_company.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Удалить
+                </a>
+                <a href="{% url 'warehouse:delivery_company_list' %}" class="btn btn-default">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Boxes -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-pills"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Поставки лекарств</span>
+                        <span class="info-box-number">{{ medication_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-money-bill-wave"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Общая стоимость</span>
+                        <span class="info-box-number">{{ total_stock_value|intcomma }} сум</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-calendar-alt"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Поставки за 30 дней</span>
+                        <span class="info-box-number">{{ recent_count }} ({{ recent_value|intcomma }} сум)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon {% if contract_active %}bg-success{% else %}bg-danger{% endif %} elevation-1"><i class="fas fa-file-contract"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Статус контракта</span>
+                        <span class="info-box-number">{% if contract_active %}Активен{% else %}Истек{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Information -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о компании доставки</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">ID:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.id }}</dd>
+
+                            <dt class="col-sm-4">Название:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.name }}</dd>
+
+                            <dt class="col-sm-4">Контактное лицо:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.contact_person|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Телефон:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.phone_number|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.email|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Адрес:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.address|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Город:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.city|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Страна:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.country|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Почтовый индекс:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.postal_code|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Статус:</dt>
+                            <dd class="col-sm-8">
+                                {% if delivery_company.is_active %}
+                                    <span class="badge badge-success">Активна</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Неактивна</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Information -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Информация о контракте</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Номер контракта:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.contract_number|default:"Не указано" }}</dd>
+
+                            <dt class="col-sm-4">Дата начала:</dt>
+                            <dd class="col-sm-8">
+                                {% if delivery_company.contract_start_date %}
+                                    {{ delivery_company.contract_start_date|date:"d.m.Y" }}
+                                {% else %}
+                                    Не указано
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Дата окончания:</dt>
+                            <dd class="col-sm-8">
+                                {% if delivery_company.contract_end_date %}
+                                    {{ delivery_company.contract_end_date|date:"d.m.Y" }}
+                                {% else %}
+                                    Не указано
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Статус контракта:</dt>
+                            <dd class="col-sm-8">
+                                {% if contract_active %}
+                                    <span class="badge badge-success">Активен</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Истек</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Примечания:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.notes|default:"Нет примечаний"|linebreaks }}</dd>
+
+                            <dt class="col-sm-4">Дата создания:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.created_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Создан:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.created_by.get_full_name }}</dd>
+
+                            <dt class="col-sm-4">Последнее обновление:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.modified_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Обновлен:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.modified_by.get_full_name }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medications Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Поставленные лекарства</h3>
+                {% if medication_count > 20 %}
+                <span class="badge badge-info ml-2">Показаны 20 из {{ medication_count }}</span>
+                {% endif %}
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Серия</th>
+                            <th>Склад</th>
+                            <th>Количество</th>
+                            <th>Цена</th>
+                            <th>Дата поставки</th>
+                            <th>Срок годности</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medication in medications %}
+                        <tr>
+                            <td>{{ medication.item.name }}</td>
+                            <td>{{ medication.income_seria|default:"-" }}</td>
+                            <td>{{ medication.warehouse.name }}</td>
+                            <td>
+                                {{ medication.quantity }} уп.
+                                {% if medication.unit_quantity > 0 %}
+                                + {{ medication.unit_quantity }} {{ medication.item.get_unit_display }}
+                                {% endif %}
+                            </td>
+                            <td>{{ medication.price|intcomma }} сум</td>
+                            <td>
+                                {% if medication.delivery_date %}
+                                {{ medication.delivery_date|date:"d.m.Y" }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if medication.expire_date %}
+                                {{ medication.expire_date|date:"d.m.Y" }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">Нет поставленных лекарств от этой компании</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if medication_count > medications|length %}
+            <div class="card-footer">
+                <a href="#" class="btn btn-primary btn-sm">Посмотреть все лекарства ({{ medication_count }})</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}

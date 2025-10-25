@@ -313,7 +313,7 @@
 
                     <!-- Companies Section -->
                     <li class="nav-item">
-                        <a href="#" class="nav-link {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
+                        <a href="#" class="nav-link {% if 'company' in request.resolver_match.url_name and not 'delivery_company' in request.resolver_match.url_name %}active{% endif %}">
                             <i class="nav-icon fas fa-building"></i>
                             <p>
                                 Компании
@@ -331,6 +331,31 @@
                                 <a href="{% url 'warehouse:company_create' %}" class="nav-link {% if request.resolver_match.url_name == 'company_create' %}active{% endif %}">
                                     <i class="fas fa-plus nav-icon"></i>
                                     <p>Добавить компанию</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Delivery Companies Section -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if 'delivery_company' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="nav-icon fas fa-truck"></i>
+                            <p>
+                                Компании доставки
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:delivery_company_list' %}" class="nav-link {% if request.resolver_match.url_name == 'delivery_company_list' %}active{% endif %}">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список компаний доставки</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:delivery_company_create' %}" class="nav-link {% if request.resolver_match.url_name == 'delivery_company_create' %}active{% endif %}">
+                                    <i class="fas fa-plus nav-icon"></i>
+                                    <p>Добавить компанию доставки</p>
                                 </a>
                             </li>
                         </ul>

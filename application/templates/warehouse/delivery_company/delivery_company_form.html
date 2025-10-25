@@ -1,0 +1,296 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ title }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:delivery_company_list' %}">Компании доставки</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10 mx-auto">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ title }}</h3>
+                    </div>
+                    <!-- form start -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4 class="mb-3">Основная информация</h4>
+                                    
+                                    <div class="form-group">
+                                        <label for="{{ form.name.id_for_label }}">Название компании</label>
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.name.help_text %}
+                                        <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.contact_person.id_for_label }}">Контактное лицо</label>
+                                        {{ form.contact_person }}
+                                        {% if form.contact_person.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.contact_person.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.phone_number.id_for_label }}">Номер телефона</label>
+                                        {{ form.phone_number }}
+                                        {% if form.phone_number.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.phone_number.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.email.id_for_label }}">Email</label>
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.email.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.is_active.id_for_label }}">Активна</label>
+                                        <div class="form-check">
+                                            {{ form.is_active }}
+                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                Компания активна и может использоваться для поставок
+                                            </label>
+                                        </div>
+                                        {% if form.is_active.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.is_active.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h4 class="mb-3">Адрес</h4>
+                                    
+                                    <div class="form-group">
+                                        <label for="{{ form.address.id_for_label }}">Адрес</label>
+                                        {{ form.address }}
+                                        {% if form.address.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.address.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.city.id_for_label }}">Город</label>
+                                        {{ form.city }}
+                                        {% if form.city.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.city.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.country.id_for_label }}">Страна</label>
+                                        {{ form.country }}
+                                        {% if form.country.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.country.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="{{ form.postal_code.id_for_label }}">Почтовый индекс</label>
+                                        {{ form.postal_code }}
+                                        {% if form.postal_code.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.postal_code.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <h4 class="mb-3">Информация о контракте</h4>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="{{ form.contract_number.id_for_label }}">Номер контракта</label>
+                                                {{ form.contract_number }}
+                                                {% if form.contract_number.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.contract_number.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="{{ form.contract_start_date.id_for_label }}">Дата начала контракта</label>
+                                                {{ form.contract_start_date }}
+                                                {% if form.contract_start_date.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.contract_start_date.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="{{ form.contract_end_date.id_for_label }}">Дата окончания контракта</label>
+                                                {{ form.contract_end_date }}
+                                                {% if form.contract_end_date.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.contract_end_date.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="{{ form.notes.id_for_label }}">Примечания</label>
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.notes.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+                            {% if delivery_company %}
+                            <a href="{% url 'warehouse:delivery_company_detail' delivery_company.id %}" class="btn btn-default">Отмена</a>
+                            {% else %}
+                            <a href="{% url 'warehouse:delivery_company_list' %}" class="btn btn-default">Отмена</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+
+                <!-- Additional Information Card (for Update form) -->
+                {% if delivery_company %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Дополнительная информация</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Дата создания:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.created_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Создан:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.created_by.get_full_name }}</dd>
+
+                            <dt class="col-sm-4">Последнее обновление:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.modified_at|date:"d.m.Y H:i" }}</dd>
+
+                            <dt class="col-sm-4">Обновлен:</dt>
+                            <dd class="col-sm-8">{{ delivery_company.modified_by.get_full_name }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Focus on the name field when the page loads
+        $('#{{ form.name.id_for_label }}').focus();
+        
+        // Initialize date pickers
+        $('#{{ form.contract_start_date.id_for_label }}, #{{ form.contract_end_date.id_for_label }}').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            locale: {
+                format: 'YYYY-MM-DD'
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Удаление компании доставки - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Удаление компании доставки</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:delivery_company_list' %}">Компании доставки</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:delivery_company_detail' delivery_company.id %}">{{ delivery_company.name }}</a></li>
+                    <li class="breadcrumb-item active">Удаление</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Delete Confirmation Card -->
+        <div class="card">
+            <div class="card-header bg-danger">
+                <h3 class="card-title">Подтверждение удаления</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5><i class="icon fas fa-exclamation-triangle"></i> Внимание!</h5>
+                    <p>Вы собираетесь удалить компанию доставки <strong>{{ delivery_company.name }}</strong>.</p>
+                    <p>Это действие может повлиять на связанные записи о поставках лекарств. Данное действие невозможно отменить.</p>
+                    <p>Вы уверены, что хотите продолжить?</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-info"><i class="fas fa-building"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Название компании</span>
+                                <span class="info-box-number">{{ delivery_company.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-success"><i class="fas fa-user"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Контактное лицо</span>
+                                <span class="info-box-number">{{ delivery_company.contact_person|default:"Не указано" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-warning"><i class="fas fa-phone"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Телефон</span>
+                                <span class="info-box-number">{{ delivery_company.phone_number|default:"Не указано" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-danger"><i class="fas fa-calendar-alt"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Дата создания</span>
+                                <span class="info-box-number">{{ delivery_company.created_at|date:"d.m.Y H:i" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                    <a href="{% url 'warehouse:delivery_company_detail' delivery_company.id %}" class="btn btn-default">Отмена</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

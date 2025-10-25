@@ -107,6 +107,17 @@
                             </div>
                         </div>
                     </div>
+                    {% if is_update %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="serial">Серийный номер</label>
+                                <input type="text" class="form-control" name="serial" id="serial" value="{{ income.serial }}" maxlength="255">
+                                <small class="form-text text-muted">Изменение серийного номера обновит связанные записи в складских остатках</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     {% if not is_update %}
                     <hr>

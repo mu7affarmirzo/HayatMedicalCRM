@@ -189,9 +189,27 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'warehouse:prescribed_list' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
+                                <a href="#" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
                                     <i class="fas fa-chart-line nav-icon"></i>
                                     <p>Прогноз расходов</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if 'prescribed' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="nav-icon fas fa-prescription-bottle-alt"></i>
+                            <p>
+                                Назначенные препараты
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:prescribed_list' %}" class="nav-link {% if request.resolver_match.url_name == 'prescribed_list' %}active{% endif %}">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список назначений</p>
                                 </a>
                             </li>
                         </ul>
@@ -303,7 +321,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'warehouse:prescribed_list' %}" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
+                                <a href="#" class="nav-link {% if request.resolver_match.url_name == 'medication_expenses_dashboard' %}active{% endif %}">
                                     <i class="fas fa-pills nav-icon text-warning"></i>
                                     <p>Прогноз расходов лекарств</p>
                                 </a>

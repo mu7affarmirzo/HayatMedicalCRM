@@ -1,0 +1,403 @@
+{% extends 'cashbox/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Детали счета - Бронирование #{{ booking.booking_number }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Детали счета</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'cashbox:billing_list' %}">Счета</a></li>
+                    <li class="breadcrumb-item active">{{ booking.booking_number }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        
+        <!-- Booking Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle"></i> Информация о бронировании #{{ booking.booking_number }}
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-lg badge-{{ booking.status_display_color }}">
+                        {{ booking.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Период пребывания:</strong><br>
+                        {{ booking.start_date|date:"d.m.Y H:i" }} - {{ booking.end_date|date:"d.m.Y H:i" }}<br>
+                        <small class="text-muted">Продолжительность: {{ stay_duration }} дней</small>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Персонал:</strong><br>
+                        {{ booking.staff.get_full_name|default:"Не указан" }}
+                    </div>
+                </div>
+                
+                {% if booking.notes %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <strong>Примечания:</strong><br>
+                        {{ booking.notes }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Patients and Rooms -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-users"></i> Пациенты и размещение
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Пациент</th>
+                                <th>Комната</th>
+                                <th>Тариф</th>
+                                <th>Стоимость</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detail in booking_details %}
+                            <tr>
+                                <td>
+                                    <strong>{{ detail.client.full_name }}</strong><br>
+                                    <small class="text-muted">{{ detail.client.phone|default:"Телефон не указан" }}</small>
+                                </td>
+                                <td>
+                                    {{ detail.room.name }}<br>
+                                    <small class="text-muted">{{ detail.room.room_type.name }}</small>
+                                </td>
+                                <td>
+                                    {{ detail.tariff.name }}<br>
+                                    <small class="text-muted">{{ detail.tariff.description|truncatewords:10 }}</small>
+                                </td>
+                                <td>
+                                    <span class="billing-amount">{{ detail.price|intcomma }} сум</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Summary -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-calculator"></i> Расчет стоимости
+                </h3>
+                <div class="card-tools">
+                    {% if 'calculate_billing' in available_actions %}
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="calculate_billing">
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="fas fa-calculator"></i> Пересчитать
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if 'mark_invoiced' in available_actions %}
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_invoiced">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-file-invoice"></i> Выставить счет
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="billing-breakdown">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-primary">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Базовый тариф</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <h4 class="text-primary">{{ billing_breakdown.tariff_base|intcomma }} сум</h4>
+                                            <p class="text-muted">Стоимость согласно тарифному плану</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-warning">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Доп. услуги</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <h4 class="text-warning">{{ billing_breakdown.additional_services|intcomma }} сум</h4>
+                                            <p class="text-muted">Услуги сверх тарифа</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-info">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Медикаменты</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <h4 class="text-info">{{ billing_breakdown.medications|intcomma }} сум</h4>
+                                            <p class="text-muted">Прописанные лекарства</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-secondary">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Лабораторные</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <h4 class="text-secondary">{{ billing_breakdown.lab_research|intcomma }} сум</h4>
+                                            <p class="text-muted">Анализы и исследования</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card card-outline card-success">
+                            <div class="card-header">
+                                <h3 class="card-title">Итого к оплате</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <h2 class="billing-total">{{ billing_breakdown.total|intcomma }} сум</h2>
+                                <p class="text-muted">
+                                    Статус: 
+                                    <span class="badge badge-{% if billing.billing_status == 'pending' %}warning{% elif billing.billing_status == 'calculated' %}success{% else %}primary{% endif %}">
+                                        {{ billing.get_billing_status_display }}
+                                    </span>
+                                </p>
+                                {% if billing.billing_status == 'calculated' %}
+                                <button class="btn btn-success btn-lg btn-block">
+                                    <i class="fas fa-credit-card"></i> Принять оплату
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Services Details -->
+        {% if additional_services %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-plus-circle"></i> Дополнительные услуги
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Пациент</th>
+                                <th>Услуга</th>
+                                <th>Количество</th>
+                                <th>Дата</th>
+                                <th>Стоимость</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for service in additional_services %}
+                            <tr>
+                                <td>{{ service.booking_detail.client.full_name }}</td>
+                                <td>{{ service.service.name }}</td>
+                                <td>{{ service.quantity }}</td>
+                                <td>{{ service.date_used|date:"d.m.Y" }}</td>
+                                <td>{{ service.price|intcomma }} сум</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Prescribed Medications -->
+        {% if prescribed_medications %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-pills"></i> Прописанные медикаменты
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Пациент</th>
+                                <th>Медикамент</th>
+                                <th>Количество</th>
+                                <th>Дата</th>
+                                <th>Стоимость</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in prescribed_medications %}
+                            <tr>
+                                <td>{{ med.prescribed_medication.illness_history.patient.full_name }}</td>
+                                <td>{{ med.prescribed_medication.medication.name }}</td>
+                                <td>{{ med.quantity }}</td>
+                                <td>{{ med.session_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if med.prescribed_medication.medication.unit_price %}
+                                        {{ med.total_cost|intcomma }} сум
+                                    {% else %}
+                                        <span class="text-muted">Не указана</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Lab Tests -->
+        {% if lab_tests %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-vials"></i> Лабораторные исследования
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Пациент</th>
+                                <th>Исследование</th>
+                                <th>Дата назначения</th>
+                                <th>Статус</th>
+                                <th>Стоимость</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lab in lab_tests %}
+                            <tr>
+                                <td>{{ lab.illness_history.patient.full_name }}</td>
+                                <td>{{ lab.lab_research.name }}</td>
+                                <td>{{ lab.assigned_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if lab.status == 'completed' %}success{% elif lab.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                        {{ lab.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if lab.lab_research.price %}
+                                        {{ lab.lab_research.price|intcomma }} сум
+                                    {% else %}
+                                        <span class="text-muted">Не указана</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Procedures -->
+        {% if procedures %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-procedures"></i> Процедуры
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Пациент</th>
+                                <th>Процедура</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Стоимость</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for procedure in procedures %}
+                            <tr>
+                                <td>{{ procedure.prescribed_procedure.illness_history.patient.full_name }}</td>
+                                <td>{{ procedure.prescribed_procedure.service.name }}</td>
+                                <td>{{ procedure.session_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if procedure.status == 'completed' %}success{% elif procedure.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                        {{ procedure.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if procedure.prescribed_procedure.service.base_price %}
+                                        {{ procedure.prescribed_procedure.service.base_price|intcomma }} сум
+                                    {% else %}
+                                        <span class="text-muted">Не указана</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Custom template filter simulation for multiplication
+$(document).ready(function() {
+    // Any additional JavaScript for the billing detail page
+});
+</script>
+{% endblock %}

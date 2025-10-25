@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Hayat Medical Center - Cashbox{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'adminlte3_assets/dist/img/favicon.png' %}">
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/fontawesome-free/css/all.min.css' %}">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/dist/css/adminlte.min.css' %}">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css' %}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/toastr/toastr.min.css' %}">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        .billing-amount {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .billing-breakdown .card {
+            margin-bottom: 0.5rem;
+        }
+        .status-badge {
+            font-size: 0.875rem;
+        }
+        .table-responsive {
+            border-radius: 0.375rem;
+        }
+        .filter-card {
+            margin-bottom: 1rem;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .stats-card .card-body {
+            padding: 1rem;
+        }
+        .billing-total {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <!-- Preloader -->
+    <div class="preloader flex-column justify-content-center align-items-center">
+        <img class="animation__shake" src="{% static 'adminlte3_assets/dist/img/logo.png' %}" alt="HayatMedical" height="60" width="60">
+    </div>
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- Left navbar links -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a href="{% url 'cashbox:billing_list' %}" class="nav-link">Главная</a>
+            </li>
+        </ul>
+
+        <!-- Right navbar links -->
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Brand Logo -->
+        <a href="{% url 'cashbox:billing_list' %}" class="brand-link">
+            <img src="{% static 'adminlte3_assets/dist/img/hayat_logo.png' %}" alt="HayatMedical" class="brand-image img-circle elevation-3" style="opacity: .8">
+            <span class="brand-text font-weight-light">Cashbox</span>
+        </a>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Sidebar user panel -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="image">
+                    <img src="{% static 'adminlte3_assets/dist/img/avatar.png' %}" class="img-circle elevation-2" alt="User Image">
+                </div>
+                <div class="info">
+                    <a href="#" class="d-block">{{ user.get_full_name|default:user.username }}</a>
+                </div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <li class="nav-item">
+                        <a href="{% url 'cashbox:billing_list' %}" class="nav-link {% if request.resolver_match.url_name == 'billing_list' %}active{% endif %}">
+                            <i class="nav-icon fas fa-calculator"></i>
+                            <p>Расчет счетов</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-credit-card"></i>
+                            <p>Платежи</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            <p>Отчеты</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; 2024 <a href="#">Hayat Medical Center</a>.</strong>
+        Все права защищены.
+        <div class="float-right d-none d-sm-inline-block">
+            <b>Cashbox Module</b> v1.0
+        </div>
+    </footer>
+</div>
+
+<!-- jQuery -->
+<script src="{% static 'adminlte3_assets/plugins/jquery/jquery.min.js' %}"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="{% static 'adminlte3_assets/plugins/jquery-ui/jquery-ui.min.js' %}"></script>
+<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+<script>
+    $.widget.bridge('uibutton', $.ui.button)
+</script>
+<!-- Bootstrap 4 -->
+<script src="{% static 'adminlte3_assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'adminlte3_assets/dist/js/adminlte.js' %}"></script>
+<!-- SweetAlert2 -->
+<script src="{% static 'adminlte3_assets/plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+<!-- Toastr -->
+<script src="{% static 'adminlte3_assets/plugins/toastr/toastr.min.js' %}"></script>
+<!-- DataTables -->
+<script src="{% static 'adminlte3_assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+    $(function () {
+        // Initialize Select2 Elements
+        $('.select2').select2();
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Show toastr notifications for messages
+        {% if messages %}
+            {% for message in messages %}
+                toastr.{{ message.tags }}('{{ message }}');
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

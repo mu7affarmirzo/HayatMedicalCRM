@@ -89,15 +89,142 @@ class IndividualProcedureSessionModel(BaseAuditModel):
 
     notes = models.TextField(blank=True, null=True, verbose_name='Примечания')
 
+    # New fields for billing
+    booking_detail_at_time = models.ForeignKey(
+        'BookingDetail',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='completed_sessions',
+        help_text="BookingDetail that was active when this session was completed",
+        verbose_name='Тариф на момент проведения'
+    )
+    is_billable = models.BooleanField(
+        default=False,
+        help_text="Should this session be charged?",
+        verbose_name='Платная сессия'
+    )
+    billed_amount = models.IntegerField(
+        default=0,
+        help_text="Amount charged for this session",
+        verbose_name='Сумма к оплате'
+    )
+
     class Meta:
         ordering = ['session_number']
         unique_together = ['assigned_procedure', 'session_number', 'id']  # Ensure no duplicate session numbers
-
+        indexes = [
+            models.Index(fields=['booking_detail_at_time', 'is_billable'], name='idx_session_billing'),
+            models.Index(fields=['status', 'completed_at'], name='idx_session_status_date'),
+        ]
         verbose_name = 'Основной лист назначений | Индивидуальный сеанс'
         verbose_name_plural = 'Основной лист назначений | Индивидуальные сеансы'
 
     def __str__(self):
         return f"{self.assigned_procedure.illness_history} - Сеанс #{self.session_number}"
+
+    def save(self, *args, **kwargs):
+        # If status changed to completed and completed_at is set, calculate billing
+        if self.status == 'completed' and self.completed_at and not self.booking_detail_at_time:
+            self._set_booking_detail_at_time()
+            self._calculate_billing()
+
+        super().save(*args, **kwargs)
+
+    def _set_booking_detail_at_time(self):
+        """Find and set the BookingDetail that was active when session was completed"""
+        from core.models.booking import BookingDetail
+
+        if not self.completed_at:
+            return
+
+        # Get the booking and client from illness_history
+        illness_history = self.assigned_procedure.illness_history
+        if not illness_history or not illness_history.booking:
+            return
+
+        booking = illness_history.booking
+        client = illness_history.patient
+
+        # Find the active BookingDetail at completion time
+        self.booking_detail_at_time = BookingDetail.get_active_detail_at(
+            booking=booking,
+            client=client,
+            check_datetime=self.completed_at
+        )
+
+    def _calculate_billing(self):
+        """
+        Calculate if this session should be billed based on:
+        1. Whether service is included in the active tariff
+        2. How many sessions have been used in this tariff period
+        """
+        from core.models.tariffs import ServiceSessionTracking
+
+        if not self.booking_detail_at_time:
+            # No tariff info, mark as billable and use base price
+            self.is_billable = True
+            self.billed_amount = self.assigned_procedure.medical_service.base_price if self.assigned_procedure.medical_service else 0
+            return
+
+        service = self.assigned_procedure.medical_service
+        if not service:
+            self.is_billable = False
+            self.billed_amount = 0
+            return
+
+        # Get or create tracking record for this service in this booking detail period
+        tracking, created = ServiceSessionTracking.objects.get_or_create(
+            booking_detail=self.booking_detail_at_time,
+            service=service,
+            defaults={
+                'sessions_included': 0,
+                'sessions_used': 0,
+                'sessions_billed': 0
+            }
+        )
+
+        # If newly created, try to link to tariff_service
+        if created:
+            try:
+                from core.models.tariffs import TariffService
+                tariff_service = TariffService.objects.get(
+                    tariff=self.booking_detail_at_time.tariff,
+                    service=service
+                )
+                tracking.tariff_service = tariff_service
+                tracking.sessions_included = tariff_service.sessions_included
+                tracking.save(update_fields=['tariff_service', 'sessions_included'])
+            except:
+                pass  # Service not in tariff
+
+        # Check if we've exceeded included sessions
+        if tracking.sessions_used >= tracking.sessions_included:
+            # This session should be billed
+            self.is_billable = True
+            self.billed_amount = service.base_price if service.base_price else 0
+            tracking.increment_session(is_billable=True)
+        else:
+            # This session is covered by tariff
+            self.is_billable = False
+            self.billed_amount = 0
+            tracking.increment_session(is_billable=False)
+
+    def recalculate_billing(self):
+        """
+        Recalculate billing for this session.
+        Useful when tariffs change or when correcting billing.
+        """
+        if self.status == 'completed' and self.completed_at:
+            # Reset billing fields
+            self.booking_detail_at_time = None
+            self.is_billable = False
+            self.billed_amount = 0
+
+            # Recalculate
+            self._set_booking_detail_at_time()
+            self._calculate_billing()
+            self.save()
 
 
 # Store original values before save to compare in post_save

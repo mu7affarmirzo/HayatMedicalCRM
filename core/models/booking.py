@@ -98,10 +98,48 @@ class BookingDetail(BaseAuditModel):
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
 
+    # New fields for tariff change tracking
+    effective_from = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this tariff/room combination started",
+        db_index=True
+    )
+    effective_to = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this tariff/room combination ended",
+        db_index=True
+    )
+    is_current = models.BooleanField(
+        default=True,
+        help_text="Is this the current active tariff/room?",
+        db_index=True
+    )
+
+    class Meta:
+        ordering = ['-effective_from']
+        indexes = [
+            models.Index(fields=['booking', 'client', 'effective_from'], name='idx_booking_client_eff'),
+            models.Index(fields=['booking', 'is_current'], name='idx_booking_is_current'),
+        ]
+
     def __str__(self):
+        if self.effective_from:
+            period = f"({self.effective_from.strftime('%Y-%m-%d')} - "
+            if self.effective_to:
+                period += self.effective_to.strftime('%Y-%m-%d')
+            else:
+                period += "current"
+            period += ")"
+            return f"{self.booking.booking_number} - {self.client.full_name} - {self.room.name} - {self.tariff.name} {period}"
         return f"{self.booking.booking_number} - {self.client.full_name} - {self.room.name} - {self.tariff.name}"
 
     def save(self, *args, **kwargs):
+        # Set effective_from to start_date if not set
+        if not self.effective_from and self.start_date:
+            self.effective_from = self.start_date
+
         # Automatically calculate price based on tariff and room type if not set
         if not self.price:
             try:
@@ -112,7 +150,145 @@ class BookingDetail(BaseAuditModel):
                 self.price = price_record.price
             except TariffRoomPrice.DoesNotExist:
                 pass
+
+        is_new = self.pk is None
         super().save(*args, **kwargs)
+
+        # Initialize ServiceSessionTracking for new BookingDetail
+        if is_new:
+            self._initialize_service_tracking()
+
+    def _initialize_service_tracking(self):
+        """Initialize ServiceSessionTracking records for all services in tariff"""
+        from core.models.tariffs import ServiceSessionTracking
+
+        for tariff_service in self.tariff.tariff_services.all():
+            ServiceSessionTracking.objects.get_or_create(
+                booking_detail=self,
+                service=tariff_service.service,
+                tariff_service=tariff_service,
+                defaults={
+                    'sessions_included': tariff_service.sessions_included,
+                    'sessions_used': 0,
+                    'sessions_billed': 0
+                }
+            )
+
+    @staticmethod
+    def change_tariff(booking, client, new_tariff, new_room=None, change_datetime=None):
+        """
+        Change tariff and/or room for a client within a booking.
+
+        Args:
+            booking: Booking instance
+            client: PatientModel instance
+            new_tariff: New Tariff instance
+            new_room: New Room instance (optional, keep current if None)
+            change_datetime: DateTime when change takes effect (default: now)
+
+        Returns:
+            New BookingDetail instance
+        """
+        if change_datetime is None:
+            change_datetime = timezone.now()
+
+        # Get the current active BookingDetail
+        try:
+            current_detail = BookingDetail.objects.get(
+                booking=booking,
+                client=client,
+                is_current=True
+            )
+        except BookingDetail.DoesNotExist:
+            raise ValueError(f"No active BookingDetail found for client {client.full_name} in booking {booking.booking_number}")
+
+        # Close the current BookingDetail
+        current_detail.effective_to = change_datetime
+        current_detail.is_current = False
+        current_detail.save(update_fields=['effective_to', 'is_current', 'updated_at'])
+
+        # Determine the room for new detail
+        room = new_room if new_room else current_detail.room
+
+        # Calculate price for new tariff/room combination
+        try:
+            price_record = TariffRoomPrice.objects.get(
+                tariff=new_tariff,
+                room_type=room.room_type
+            )
+            price = price_record.price
+        except TariffRoomPrice.DoesNotExist:
+            price = new_tariff.price if new_tariff.price else 0
+
+        # Create new BookingDetail
+        new_detail = BookingDetail.objects.create(
+            booking=booking,
+            client=client,
+            room=room,
+            tariff=new_tariff,
+            price=price,
+            start_date=current_detail.start_date,
+            end_date=current_detail.end_date,
+            effective_from=change_datetime,
+            effective_to=None,
+            is_current=True
+        )
+
+        return new_detail
+
+    @staticmethod
+    def get_active_detail_at(booking, client, check_datetime):
+        """
+        Get the BookingDetail that was active at a specific datetime.
+
+        Args:
+            booking: Booking instance
+            client: PatientModel instance
+            check_datetime: DateTime to check
+
+        Returns:
+            BookingDetail instance or None
+        """
+        try:
+            return BookingDetail.objects.filter(
+                booking=booking,
+                client=client,
+                effective_from__lte=check_datetime
+            ).filter(
+                models.Q(effective_to__gte=check_datetime) | models.Q(effective_to__isnull=True)
+            ).get()
+        except BookingDetail.DoesNotExist:
+            return None
+        except BookingDetail.MultipleObjectsReturned:
+            # Should not happen with proper data, but handle gracefully
+            return BookingDetail.objects.filter(
+                booking=booking,
+                client=client,
+                effective_from__lte=check_datetime
+            ).filter(
+                models.Q(effective_to__gte=check_datetime) | models.Q(effective_to__isnull=True)
+            ).order_by('-effective_from').first()
+
+    def get_days_in_period(self):
+        """Calculate number of days this tariff/room was active"""
+        start = self.effective_from if self.effective_from else self.start_date
+        if not start:
+            return 0
+        end = self.effective_to if self.effective_to else timezone.now()
+        return (end - start).days + 1  # +1 to include both start and end days
+
+    def get_prorated_price(self):
+        """Calculate prorated price based on days in period"""
+        if not self.booking.start_date or not self.booking.end_date:
+            return self.price
+
+        total_booking_days = (self.booking.end_date - self.booking.start_date).days + 1
+        days_in_period = self.get_days_in_period()
+
+        if total_booking_days <= 0:
+            return self.price
+
+        return (self.price / total_booking_days) * days_in_period
 
 
 class BookingBilling(BaseAuditModel):

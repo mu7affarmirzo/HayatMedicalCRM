@@ -1,6 +1,7 @@
 import uuid
+import random
 
-from django.conf import settings
+from django.utils import timezone
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -71,8 +72,6 @@ class Booking(BaseAuditModel):
     @staticmethod
     def generate_booking_number():
         """Generate unique booking number"""
-        from django.utils import timezone
-        import random
 
         # Format: BK-YYYYMMDD-XXXX
         date_part = timezone.now().strftime('%Y%m%d')
@@ -227,6 +226,7 @@ class ServiceUsage(BaseAuditModel):
         if not self.price:
             self.price = self.service.base_price * self.quantity
         super().save(*args, **kwargs)
+
 
 
 @receiver(post_save, sender=Booking)

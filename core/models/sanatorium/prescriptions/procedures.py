@@ -101,7 +101,6 @@ class IndividualProcedureSessionModel(BaseAuditModel):
 
 
 # Store original values before save to compare in post_save
-# Store original values before save to compare in post_save
 @receiver(pre_save, sender=ProcedureServiceModel)
 def store_original_values(sender, instance, **kwargs):
     """Store original values before save to compare in post_save"""

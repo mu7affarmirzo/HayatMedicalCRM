@@ -90,7 +90,7 @@ def redirect_by_role(user):
         return redirect('sanatorium.doctors:doctors_main_screen')
     elif main_role == RolesModel.NURSE:
         return redirect('sanatorium.nurses:nurses_main_screen')
-    elif main_role.name == "cashbox" or main_role == RolesModel.CASHBOX:
+    elif main_role == RolesModel.CASHBOX:
         return redirect('cashbox:dashboard')
     elif main_role == RolesModel.WAREHOUSE or main_role.name == "warehouse":
         return redirect('warehouse:warehouse_dashboard')

@@ -16,6 +16,7 @@ class RolesModel(models.Model):
     RECEPTIONIST = 'receptionist'
     MANAGER = 'manager'
     WAREHOUSE = 'warehouse'
+    CASHBOX = 'cashbox'
 
     # Default roles
     DEFAULT_ROLES = [
@@ -26,6 +27,7 @@ class RolesModel(models.Model):
         (RECEPTIONIST, 'Receptionist'),
         (MANAGER, 'Manager'),
         (WAREHOUSE, 'Warehouse'),
+        (CASHBOX, 'Cashbox'),
     ]
 
     def __str__(self):

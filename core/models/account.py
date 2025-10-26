@@ -82,6 +82,8 @@ class Account(AbstractBaseUser):
             return RolesModel.NURSE
         elif self.has_role(RolesModel.WAREHOUSE):
             return RolesModel.WAREHOUSE
+        elif self.has_role(RolesModel.CASHBOX):
+            return RolesModel.CASHBOX
         return self.roles.first()
 
     # For checking permissions. to keep it simple all admin have ALL permissons

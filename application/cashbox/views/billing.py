@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import cashbox_required
 from django.db.models import Q, Prefetch
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -12,7 +12,7 @@ from core.models import (
 )
 
 
-@login_required
+@cashbox_required
 def billing_list(request):
     """
     Display list of bookings with their billing information for payment processing
@@ -101,7 +101,7 @@ def billing_list(request):
     return render(request, 'cashbox/billing/billing_list.html', context)
 
 
-@login_required
+@cashbox_required
 def billing_detail(request, booking_id):
     """
     Display detailed billing information for a specific booking with breakdown of all charges
@@ -246,7 +246,7 @@ def calculate_billing_amounts(booking, billing, user):
     billing.save()  # This will automatically calculate total_amount
 
 
-@login_required
+@cashbox_required
 @require_POST
 def update_billing_status(request, booking_id):
     """AJAX endpoint to update billing status"""

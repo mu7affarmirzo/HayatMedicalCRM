@@ -30,7 +30,6 @@ DEFAULT_REDIRECT = 'home'
 
 def get_redirect_url_for_role(user):
     """Get the appropriate redirect URL based on user's role"""
-    print('get_redirect_url_for_rol')
     try:
         target_role = user.roles.first()
         if target_role and target_role.name in USER_ROLE_REDIRECTS:
@@ -91,6 +90,8 @@ def redirect_by_role(user):
         return redirect('sanatorium.doctors:doctors_main_screen')
     elif main_role == RolesModel.NURSE:
         return redirect('sanatorium.nurses:nurses_main_screen')
+    elif main_role.name == "cashbox" or main_role == RolesModel.CASHBOX:
+        return redirect('cashbox:dashboard')
     elif main_role == RolesModel.WAREHOUSE or main_role.name == "warehouse":
         return redirect('warehouse:warehouse_dashboard')
     elif main_role.name == "massagist":

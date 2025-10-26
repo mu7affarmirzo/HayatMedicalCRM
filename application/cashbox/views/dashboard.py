@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from HayatMedicalCRM.auth.decorators import cashbox_required
 from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta
@@ -7,7 +7,7 @@ from datetime import timedelta
 from core.models import Booking, BookingBilling
 
 
-@login_required
+@cashbox_required
 def dashboard(request):
     """
     Cashbox dashboard with overview statistics
@@ -16,7 +16,7 @@ def dashboard(request):
     return redirect('cashbox:billing_list')
 
 
-@login_required
+@cashbox_required
 def dashboard_stats(request):
     """
     Dashboard with statistics for cashbox operations

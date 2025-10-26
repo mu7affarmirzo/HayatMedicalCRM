@@ -122,6 +122,14 @@ def warehouse_manager_required(view_func):
     return role_required(RolesModel.WAREHOUSE, RolesModel.ADMIN)(view_func)
 
 
+def cashbox_required(view_func):
+    """
+    Decorator to check if user is cashbox or admin.
+    """
+    from core.models import RolesModel
+    return role_required(RolesModel.CASHBOX, RolesModel.ADMIN)(view_func)
+
+
 def manager_required(view_func):
     """
     Decorator to check if user is manager or admin.
@@ -215,3 +223,13 @@ class WarehouseManagerRequiredMixin(UserPassesTestMixin):
         # Check if user has NURSE or ADMIN role
         from core.models import RolesModel
         return user.has_role(RolesModel.WAREHOUSE) or user.has_role(RolesModel.ADMIN) or user.is_superuser
+
+
+class CashboxRequiredMixin(UserPassesTestMixin):
+    """Mixin to ensure that only cashbox or admins can access the view"""
+
+    def test_func(self):
+        user = self.request.user
+        # Check if user has CASHBOX or ADMIN role
+        from core.models import RolesModel
+        return user.has_role(RolesModel.CASHBOX) or user.has_role(RolesModel.ADMIN) or user.is_superuser

@@ -1,0 +1,391 @@
+{% extends 'cashbox/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Панель управления кассой - Медицинский центр Хаят{% endblock %}
+
+{% block extra_css %}
+<!-- ChartJS -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.css' %}">
+<style>
+    .small-box .icon {
+        color: rgba(0, 0, 0, 0.15);
+        z-index: 0;
+    }
+    .card-header .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .revenue-card {
+        border-left: 4px solid #28a745;
+    }
+    .billing-card {
+        border-left: 4px solid #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Панель управления кассой</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'cashbox:billing_list' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Панель управления кассой</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Info boxes - Billing Statistics -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ total_billings }}</h3>
+                        <p>Всего счетов</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <a href="{% url 'cashbox:billing_list' %}" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ pending_billings }}</h3>
+                        <p>Ожидает расчета</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <a href="{% url 'cashbox:billing_list' %}?status=pending" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>{{ calculated_billings }}</h3>
+                        <p>Рассчитано</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <a href="{% url 'cashbox:billing_list' %}?status=calculated" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ invoiced_billings }}</h3>
+                        <p>Выставлено счетов</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <a href="{% url 'cashbox:billing_list' %}?status=invoiced" class="small-box-footer">
+                        Подробнее <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Statistics Row -->
+        <div class="row">
+            <!-- Total Revenue -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card revenue-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title text-muted mb-2">Общая выручка</h5>
+                                <h2 class="mb-0">{{ total_revenue|floatformat:2|intcomma }} UZS</h2>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-money-bill-wave fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Revenue -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card revenue-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title text-muted mb-2">Выручка за месяц</h5>
+                                <h2 class="mb-0">{{ monthly_revenue|floatformat:2|intcomma }} UZS</h2>
+                            </div>
+                            <div class="text-primary">
+                                <i class="fas fa-calendar-alt fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Revenue -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card revenue-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title text-muted mb-2">Выручка за неделю</h5>
+                                <h2 class="mb-0">{{ weekly_revenue|floatformat:2|intcomma }} UZS</h2>
+                            </div>
+                            <div class="text-info">
+                                <i class="fas fa-chart-line fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main row -->
+        <div class="row">
+            <!-- Left col - Revenue Chart -->
+            <div class="col-md-8">
+                <!-- Revenue Trends Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Тенденции выручки</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            <canvas id="revenueChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Status Distribution -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Распределение статусов счетов</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            <canvas id="billingStatusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right col - Activity Summary -->
+            <div class="col-md-4">
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Недавняя активность</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-box mb-3 bg-info">
+                            <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Активные бронирования</span>
+                                <span class="info-box-number">{{ recent_bookings }}</span>
+                            </div>
+                        </div>
+                        <p class="text-muted">За последнюю неделю</p>
+                    </div>
+                </div>
+
+                <!-- Billing Statistics Breakdown -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Статистика счетов</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="nav nav-pills flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:billing_list' %}?status=pending" class="nav-link">
+                                    Ожидает расчета
+                                    <span class="badge bg-warning float-right">{{ pending_billings }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:billing_list' %}?status=calculated" class="nav-link">
+                                    Рассчитано
+                                    <span class="badge bg-primary float-right">{{ calculated_billings }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:billing_list' %}?status=invoiced" class="nav-link">
+                                    Выставлено счетов
+                                    <span class="badge bg-success float-right">{{ invoiced_billings }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:billing_list' %}" class="nav-link">
+                                    Всего счетов
+                                    <span class="badge bg-info float-right">{{ total_billings }}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Быстрые действия</h3>
+                    </div>
+                    <div class="card-body">
+                        <a href="{% url 'cashbox:billing_list' %}" class="btn btn-block btn-primary mb-2">
+                            <i class="fas fa-list"></i> Просмотреть все счета
+                        </a>
+                        <a href="{% url 'cashbox:billing_list' %}?status=pending" class="btn btn-block btn-warning mb-2">
+                            <i class="fas fa-clock"></i> Счета в ожидании
+                        </a>
+                        <a href="#" class="btn btn-block btn-success">
+                            <i class="fas fa-file-export"></i> Экспорт отчета
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- ChartJS -->
+<script src="{% static 'adminlte3_assets/plugins/chart.js/Chart.min.js' %}"></script>
+
+<script>
+    $(function() {
+        // Revenue Trends Chart (Line Chart)
+        var revenueChartCanvas = document.getElementById('revenueChart').getContext('2d');
+        var revenueChartData = {
+            labels: ['Неделя', 'Месяц', 'Всего'],
+            datasets: [{
+                label: 'Выручка (UZS)',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                pointRadius: 5,
+                pointColor: 'rgba(40, 167, 69, 1)',
+                pointStrokeColor: '#fff',
+                pointHighlightFill: '#fff',
+                pointHighlightStroke: 'rgba(40, 167, 69, 1)',
+                data: [{{ weekly_revenue }}, {{ monthly_revenue }}, {{ total_revenue }}]
+            }]
+        };
+
+        var revenueChartOptions = {
+            maintainAspectRatio: false,
+            responsive: true,
+            legend: {
+                display: true
+            },
+            scales: {
+                xAxes: [{
+                    gridLines: {
+                        display: false
+                    }
+                }],
+                yAxes: [{
+                    gridLines: {
+                        display: true
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            return value.toLocaleString() + ' UZS';
+                        }
+                    }
+                }]
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        return data.datasets[tooltipItem.datasetIndex].label + ': ' +
+                               tooltipItem.yLabel.toLocaleString() + ' UZS';
+                    }
+                }
+            }
+        };
+
+        new Chart(revenueChartCanvas, {
+            type: 'line',
+            data: revenueChartData,
+            options: revenueChartOptions
+        });
+
+        // Billing Status Distribution Chart (Doughnut Chart)
+        var billingStatusCanvas = document.getElementById('billingStatusChart').getContext('2d');
+        var billingStatusData = {
+            labels: ['Ожидает расчета', 'Рассчитано', 'Выставлено счетов'],
+            datasets: [{
+                data: [{{ pending_billings }}, {{ calculated_billings }}, {{ invoiced_billings }}],
+                backgroundColor: ['#ffc107', '#007bff', '#28a745'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        };
+
+        var billingStatusOptions = {
+            maintainAspectRatio: false,
+            responsive: true,
+            legend: {
+                position: 'bottom'
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var label = data.labels[tooltipItem.index] || '';
+                        var value = data.datasets[0].data[tooltipItem.index];
+                        var total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        var percentage = ((value / total) * 100).toFixed(1);
+                        return label + ': ' + value + ' (' + percentage + '%)';
+                    }
+                }
+            }
+        };
+
+        new Chart(billingStatusCanvas, {
+            type: 'doughnut',
+            data: billingStatusData,
+            options: billingStatusOptions
+        });
+    });
+</script>
+{% endblock %}

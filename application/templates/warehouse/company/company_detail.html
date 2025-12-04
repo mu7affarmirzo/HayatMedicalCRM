@@ -170,7 +170,6 @@
                             <th>Форма выпуска</th>
                             <th>В упаковке</th>
                             <th>Единица измерения</th>
-                            <th>Срок годности</th>
                             <th>На складе</th>
                             <th>Действия</th>
                         </tr>
@@ -182,13 +181,6 @@
                             <td>{{ medication.dosage_form|default:"—" }}</td>
                             <td>{{ medication.in_pack }}</td>
                             <td>{{ medication.get_unit_display }}</td>
-                            <td>
-                                {% if medication.expiry_date %}
-                                {{ medication.expiry_date|date:"d.m.Y" }}
-                                {% else %}
-                                —
-                                {% endif %}
-                            </td>
                             <td>
                                 {% for stock in medication.in_stock.all %}
                                 {% if stock.quantity > 0 or stock.unit_quantity > 0 %}

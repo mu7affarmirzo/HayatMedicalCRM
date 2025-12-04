@@ -175,10 +175,12 @@ def transfer_add_items(request, pk):
         except Exception as e:
             messages.error(request, f'Ошибка при добавлении товара: {str(e)}')
 
-    # Get available medications in the sender warehouse
+    # Get available medications in the sender warehouse (with actual stock)
+    from django.db.models import Q
     available_medications = MedicationsInStockModel.objects.filter(
-        warehouse=transfer.sender,
-        quantity__gt=0
+        warehouse=transfer.sender
+    ).filter(
+        Q(quantity__gt=0) | Q(unit_quantity__gt=0)
     ).values_list('item', flat=True).distinct()
 
     medications = MedicationModel.objects.filter(id__in=available_medications)
@@ -235,10 +237,12 @@ def get_medication_batches(request):
 
         if warehouse_id and medication_id:
             try:
+                from django.db.models import Q
                 batches = MedicationsInStockModel.objects.filter(
                     warehouse_id=warehouse_id,
-                    item_id=medication_id,
-                    quantity__gt=0
+                    item_id=medication_id
+                ).filter(
+                    Q(quantity__gt=0) | Q(unit_quantity__gt=0)
                 ).values('income_seria', 'expire_date', 'quantity', 'unit_quantity')
 
                 batch_data = []

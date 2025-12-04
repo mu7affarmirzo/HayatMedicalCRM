@@ -12,7 +12,7 @@ class MedicationForm(forms.ModelForm):
     class Meta:
         model = MedicationModel
         fields = ['name', 'company', 'in_pack', 'unit', 'batch_number',
-                  'manufacture_date', 'expiry_date', 'description',
+                  'manufacture_date', 'description',
                   'dosage_form', 'active_ingredients', 'contraindications', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -21,7 +21,6 @@ class MedicationForm(forms.ModelForm):
             'unit': forms.Select(attrs={'class': 'form-control'}),
             'batch_number': forms.TextInput(attrs={'class': 'form-control'}),
             'manufacture_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
-            'expiry_date': forms.DateInput(attrs={'class': 'form-control datepicker', 'type': 'date'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'dosage_form': forms.TextInput(attrs={'class': 'form-control'}),
             'active_ingredients': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -40,7 +39,6 @@ class MedicationForm(forms.ModelForm):
         self.fields['unit'].label = 'Единица измерения'
         self.fields['batch_number'].label = 'Номер партии'
         self.fields['manufacture_date'].label = 'Дата производства'
-        self.fields['expiry_date'].label = 'Срок годности'
         self.fields['description'].label = 'Описание'
         self.fields['dosage_form'].label = 'Форма выпуска'
         self.fields['active_ingredients'].label = 'Активные ингредиенты'

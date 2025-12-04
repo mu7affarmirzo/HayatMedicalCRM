@@ -1,35 +1,35 @@
 # --- Основное ---
 Django
-djangorestframework==3.15.2
-django-filter==24.3
+djangorestframework
+django-filter
 
 # --- Аутентификация и безопасность ---
-djangorestframework-simplejwt==5.3.1
-passlib==1.7.4
-cryptography==43.0.1
+djangorestframework-simplejwt
+passlib
+cryptography
 
 # --- Работа с БД ---
-psycopg2-binary==2.9.9
+psycopg2-binary
 
 # --- Конфигурации и CORS ---
-python-decouple==3.8
-django-cors-headers==4.4.0
+python-decouple
+django-cors-headers
 
 # --- Документация и API ---
-drf-yasg==1.21.8
+drf-yasg
 
 # --- Импорт, экспорт и офисные файлы ---
-django-import-export==4.1.1
-openpyxl==3.1.5
-python-docx==1.1.2
+django-import-export
+openpyxl
+python-docx
 
 # --- PDF и изображения ---
-Pillow==10.4.0
-reportlab==4.2.5
-xhtml2pdf==0.2.16  # можно удалить, если используешь только reportlab
+Pillow
+reportlab
+xhtml2pdf  # можно удалить, если используешь только reportlab
 
 # --- Формы и Bootstrap ---
-crispy-bootstrap5==2024.2
+crispy-bootstrap5
 
 # --- JWT и токены ---
-PyJWT==2.9.0  # можно удалить, если хватает simplejwt
+PyJWT  # можно удалить, если хватает simplejwt

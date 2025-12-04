@@ -77,7 +77,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <div class="form-group">
                                 <label for="delivery_company">Компания-поставщик</label>
                                 <select class="form-control select2bs4" name="delivery_company" id="delivery_company">
@@ -86,6 +86,14 @@
                                         <option value="{{ company.id }}" {% if income and income.delivery_company and income.delivery_company.id == company.id %}selected{% endif %}>{{ company.name }}</option>
                                     {% endfor %}
                                 </select>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#addDeliveryCompanyModal" title="Добавить новую компанию">
+                                    <i class="fas fa-plus"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -125,7 +133,7 @@
                     <div id="items-container">
                         <div class="item-row" id="item-row-1">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Лекарство <span class="text-danger">*</span></label>
                                         <select class="form-control select2bs4 item-select" name="item_id" required>
@@ -134,6 +142,14 @@
                                                 <option value="{{ medication.id }}">{{ medication.name }} ({{ medication.get_unit_display }})</option>
                                             {% endfor %}
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#addMedicationModal" title="Добавить новое лекарство">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
@@ -197,6 +213,97 @@
                     <a href="{% if income %}{% url 'warehouse:income_detail' income.id %}{% else %}{% url 'warehouse:income_list' %}{% endif %}" class="btn btn-default">Отмена</a>
                 </div>
             </form>
+        </div>
+
+        <!-- Add Delivery Company Modal -->
+        <div class="modal fade" id="addDeliveryCompanyModal" tabindex="-1" role="dialog" aria-labelledby="addDeliveryCompanyModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addDeliveryCompanyModalLabel">Добавить компанию-поставщика</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addDeliveryCompanyForm">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="company_name">Название компании <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="company_name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="contact_person">Контактное лицо</label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone_number">Телефон</label>
+                                <input type="text" class="form-control" id="phone_number" name="phone_number">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Адрес</label>
+                                <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary" id="saveDeliveryCompanyBtn">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Medication Modal -->
+        <div class="modal fade" id="addMedicationModal" tabindex="-1" role="dialog" aria-labelledby="addMedicationModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addMedicationModalLabel">Добавить лекарство</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addMedicationForm">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="medication_name">Название лекарства <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="medication_name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="medication_company">Компания-производитель <span class="text-danger">*</span></label>
+                                <select class="form-control" id="medication_company" name="company" required>
+                                    <option value="">Выберите компанию</option>
+                                    {% for company in manufacturer_companies %}
+                                        <option value="{{ company.id }}">{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="in_pack">Количество в упаковке <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="in_pack" name="in_pack" value="10" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="unit">Единица измерения <span class="text-danger">*</span></label>
+                                <select class="form-control" id="unit" name="unit" required>
+                                    {% for unit_code, unit_name in medication_units %}
+                                        <option value="{{ unit_code }}" {% if unit_code == 'tablet' %}selected{% endif %}>{{ unit_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-primary" id="saveMedicationBtn">Сохранить</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -281,5 +388,70 @@
         updateRemoveButtons();
     }
     {% endif %}
+
+    // Add Delivery Company
+    $('#saveDeliveryCompanyBtn').click(function() {
+        const form = $('#addDeliveryCompanyForm');
+        const formData = form.serialize();
+
+        $.ajax({
+            url: '{% url "warehouse:add_delivery_company" %}',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    // Add new option to select
+                    const newOption = new Option(response.company.name, response.company.id, true, true);
+                    $('#delivery_company').append(newOption).trigger('change');
+
+                    // Close modal and reset form
+                    $('#addDeliveryCompanyModal').modal('hide');
+                    form[0].reset();
+
+                    // Show success message
+                    alert('Компания успешно добавлена!');
+                } else {
+                    alert('Ошибка: ' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Ошибка при добавлении компании: ' + error);
+            }
+        });
+    });
+
+    // Add Medication
+    $('#saveMedicationBtn').click(function() {
+        const form = $('#addMedicationForm');
+        const formData = form.serialize();
+
+        $.ajax({
+            url: '{% url "warehouse:add_medication" %}',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    // Add new option to all medication selects
+                    const displayText = response.medication.name + ' (' + response.medication.unit_display + ')';
+                    $('.item-select').each(function() {
+                        const newOption = new Option(displayText, response.medication.id, false, false);
+                        $(this).append(newOption);
+                    });
+
+                    // Close modal and reset form
+                    $('#addMedicationModal').modal('hide');
+                    form[0].reset();
+
+                    // Show success message
+                    alert('Лекарство успешно добавлено!');
+                } else {
+                    alert('Ошибка: ' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Ошибка при добавлении лекарства: ' + error);
+            }
+        });
+    });
 </script>
 {% endblock %}

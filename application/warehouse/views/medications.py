@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
@@ -15,16 +15,26 @@ from ..forms.medications_form import MedicationForm
 @warehouse_manager_required
 def medication_list(request):
     """
-    View to display list of all medications with filtering and sorting options
+    View to display list of medications that are in stock (registered as income)
     """
-    # Base queryset
-    medications = MedicationModel.objects.all().order_by('name')
+    from django.db.models import Q
+
+    # Get medications that have stock entries with actual quantity
+    medications_in_stock = MedicationsInStockModel.objects.filter(
+        Q(quantity__gt=0) | Q(unit_quantity__gt=0)
+    ).values_list('item_id', flat=True).distinct()
+
+    # Base queryset - only medications that are in stock
+    medications = MedicationModel.objects.filter(
+        id__in=medications_in_stock
+    ).order_by('name')
 
     # Filter parameters
     name = request.GET.get('name')
     company_id = request.GET.get('company')
     unit = request.GET.get('unit')
     is_active = request.GET.get('is_active')
+    warehouse_id = request.GET.get('warehouse')
 
     # Apply filters
     if name:
@@ -40,6 +50,15 @@ def medication_list(request):
         is_active_bool = is_active.lower() == 'true'
         medications = medications.filter(is_active=is_active_bool)
 
+    if warehouse_id:
+        # Filter medications that are available in the selected warehouse
+        medications_in_warehouse = MedicationsInStockModel.objects.filter(
+            warehouse_id=warehouse_id
+        ).filter(
+            Q(quantity__gt=0) | Q(unit_quantity__gt=0)
+        ).values_list('item_id', flat=True).distinct()
+        medications = medications.filter(id__in=medications_in_warehouse)
+
     # Pagination
     paginator = Paginator(medications, 10)  # Show 10 medications per page
     page = request.GET.get('page')
@@ -48,11 +67,14 @@ def medication_list(request):
     # Get context data
     companies = CompanyModel.objects.all()
     unit_choices = MedicationModel.UNIT_CHOICES
+    warehouses = Warehouse.objects.all()
 
     context = {
         'medications': medications_page,
         'companies': companies,
         'unit_choices': unit_choices,
+        'warehouses': warehouses,
+        'selected_warehouse': warehouse_id,
         # For notifications
         'expiring_soon_count': MedicationsInStockModel.objects.filter(
             expire_date__lte=timezone.now().date() + timezone.timedelta(days=90),
@@ -387,3 +409,39 @@ def low_stock(request):
     }
 
     return render(request, 'warehouse/medications/low_stock.html', context)
+
+
+@warehouse_manager_required
+def create_company(request):
+    """
+    AJAX endpoint to create a new company
+    """
+    if request.method == 'POST':
+        company_name = request.POST.get('company_name', '').strip()
+
+        if not company_name:
+            return JsonResponse({'success': False, 'error': 'Название компании обязательно.'}, status=400)
+
+        # Check if company already exists
+        if CompanyModel.objects.filter(name__iexact=company_name).exists():
+            return JsonResponse({'success': False, 'error': 'Компания с таким названием уже существует.'}, status=400)
+
+        try:
+            # Create the company
+            company = CompanyModel.objects.create(
+                name=company_name,
+                created_by=request.user,
+                modified_by=request.user
+            )
+
+            return JsonResponse({
+                'success': True,
+                'company': {
+                    'id': company.id,
+                    'name': company.name
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Ошибка при создании компании: {str(e)}'}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Неверный метод запроса.'}, status=400)

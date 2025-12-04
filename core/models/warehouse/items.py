@@ -84,7 +84,6 @@ class MedicationModel(BaseAuditModel):
     # Batch information
     batch_number = models.CharField(max_length=50, blank=True, help_text="Batch or serial number")
     manufacture_date = models.DateField(null=True, blank=True)
-    expiry_date = models.DateField(null=True, blank=True)
 
     # Additional fields
     description = models.TextField(blank=True)
@@ -99,41 +98,12 @@ class MedicationModel(BaseAuditModel):
         ordering = ['name']
         indexes = [
             models.Index(fields=['name']),
-            models.Index(fields=['expiry_date']),
         ]
         verbose_name = "Warehouses | Medications"
         verbose_name_plural = "Warehouses | Medications"
 
     def __str__(self):
         return f"{self.name} ({self.get_unit_display()}, {self.in_pack}/pack)"
-
-    @property
-    def is_expired(self):
-        """Check if medication is expired based on expiry date"""
-        if not self.expiry_date:
-            return False
-        return self.expiry_date < timezone.now().date()
-
-    @property
-    def validity_status(self):
-        """
-        Return medication validity status:
-        - 'valid': Not expired
-        - 'expiring_soon': Expires within 90 days
-        - 'expired': Already expired
-        """
-        if not self.expiry_date:
-            return 'unknown'
-
-        today = timezone.now().date()
-        days_until_expiry = (self.expiry_date - today).days
-
-        if days_until_expiry < 0:
-            return 'expired'
-        elif days_until_expiry <= 90:
-            return 'expiring_soon'
-        else:
-            return 'valid'
 
 
 class MedicationsInStockModel(BaseAuditModel):

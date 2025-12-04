@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(brew install:*)",
+      "Bash(pip install:*)",
+      "Bash(python manage.py check:*)",
+      "Bash(python3 manage.py:*)"
     ],
     "deny": [],
     "ask": []

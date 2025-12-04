@@ -397,9 +397,7 @@ def get_medication_info(request):
             'contraindications': medication.contraindications,
             'batch_number': medication.batch_number,
             'manufacture_date': medication.manufacture_date.isoformat() if medication.manufacture_date else None,
-            'expiry_date': medication.expiry_date.isoformat() if medication.expiry_date else None,
             'is_active': medication.is_active,
-            'validity_status': medication.validity_status,
             'stock': stock_info
         }
 

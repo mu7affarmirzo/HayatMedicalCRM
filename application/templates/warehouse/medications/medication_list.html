@@ -116,6 +116,19 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Склад:</label>
+                                <select class="form-control select2bs4" name="warehouse" style="width: 100%;">
+                                    <option value="">Все склады</option>
+                                    {% for warehouse in warehouses %}
+                                        <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"i" %}selected{% endif %}>{{ warehouse.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-12">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-filter"></i> Применить фильтры

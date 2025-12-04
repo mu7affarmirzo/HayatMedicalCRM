@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db import transaction
 
 from HayatMedicalCRM.auth.decorators import warehouse_manager_required
 from core.models.warehouse.income_registry import IncomeModel, IncomeItemsModel
-from core.models import MedicationModel, Warehouse, DeliveryCompanyModel
+from core.models import MedicationModel, Warehouse, DeliveryCompanyModel, CompanyModel
 
 @warehouse_manager_required
 def income_list(request):
@@ -116,53 +116,56 @@ def income_create(request):
                     unit_quantity = int(unit_quantities[i]) if unit_quantities[i] else 0
 
                     # Parse prices (treat 0, None, and empty string as "not provided")
-                    price = int(prices[i]) if prices[i] and int(prices[i]) > 0 else 0
-                    unit_price = int(unit_prices[i]) if unit_prices[i] and int(unit_prices[i]) > 0 else 0
+                    price = int(prices[i]) if prices[i] and prices[i].strip() and int(prices[i]) > 0 else 0
+                    unit_price = int(unit_prices[i]) if unit_prices[i] and unit_prices[i].strip() and int(unit_prices[i]) > 0 else 0
 
                     # Parse other fields
                     nds = int(nds_values[i]) if nds_values[i] else 0
                     expire_date = expire_dates[i] if expire_dates[i] else None
 
-                    # Step 1: Calculate total units
-                    # total_units = (full packs × units per pack) + loose units
-                    total_units = (quantity * item.in_pack) + unit_quantity
-
-                    # Validation: Skip items with zero total units
-                    if total_units == 0:
+                    # Validation: Skip items with zero total quantity
+                    if quantity == 0 and unit_quantity == 0:
                         messages.warning(
                             request,
                             f'Предупреждение: {item.name} имеет нулевое количество и был пропущен.'
                         )
                         continue
 
-                    # Step 2: Bidirectional Price Calculation
+                    # Step 1: Calculate missing price or unit_price based on in_pack relationship
 
                     # Case 1: Both price and unit_price are provided (> 0)
                     if price > 0 and unit_price > 0:
-                        # Use provided values as-is (trust user input)
+                        # Use provided values as-is (all fields provided - no calculation needed)
                         pass
 
-                    # Case 2: Only unit_price is provided (Forward Calculation)
-                    elif unit_price > 0 and price == 0:
-                        # Calculate: price = unit_price × total_units
-                        price = unit_price * total_units
-
-                    # Case 3: Only price is provided (Reverse Calculation)
+                    # Case 2: Only pack price is provided, calculate unit_price
                     elif price > 0 and unit_price == 0:
-                        # Calculate: unit_price = price ÷ total_units (integer division)
-                        unit_price = price // total_units
+                        # Calculate: unit_price = price ÷ in_pack
+                        if item.in_pack > 0:
+                            unit_price = price // item.in_pack
+                        else:
+                            messages.error(
+                                request,
+                                f'Ошибка: {item.name} имеет неверное значение "в упаковке" (in_pack = {item.in_pack}).'
+                            )
+                            continue
+
+                    # Case 3: Only unit_price is provided, calculate pack price
+                    elif unit_price > 0 and price == 0:
+                        # Calculate: price = unit_price × in_pack
+                        price = unit_price * item.in_pack
 
                     # Case 4: Neither price nor unit_price provided
                     else:
                         messages.error(
                             request,
-                            f'Ошибка: Для {item.name} необходимо указать цену или цену за единицу.'
+                            f'Ошибка: Для {item.name} необходимо указать цену упаковки или цену за единицу.'
                         )
                         continue
 
-                    # Step 3: Calculate contribution to bill_amount
-                    # Always use unit_price × total_units for consistency
-                    item_total = unit_price * total_units
+                    # Step 2: Calculate item total for bill_amount
+                    # Total = (quantity × price) + (unit_quantity × unit_price)
+                    item_total = (quantity * price) + (unit_quantity * unit_price)
                     total_bill_amount += item_total
 
                     # Store processed item data
@@ -175,7 +178,6 @@ def income_create(request):
                         'unit_price': unit_price,
                         'nds': nds,
                         'expire_date': expire_date,
-                        'total_units': total_units,  # Store for reference
                         'item_total': item_total  # Store for debugging
                     })
 
@@ -230,12 +232,16 @@ def income_create(request):
     companies = DeliveryCompanyModel.objects.all()
     medications = MedicationModel.objects.filter(is_active=True).order_by('name')
     state_choices = IncomeModel.STATE_CHOICES
+    manufacturer_companies = CompanyModel.objects.all()
+    medication_units = MedicationModel.UNIT_CHOICES
 
     context = {
         'warehouses': warehouses,
         'companies': companies,
         'medications': medications,
         'state_choices': state_choices,
+        'manufacturer_companies': manufacturer_companies,
+        'medication_units': medication_units,
         'is_update': False,
     }
 
@@ -321,3 +327,119 @@ def income_delete(request, pk):
     }
 
     return render(request, 'warehouse/income/income_confirm_delete.html', context)
+
+
+@warehouse_manager_required
+def add_delivery_company(request):
+    """
+    AJAX view to add a new delivery company while creating income
+    """
+    if request.method == 'POST':
+        try:
+            name = request.POST.get('name', '').strip()
+            contact_person = request.POST.get('contact_person', '').strip()
+            phone_number = request.POST.get('phone_number', '').strip()
+            email = request.POST.get('email', '').strip()
+            address = request.POST.get('address', '').strip()
+
+            # Validation
+            if not name:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Название компании обязательно для заполнения'
+                })
+
+            # Create delivery company
+            company = DeliveryCompanyModel.objects.create(
+                name=name,
+                contact_person=contact_person if contact_person else None,
+                phone_number=phone_number if phone_number else None,
+                email=email if email else None,
+                address=address if address else None,
+                is_active=True,
+                created_by=request.user,
+                modified_by=request.user
+            )
+
+            return JsonResponse({
+                'success': True,
+                'company': {
+                    'id': company.id,
+                    'name': company.name
+                }
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Ошибка при создании компании: {str(e)}'
+            })
+
+    return JsonResponse({'success': False, 'error': 'Метод не поддерживается'})
+
+
+@warehouse_manager_required
+def add_medication(request):
+    """
+    AJAX view to add a new medication while creating income
+    """
+    if request.method == 'POST':
+        try:
+            name = request.POST.get('name', '').strip()
+            company_id = request.POST.get('company')
+            in_pack = request.POST.get('in_pack', '10')
+            unit = request.POST.get('unit', 'tablet')
+
+            # Validation
+            if not name:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Название лекарства обязательно для заполнения'
+                })
+
+            if not company_id:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Компания-производитель обязательна для заполнения'
+                })
+
+            try:
+                in_pack_value = int(in_pack)
+                if in_pack_value <= 0:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Количество в упаковке должно быть больше 0'
+                    })
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Количество в упаковке должно быть числом'
+                })
+
+            # Create medication
+            medication = MedicationModel.objects.create(
+                name=name,
+                company_id=company_id,
+                in_pack=in_pack_value,
+                unit=unit,
+                is_active=True,
+                created_by=request.user,
+                modified_by=request.user
+            )
+
+            return JsonResponse({
+                'success': True,
+                'medication': {
+                    'id': medication.id,
+                    'name': medication.name,
+                    'unit_display': medication.get_unit_display()
+                }
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Ошибка при создании лекарства: {str(e)}'
+            })
+
+    return JsonResponse({'success': False, 'error': 'Метод не поддерживается'})

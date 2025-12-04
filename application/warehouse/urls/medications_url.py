@@ -14,4 +14,7 @@ urlpatterns = [
     path('expiring/export-excel/', medications.expiring_medications_export_excel, name='expiring_medications_export'),
     path('low-stock/', medications.low_stock, name='low_stock'),
 
+    # Company Management
+    path('create-company/', medications.create_company, name='create_company'),
+
 ]

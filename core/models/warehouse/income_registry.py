@@ -16,7 +16,7 @@ class IncomeModel(BaseAuditModel):
     delivery_company = models.ForeignKey('DeliveryCompanyModel', on_delete=models.SET_NULL, null=True, blank=True)
     receiver = models.ForeignKey('Warehouse', on_delete=models.CASCADE)
     bill_amount = models.BigIntegerField(default=0, null=True, blank=True)
-    state = models.CharField(choices=STATE_CHOICES, max_length=50, default='принято')
+    state = models.CharField(choices=STATE_CHOICES, max_length=50, default='в ожидании')
 
     def __str__(self):
         return f"{self.receiver} - {self.serial}"
@@ -61,7 +61,17 @@ def income_item_overall_price(sender, instance, **kwargs):
 
 @receiver(post_save, sender=IncomeItemsModel)
 def items_to_stock(sender, instance: IncomeItemsModel, created, **kwargs):
+    """
+    NOTE: Stock is only added when income state is 'принято' (accepted).
+    Items in 'в ожидании' (pending) state are NOT added to stock.
+    This allows editing items before acceptance.
+    """
     from core.models import MedicationsInStockModel
+
+    # Only add to stock if income is accepted
+    if instance.income.state != 'принято':
+        return
+
     stock_data = {
         'item': instance.item,
         'income_seria': instance.income.serial,
@@ -89,3 +99,19 @@ def create_income_serial_number(sender, instance=None, created=False, **kwargs):
         number_str = str(instance.id).zfill(5)
         instance.serial = f"{instance.serial}|{number_str}"
         instance.save()
+
+
+@receiver(post_save, sender=IncomeModel)
+def process_income_items_on_state_change(sender, instance, created, **kwargs):
+    """
+    Handle income state changes:
+    - 'принято' (accepted): Add all income items to stock
+    """
+    if created:
+        return  # Skip for newly created income
+
+    if instance.state == 'принято':
+        # Re-save all income items to trigger their post_save signal
+        # This will add stock to warehouse
+        for item in instance.income_items.all():
+            item.save()

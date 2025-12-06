@@ -186,32 +186,54 @@
                             <th>НДС (%)</th>
                             <th>Общая сумма</th>
                             <th>Срок годности</th>
+                            {% if income.state == 'в ожидании' %}
+                            <th>Действия</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
-                        <tr>
+                        <tr id="item-row-{{ item.id }}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.item.name }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>{{ item.unit_quantity }}</td>
-                            <td>{{ item.price|intcomma }} сум</td>
-                            <td>{{ item.unit_price|intcomma }} сум</td>
-                            <td>{{ item.nds }}%</td>
+                            <td class="item-quantity">{{ item.quantity }}</td>
+                            <td class="item-unit-quantity">{{ item.unit_quantity }}</td>
+                            <td class="item-price">{{ item.price|intcomma }} сум</td>
+                            <td class="item-unit-price">{{ item.unit_price|intcomma }} сум</td>
+                            <td class="item-nds">{{ item.nds }}%</td>
                             <td>{{ item.overall_price|intcomma }} сум</td>
-                            <td>{{ item.expire_date|date:"d.m.Y"|default:"-" }}</td>
+                            <td class="item-expire-date">{{ item.expire_date|date:"d.m.Y"|default:"-" }}</td>
+                            {% if income.state == 'в ожидании' %}
+                            <td>
+                                <button type="button" class="btn btn-sm btn-warning edit-item-btn"
+                                        data-item-id="{{ item.id }}"
+                                        data-quantity="{{ item.quantity }}"
+                                        data-unit-quantity="{{ item.unit_quantity }}"
+                                        data-price="{{ item.price }}"
+                                        data-unit-price="{{ item.unit_price }}"
+                                        data-nds="{{ item.nds }}"
+                                        data-expire-date="{{ item.expire_date|date:'Y-m-d' }}">
+                                    <i class="fas fa-edit"></i> Изменить
+                                </button>
+                                <a href="{% url 'warehouse:remove_income_item' income.id item.id %}"
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Вы уверены, что хотите удалить этот товар?');">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </a>
+                            </td>
+                            {% endif %}
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center">Товаров не найдено</td>
+                            <td colspan="{% if income.state == 'в ожидании' %}10{% else %}9{% endif %}" class="text-center">Товаров не найдено</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="7" class="text-right">Итого:</th>
+                            <th colspan="{% if income.state == 'в ожидании' %}8{% else %}7{% endif %}" class="text-right">Итого:</th>
                             <th>{{ overall_sum|intcomma }} сум</th>
-                            <th></th>
+                            <th{% if income.state == 'в ожидании' %} colspan="2"{% endif %}></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -219,6 +241,55 @@
         </div>
     </div>
 </section>
+
+<!-- Edit Item Modal -->
+{% if income.state == 'в ожидании' %}
+<div class="modal fade" id="editItemModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Изменить товар</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editItemForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_quantity">Количество (упаковок)</label>
+                        <input type="number" class="form-control" id="edit_quantity" name="quantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_unit_quantity">Количество (единиц)</label>
+                        <input type="number" class="form-control" id="edit_unit_quantity" name="unit_quantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_price">Цена за упаковку</label>
+                        <input type="number" class="form-control" id="edit_price" name="price" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_unit_price">Цена за единицу</label>
+                        <input type="number" class="form-control" id="edit_unit_price" name="unit_price" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_nds">НДС (%)</label>
+                        <input type="number" class="form-control" id="edit_nds" name="nds" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_expire_date">Срок годности</label>
+                        <input type="date" class="form-control" id="edit_expire_date" name="expire_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -240,6 +311,34 @@
             "autoWidth": false,
             "responsive": true,
         });
+
+        {% if income.state == 'в ожидании' %}
+        // Handle edit button click
+        $('.edit-item-btn').on('click', function() {
+            var itemId = $(this).data('item-id');
+            var quantity = $(this).data('quantity');
+            var unitQuantity = $(this).data('unit-quantity');
+            var price = $(this).data('price');
+            var unitPrice = $(this).data('unit-price');
+            var nds = $(this).data('nds');
+            var expireDate = $(this).data('expire-date');
+
+            // Set form values
+            $('#edit_quantity').val(quantity);
+            $('#edit_unit_quantity').val(unitQuantity);
+            $('#edit_price').val(price);
+            $('#edit_unit_price').val(unitPrice);
+            $('#edit_nds').val(nds);
+            $('#edit_expire_date').val(expireDate);
+
+            // Set form action URL
+            var formAction = "{% url 'warehouse:update_income_item' income.id 0 %}".replace('/0/', '/' + itemId + '/');
+            $('#editItemForm').attr('action', formAction);
+
+            // Show modal
+            $('#editItemModal').modal('show');
+        });
+        {% endif %}
     });
 </script>
 {% endblock %}

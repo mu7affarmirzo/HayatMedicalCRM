@@ -295,6 +295,107 @@ def get_medication_batches(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+
+@warehouse_manager_required
+def update_account_transfer_item(request, pk, item_pk):
+    """
+    View to update an account transfer item (only allowed when transfer is in 'в ожидании' state)
+    """
+    transfer = get_object_or_404(AccountTransferModel, pk=pk)
+    transfer_item = get_object_or_404(AccountTransferItemsModel, pk=item_pk, transfer=transfer)
+
+    # Only allow updating items if the transfer is in pending state
+    if transfer.state != 'в ожидании':
+        messages.error(request, 'Нельзя изменять товары в перемещении, которое не находится в состоянии "в ожидании".')
+        return redirect('warehouse:account_transfer_detail', pk=transfer.id)
+
+    if request.method == 'POST':
+        try:
+            quantity = int(request.POST.get('quantity', 0))
+            unit_quantity = int(request.POST.get('unit_quantity', 0))
+
+            # Validation: quantity must be greater than 0
+            if quantity == 0 and unit_quantity == 0:
+                messages.error(request, 'Количество должно быть больше нуля.')
+                return redirect('warehouse:account_transfer_add_items', pk=transfer.id)
+
+            # Get medication info
+            medication = transfer_item.item.item
+
+            # Auto-convert unit_quantity to packs + units if needed
+            if unit_quantity > 0 or quantity > 0:
+                total_units = (quantity * medication.in_pack) + unit_quantity
+                quantity = total_units // medication.in_pack
+                unit_quantity = total_units % medication.in_pack
+
+            # Calculate requested total units
+            requested_total_units = (quantity * medication.in_pack) + unit_quantity
+
+            # Calculate current item's units (to restore to stock temporarily)
+            old_total_units = (transfer_item.quantity * medication.in_pack) + transfer_item.unit_quantity
+
+            # Get current stock in sender warehouse
+            sender_stock = MedicationsInStockModel.objects.filter(
+                item=medication,
+                warehouse=transfer.sender,
+                expire_date=transfer_item.expire_date,
+                income_seria=transfer_item.income_seria
+            ).first()
+
+            # Calculate available units (including current transfer item's units)
+            if sender_stock:
+                available_units = (sender_stock.quantity * medication.in_pack) + sender_stock.unit_quantity + old_total_units
+            else:
+                available_units = old_total_units
+
+            # Validation: Check if enough stock available
+            if requested_total_units > available_units:
+                available_packs = available_units // medication.in_pack
+                available_unit_qty = available_units % medication.in_pack
+                messages.error(request, f'Недостаточно запасов. Доступно: {available_packs} упаковок + {available_unit_qty} единиц.')
+                return redirect('warehouse:account_transfer_add_items', pk=transfer.id)
+
+            # Calculate the difference
+            units_difference = old_total_units - requested_total_units
+
+            # Update stock in sender warehouse
+            if sender_stock:
+                current_stock_units = (sender_stock.quantity * medication.in_pack) + sender_stock.unit_quantity
+                new_stock_units = current_stock_units + units_difference
+
+                if new_stock_units > 0:
+                    sender_stock.quantity = new_stock_units // medication.in_pack
+                    sender_stock.unit_quantity = new_stock_units % medication.in_pack
+                    sender_stock.save()
+                else:
+                    sender_stock.delete()
+            elif units_difference > 0:
+                # Create new stock if difference is positive
+                MedicationsInStockModel.objects.create(
+                    item=medication,
+                    income_seria=transfer_item.income_seria,
+                    quantity=units_difference // medication.in_pack,
+                    unit_quantity=units_difference % medication.in_pack,
+                    expire_date=transfer_item.expire_date,
+                    warehouse=transfer.sender,
+                    price=transfer_item.price,
+                    unit_price=transfer_item.unit_price,
+                )
+
+            # Update the transfer item
+            transfer_item.quantity = quantity
+            transfer_item.unit_quantity = unit_quantity
+            transfer_item.modified_by = request.user
+            transfer_item.save()
+
+            messages.success(request, 'Товар успешно обновлен.')
+
+        except Exception as e:
+            messages.error(request, f'Ошибка при обновлении товара: {str(e)}')
+
+    return redirect('warehouse:account_transfer_add_items', pk=transfer.id)
+
+
 @warehouse_manager_required
 def remove_account_transfer_item(request, pk, item_pk):
     """
@@ -309,6 +410,39 @@ def remove_account_transfer_item(request, pk, item_pk):
         return redirect('warehouse:account_transfer_detail', pk=transfer.id)
 
     try:
+        # Restore stock to sender warehouse before deleting
+        medication = transfer_item.item.item
+        total_units_transfer = (transfer_item.quantity * medication.in_pack) + transfer_item.unit_quantity
+
+        # Try to find existing stock in sender warehouse
+        sender_stock = MedicationsInStockModel.objects.filter(
+            item=medication,
+            warehouse=transfer.sender,
+            expire_date=transfer_item.expire_date,
+            income_seria=transfer_item.income_seria
+        ).first()
+
+        if sender_stock:
+            # Add back to existing stock
+            total_units_sender = (sender_stock.quantity * medication.in_pack) + sender_stock.unit_quantity
+            new_total_units = total_units_sender + total_units_transfer
+
+            sender_stock.quantity = new_total_units // medication.in_pack
+            sender_stock.unit_quantity = new_total_units % medication.in_pack
+            sender_stock.save()
+        else:
+            # Recreate stock entry in sender warehouse
+            MedicationsInStockModel.objects.create(
+                item=medication,
+                income_seria=transfer_item.income_seria,
+                quantity=transfer_item.quantity,
+                unit_quantity=transfer_item.unit_quantity,
+                expire_date=transfer_item.expire_date,
+                warehouse=transfer.sender,
+                price=transfer_item.price,
+                unit_price=transfer_item.unit_price,
+            )
+
         transfer_item.delete()
         messages.success(request, 'Товар успешно удален из перемещения.')
     except Exception as e:

@@ -87,7 +87,7 @@ def income_create(request):
         receiver_id = request.POST.get('receiver')
         delivery_company_id = request.POST.get('delivery_company')
         bill_amount = int(request.POST.get('bill_amount', 0)) if request.POST.get('bill_amount') else 0
-        state = request.POST.get('state', 'принято')
+        state = request.POST.get('state', 'в ожидании')
 
         # Get item data from form
         item_ids = request.POST.getlist('item_id')
@@ -260,7 +260,7 @@ def income_update(request, pk):
         receiver_id = request.POST.get('receiver')
         delivery_company_id = request.POST.get('delivery_company')
         bill_amount = int(request.POST.get('bill_amount', 0)) if request.POST.get('bill_amount') else 0
-        state = request.POST.get('state', 'принято')
+        state = request.POST.get('state', 'в ожидании')
         serial = request.POST.get('serial')
 
         try:
@@ -443,3 +443,94 @@ def add_medication(request):
             })
 
     return JsonResponse({'success': False, 'error': 'Метод не поддерживается'})
+
+
+@warehouse_manager_required
+def update_income_item(request, pk, item_pk):
+    """
+    View to update an income item (only allowed when income is in 'в ожидании' state)
+    """
+    income = get_object_or_404(IncomeModel, pk=pk)
+    income_item = get_object_or_404(IncomeItemsModel, pk=item_pk, income=income)
+
+    # Only allow updating items if the income is in pending state
+    if income.state != 'в ожидании':
+        messages.error(request, 'Нельзя изменять товары в доходе, который не находится в состоянии "в ожидании".')
+        return redirect('warehouse:income_detail', pk=income.id)
+
+    if request.method == 'POST':
+        try:
+            quantity = int(request.POST.get('quantity', 0))
+            unit_quantity = int(request.POST.get('unit_quantity', 0))
+            price = int(request.POST.get('price', 0)) if request.POST.get('price') else 0
+            unit_price = int(request.POST.get('unit_price', 0)) if request.POST.get('unit_price') else 0
+            nds = int(request.POST.get('nds', 0)) if request.POST.get('nds') else 0
+            expire_date = request.POST.get('expire_date') if request.POST.get('expire_date') else None
+
+            # Validation: quantity must be greater than 0
+            if quantity == 0 and unit_quantity == 0:
+                messages.error(request, 'Количество должно быть больше нуля.')
+                return redirect('warehouse:income_detail', pk=income.id)
+
+            # Bidirectional price calculation (same logic as income_create)
+            medication = income_item.item
+
+            # Case 1: Both price and unit_price are provided (> 0)
+            if price > 0 and unit_price > 0:
+                pass  # Use provided values as-is
+
+            # Case 2: Only pack price is provided, calculate unit_price
+            elif price > 0 and unit_price == 0:
+                if medication.in_pack > 0:
+                    unit_price = price // medication.in_pack
+                else:
+                    messages.error(request, f'Ошибка: {medication.name} имеет неверное значение "в упаковке".')
+                    return redirect('warehouse:income_detail', pk=income.id)
+
+            # Case 3: Only unit_price is provided, calculate pack price
+            elif unit_price > 0 and price == 0:
+                price = unit_price * medication.in_pack
+
+            # Case 4: Neither price nor unit_price provided
+            else:
+                messages.error(request, 'Ошибка: необходимо указать цену упаковки или цену за единицу.')
+                return redirect('warehouse:income_detail', pk=income.id)
+
+            # Update the income item
+            income_item.quantity = quantity
+            income_item.unit_quantity = unit_quantity
+            income_item.price = price
+            income_item.unit_price = unit_price
+            income_item.nds = nds
+            income_item.expire_date = expire_date
+            income_item.modified_by = request.user
+            income_item.save()
+
+            messages.success(request, 'Товар успешно обновлен.')
+
+        except Exception as e:
+            messages.error(request, f'Ошибка при обновлении товара: {str(e)}')
+
+    return redirect('warehouse:income_detail', pk=income.id)
+
+
+@warehouse_manager_required
+def remove_income_item(request, pk, item_pk):
+    """
+    View to remove an income item (only allowed when income is in 'в ожидании' state)
+    """
+    income = get_object_or_404(IncomeModel, pk=pk)
+    income_item = get_object_or_404(IncomeItemsModel, pk=item_pk, income=income)
+
+    # Only allow removing items if the income is in pending state
+    if income.state != 'в ожидании':
+        messages.error(request, 'Нельзя удалять товары из дохода, который не находится в состоянии "в ожидании".')
+        return redirect('warehouse:income_detail', pk=income.id)
+
+    try:
+        income_item.delete()
+        messages.success(request, 'Товар успешно удален из дохода.')
+    except Exception as e:
+        messages.error(request, f'Ошибка при удалении товара: {str(e)}')
+
+    return redirect('warehouse:income_detail', pk=income.id)

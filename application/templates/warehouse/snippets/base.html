@@ -198,6 +198,36 @@
                     </li>
 
                     <li class="nav-item">
+                        <a href="#" class="nav-link {% if 'expense' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-invoice"></i>
+                            <p>
+                                Расходы медикаментов
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:expense_list' %}" class="nav-link {% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Список расходов</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:expense_create' %}" class="nav-link {% if request.resolver_match.url_name == 'expense_create' %}active{% endif %}">
+                                    <i class="fas fa-plus nav-icon"></i>
+                                    <p>Создать расход</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse:expense_export' %}" class="nav-link">
+                                    <i class="fas fa-file-excel nav-icon text-success"></i>
+                                    <p>Экспорт в Excel</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
                         <a href="#" class="nav-link {% if 'prescribed' in request.resolver_match.url_name %}active{% endif %}">
                             <i class="nav-icon fas fa-prescription-bottle-alt"></i>
                             <p>

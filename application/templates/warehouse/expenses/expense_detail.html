@@ -1,0 +1,253 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Детали расхода - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-section {
+        margin-bottom: 20px;
+    }
+    .detail-label {
+        font-weight: bold;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .detail-value {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+    .expense-type-badge {
+        font-size: 1rem;
+        padding: 8px 15px;
+        border-radius: 5px;
+        color: white;
+    }
+    .badge-expired {
+        background-color: #dc3545;
+    }
+    .badge-damaged {
+        background-color: #fd7e14;
+    }
+    .badge-charity {
+        background-color: #28a745;
+    }
+    .badge-ambulance {
+        background-color: #007bff;
+    }
+    .badge-lost {
+        background-color: #6c757d;
+    }
+    .badge-other {
+        background-color: #17a2b8;
+    }
+    .info-card {
+        border-left: 4px solid #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Детали расхода</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:expense_list' %}">Расходы</a></li>
+                    <li class="breadcrumb-item active">Детали</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main Details -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title">Информация о расходе</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-section">
+                                    <div class="detail-label">Медикамент:</div>
+                                    <div class="detail-value">{{ expense.stock_item.item.name }}</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-label">Склад:</div>
+                                    <div class="detail-value">{{ expense.stock_item.warehouse.name }}</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-label">Тип расхода:</div>
+                                    <div class="detail-value">
+                                        <span class="expense-type-badge badge-{{ expense.expense_type }}">
+                                            {{ expense.get_expense_type_display }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-label">Дата расхода:</div>
+                                    <div class="detail-value">{{ expense.expense_date|date:"d.m.Y" }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="detail-section">
+                                    <div class="detail-label">Количество упаковок:</div>
+                                    <div class="detail-value">{{ expense.quantity }}</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-label">Количество единиц:</div>
+                                    <div class="detail-value">{{ expense.unit_quantity }}</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-label">Всего единиц:</div>
+                                    <div class="detail-value">{{ expense.total_units }}</div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-label">Общая стоимость:</div>
+                                    <div class="detail-value">
+                                        <strong style="color: #dc3545;">{{ expense.total_value|floatformat:0|intcomma }} сум</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if expense.reason %}
+                        <hr>
+                        <div class="detail-section">
+                            <div class="detail-label">Причина/Примечание:</div>
+                            <div class="detail-value">
+                                <div class="alert alert-info">
+                                    {{ expense.reason }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-section">
+                                    <div class="detail-label">Создано:</div>
+                                    <div class="detail-value">{{ expense.created_at|date:"d.m.Y H:i" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-section">
+                                    <div class="detail-label">Создал:</div>
+                                    <div class="detail-value">{{ expense.created_by.get_full_name|default:expense.created_by.username }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'warehouse:expense_list' %}" class="btn btn-default">
+                            <i class="fas fa-arrow-left"></i> Назад к списку
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Item Info -->
+            <div class="col-md-4">
+                <div class="card info-card">
+                    <div class="card-header bg-info">
+                        <h3 class="card-title">Информация о партии</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-section">
+                            <div class="detail-label">Серия прихода:</div>
+                            <div class="detail-value">{{ expense.stock_item.income_seria|default:"Не указано" }}</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-label">Срок годности:</div>
+                            <div class="detail-value">
+                                {% if expense.stock_item.expire_date %}
+                                    {{ expense.stock_item.expire_date|date:"d.m.Y" }}
+                                    {% if expense.stock_item.days_until_expire <= 0 %}
+                                        <span class="badge badge-danger">Истек</span>
+                                    {% elif expense.stock_item.days_until_expire <= 30 %}
+                                        <span class="badge badge-warning">{{ expense.stock_item.days_until_expire }} дн.</span>
+                                    {% else %}
+                                        <span class="badge badge-success">{{ expense.stock_item.days_until_expire }} дн.</span>
+                                    {% endif %}
+                                {% else %}
+                                    Не указано
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-label">Компания-производитель:</div>
+                            <div class="detail-value">{{ expense.stock_item.item.company.name }}</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-label">Единица измерения:</div>
+                            <div class="detail-value">{{ expense.stock_item.item.get_unit_display }}</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-label">В упаковке:</div>
+                            <div class="detail-value">{{ expense.stock_item.item.in_pack }} {{ expense.stock_item.item.get_unit_display }}</div>
+                        </div>
+
+                        <hr>
+                        <div class="detail-section">
+                            <div class="detail-label">Цена за упаковку:</div>
+                            <div class="detail-value">{{ expense.stock_item.price|floatformat:0|intcomma }} сум</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-label">Цена за единицу:</div>
+                            <div class="detail-value">{{ expense.stock_item.unit_price|floatformat:0|intcomma }} сум</div>
+                        </div>
+
+                        <hr>
+                        <div class="detail-section">
+                            <div class="detail-label">Текущий остаток:</div>
+                            <div class="detail-value">
+                                <strong>{{ expense.stock_item.quantity }} уп. {{ expense.stock_item.unit_quantity }} ед.</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-secondary">
+                        <h3 class="card-title">Действия</h3>
+                    </div>
+                    <div class="card-body">
+                        <a href="{% url 'warehouse:medication_detail' expense.stock_item.item.id %}" class="btn btn-block btn-info">
+                            <i class="fas fa-pills"></i> Просмотр медикамента
+                        </a>
+                        <a href="{% url 'warehouse:expense_create' %}" class="btn btn-block btn-success">
+                            <i class="fas fa-plus"></i> Создать новый расход
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

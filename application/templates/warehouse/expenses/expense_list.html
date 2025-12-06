@@ -1,0 +1,345 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Расходы медикаментов - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<style>
+    .expense-type-badge {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+        border-radius: 4px;
+        color: white;
+    }
+    .badge-expired {
+        background-color: #dc3545;
+    }
+    .badge-damaged {
+        background-color: #fd7e14;
+    }
+    .badge-charity {
+        background-color: #28a745;
+    }
+    .badge-ambulance {
+        background-color: #007bff;
+    }
+    .badge-lost {
+        background-color: #6c757d;
+    }
+    .badge-other {
+        background-color: #17a2b8;
+    }
+    .filters-card {
+        margin-bottom: 1.5rem;
+    }
+    .stats-box {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Расходы медикаментов</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Расходы</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Statistics -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-chart-line"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Всего расходов</span>
+                        <span class="info-box-number">{{ total_combined }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger"><i class="fas fa-minus-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Списания</span>
+                        <span class="info-box-number">{{ total_expenses }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-user-md"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Перемещения на счета</span>
+                        <span class="info-box-number">{{ total_transfers }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Card -->
+        <div class="card filters-card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'warehouse:expense_list' %}" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Показать:</label>
+                                <select class="form-control select2bs4" name="show_type" style="width: 100%;">
+                                    <option value="all" {% if selected_show_type == 'all' %}selected{% endif %}>Все расходы</option>
+                                    <option value="expenses" {% if selected_show_type == 'expenses' %}selected{% endif %}>Только списания</option>
+                                    <option value="transfers" {% if selected_show_type == 'transfers' %}selected{% endif %}>Только перемещения</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Название медикамента:</label>
+                                <input type="text" class="form-control" name="medication" value="{{ request.GET.medication|default:'' }}" placeholder="Введите название...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Тип расхода:</label>
+                                <select class="form-control select2bs4" name="expense_type" style="width: 100%;">
+                                    <option value="">Все типы</option>
+                                    {% for type_code, type_name in expense_type_choices %}
+                                        <option value="{{ type_code }}" {% if selected_expense_type == type_code %}selected{% endif %}>{{ type_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Склад:</label>
+                                <select class="form-control select2bs4" name="warehouse" style="width: 100%;">
+                                    <option value="">Все склады</option>
+                                    {% for warehouse in warehouses %}
+                                        <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"i" %}selected{% endif %}>{{ warehouse.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Дата от:</label>
+                                <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Дата до:</label>
+                                <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> Применить фильтры
+                            </button>
+                            <a href="{% url 'warehouse:expense_list' %}" class="btn btn-default">
+                                <i class="fas fa-sync"></i> Сбросить
+                            </a>
+                            <a href="{% url 'warehouse:expense_export' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+                                <i class="fas fa-file-excel"></i> Экспорт в Excel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Expenses List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Список расходов</h3>
+                <div class="card-tools">
+                    <a href="{% url 'warehouse:expense_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Создать расход
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="expenses-table" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Тип</th>
+                                <th>Медикамент/Получатель</th>
+                                <th>Склад</th>
+                                <th>Категория</th>
+                                <th>Количество</th>
+                                <th>Стоимость</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                {% if item.item_type == 'expense' %}
+                                    <!-- Regular Expense -->
+                                    <td>{{ item.expense_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <span class="badge badge-danger">
+                                            <i class="fas fa-minus-circle"></i> Списание
+                                        </span>
+                                    </td>
+                                    <td>{{ item.stock_item.item.name }}</td>
+                                    <td>{{ item.stock_item.warehouse.name }}</td>
+                                    <td>
+                                        <span class="expense-type-badge badge-{{ item.expense_type }}">
+                                            {{ item.get_expense_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ item.quantity }} уп. {{ item.unit_quantity }} ед.
+                                        <small class="text-muted">({{ item.total_units }} ед.)</small>
+                                    </td>
+                                    <td>{{ item.total_value|floatformat:0|intcomma }} сум</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'warehouse:expense_detail' item.id %}" class="btn btn-sm btn-info" title="Детали">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                {% else %}
+                                    <!-- Account Transfer -->
+                                    <td>{{ item.created_at|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-user-md"></i> Перемещение
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ item.receiver.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% with item.transfer_items.all as transfer_items %}
+                                                {% for t_item in transfer_items|slice:":2" %}
+                                                    {{ t_item.item.item.name }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                                {% if transfer_items.count > 2 %}
+                                                    <span class="badge badge-secondary">+{{ transfer_items.count|add:"-2" }}</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </small>
+                                    </td>
+                                    <td>{{ item.sender.name }}</td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            <i class="fas fa-exchange-alt"></i> На счет
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% with item.transfer_items.all as transfer_items %}
+                                            {{ transfer_items.count }} позиц.
+                                        {% endwith %}
+                                    </td>
+                                    <td>{{ item.overall_sum|floatformat:0|intcomma }} сум</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'warehouse:account_transfer_detail' item.id %}" class="btn btn-sm btn-info" title="Детали">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">Записей не найдено</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer clearfix">
+                <ul class="pagination pagination-sm m-0 float-right">
+                    {% if items.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo; первая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ items.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">назад</a></li>
+                    {% endif %}
+
+                    <li class="page-item disabled"><a class="page-link" href="#">Страница {{ items.number }} из {{ items.paginator.num_pages }}</a></li>
+
+                    {% if items.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ items.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">вперед</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ items.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">последняя &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables & Plugins -->
+<script src="{% static 'adminlte3_assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'adminlte3_assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+
+<script>
+    $(function () {
+        // Initialize Select2 Elements
+        $('.select2bs4').select2({
+            theme: 'bootstrap4'
+        });
+
+        // Optional: Initialize DataTable for better mobile responsiveness
+        $('#expenses-table').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "responsive": true,
+        });
+    });
+</script>
+{% endblock %}

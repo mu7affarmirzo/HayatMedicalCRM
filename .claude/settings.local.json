@@ -5,7 +5,9 @@
       "Bash(brew install:*)",
       "Bash(pip install:*)",
       "Bash(python manage.py check:*)",
-      "Bash(python3 manage.py:*)"
+      "Bash(python3 manage.py:*)",
+      "Bash(python manage.py:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

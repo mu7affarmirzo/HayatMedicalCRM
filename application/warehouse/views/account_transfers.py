@@ -151,9 +151,31 @@ def account_transfer_add_items(request, pk):
             requested_total_units = (quantity * medication.in_pack) + unit_quantity
             available_total_units = (stock_item.quantity * medication.in_pack) + stock_item.unit_quantity
 
+            # Validation: Check if enough stock available
             if requested_total_units > available_total_units:
                 messages.error(request, f'Недостаточно запасов. Доступно: {stock_item.quantity} упаковок + {stock_item.unit_quantity} единиц.')
                 return redirect('warehouse:account_transfer_add_items', pk=transfer.id)
+
+            if requested_total_units == 0:
+                messages.error(request, 'Количество должно быть больше нуля.')
+                return redirect('warehouse:account_transfer_add_items', pk=transfer.id)
+
+            # Store stock item data before modification
+            stock_price = stock_item.price
+            stock_unit_price = stock_item.unit_price
+            stock_expire_date = stock_item.expire_date
+
+            # Deduct stock immediately (transfer is in "в ожидании" state)
+            remaining_units = available_total_units - requested_total_units
+
+            if remaining_units > 0:
+                # Update stock with remaining units
+                stock_item.quantity = remaining_units // medication.in_pack
+                stock_item.unit_quantity = remaining_units % medication.in_pack
+                stock_item.save()
+            else:
+                # Delete stock item if no units remain
+                stock_item.delete()
 
             # Create the transfer item
             AccountTransferItemsModel.objects.create(
@@ -161,9 +183,9 @@ def account_transfer_add_items(request, pk):
                 item=stock_item,
                 quantity=quantity,
                 unit_quantity=unit_quantity,
-                price=stock_item.price,
-                unit_price=stock_item.unit_price,
-                expire_date=stock_item.expire_date,
+                price=stock_price,
+                unit_price=stock_unit_price,
+                expire_date=stock_expire_date,
                 income_seria=income_seria,
                 created_by=request.user,
                 modified_by=request.user
@@ -176,10 +198,12 @@ def account_transfer_add_items(request, pk):
         except Exception as e:
             messages.error(request, f'Ошибка при добавлении товара: {str(e)}')
 
-    # Get available medications in the sender warehouse
+    # Get available medications in the sender warehouse (with actual stock)
+    from django.db.models import Q
     available_medications = MedicationsInStockModel.objects.filter(
-        warehouse=transfer.sender,
-        quantity__gt=0
+        warehouse=transfer.sender
+    ).filter(
+        Q(quantity__gt=0) | Q(unit_quantity__gt=0)
     ).values_list('item', flat=True).distinct()
 
     medications = MedicationModel.objects.filter(id__in=available_medications)
@@ -236,10 +260,12 @@ def get_medication_batches(request):
 
         if warehouse_id and medication_id:
             try:
+                from django.db.models import Q
                 batches = MedicationsInStockModel.objects.filter(
                     warehouse_id=warehouse_id,
-                    item_id=medication_id,
-                    quantity__gt=0
+                    item_id=medication_id
+                ).filter(
+                    Q(quantity__gt=0) | Q(unit_quantity__gt=0)
                 ).values('income_seria', 'expire_date', 'quantity', 'unit_quantity')
 
                 batch_data = []

@@ -250,20 +250,38 @@
         // Handle batch selection
         $('#batch').on('change', function() {
             var selectedOption = $(this).find('option:selected');
-            var maxQuantity = selectedOption.data('quantity') || 0;
-            var maxUnitQuantity = selectedOption.data('unit-quantity') || 0;
-            
-            // Update max values for quantity inputs
-            $('#quantity').attr('max', maxQuantity);
-            $('#unit_quantity').attr('max', maxUnitQuantity);
-            
+            var availableQuantity = parseInt(selectedOption.data('quantity')) || 0;
+            var availableUnitQuantity = parseInt(selectedOption.data('unit-quantity')) || 0;
+
+            // Remove max attributes - validation will be done on total units
+            $('#quantity').removeAttr('max');
+            $('#unit_quantity').removeAttr('max');
+
             // Show available quantity to user
             if (selectedOption.val()) {
-                $('#quantity').parent().find('label').html('Количество (упаковки) - доступно: ' + maxQuantity);
-                $('#unit_quantity').parent().find('label').html('Количество (единицы) - доступно: ' + maxUnitQuantity);
+                $('#quantity').parent().find('label').html('Количество (упаковки) - доступно: ' + availableQuantity);
+                $('#unit_quantity').parent().find('label').html('Количество (единицы) - доступно: ' + availableUnitQuantity);
+
+                // Reset values
+                $('#quantity').val(0);
+                $('#unit_quantity').val(0);
             } else {
                 $('#quantity').parent().find('label').html('Количество (упаковки)');
                 $('#unit_quantity').parent().find('label').html('Количество (единицы)');
+            }
+        });
+
+        // Form validation before submit
+        $('form').on('submit', function(e) {
+            var quantity = parseInt($('#quantity').val()) || 0;
+            var unitQuantity = parseInt($('#unit_quantity').val()) || 0;
+
+            // Note: Total units validation is done on the server side
+            // This is just a basic check
+            if (quantity === 0 && unitQuantity === 0) {
+                e.preventDefault();
+                alert('Пожалуйста, укажите количество упаковок или единиц.');
+                return false;
             }
         });
     });

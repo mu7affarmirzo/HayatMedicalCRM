@@ -76,37 +76,14 @@ def account_transfer_item_overall_price(sender, instance, **kwargs):
 
 @receiver(post_save, sender=AccountTransferItemsModel)
 def update_stock_on_account_transfer(sender, instance: AccountTransferItemsModel, created, **kwargs):
-    """Update stock when a transfer is accepted"""
-    from core.models import MedicationsInStockModel
-
-    if instance.transfer.state != 'принято':
-        return  # Only process accepted transfers
-
-    # Decrement stock from sender warehouse
-    sender_stock = MedicationsInStockModel.objects.filter(
-        item=instance.item.item,
-        warehouse=instance.transfer.sender,
-        expire_date=instance.expire_date,
-        income_seria=instance.income_seria
-    ).first()
-
-    if sender_stock:
-        # Calculate total units
-        total_units_sender = (sender_stock.quantity * sender_stock.item.in_pack) + sender_stock.unit_quantity
-        total_units_transfer = (instance.quantity * instance.item.item.in_pack) + instance.unit_quantity
-
-        # Ensure we have enough stock
-        if total_units_sender >= total_units_transfer:
-            # Calculate remaining units
-            remaining_units = total_units_sender - total_units_transfer
-
-            # Update or delete sender stock
-            if remaining_units > 0:
-                sender_stock.quantity = remaining_units // sender_stock.item.in_pack
-                sender_stock.unit_quantity = remaining_units % sender_stock.item.in_pack
-                sender_stock.save()
-            else:
-                sender_stock.delete()
+    """
+    NOTE: Stock is deducted from sender warehouse when item is added to transfer (in view).
+    This signal is kept empty for consistency but doesn't perform stock deduction.
+    Stock will be returned to warehouse when transfer state changes to 'отказано' or 'возвращено'.
+    """
+    # Stock deduction happens in the view when adding items
+    # No action needed here for 'принято' state
+    pass
 
 
 @receiver(post_save, sender=AccountTransferModel)
@@ -121,13 +98,48 @@ def create_account_transfer_serial_number(sender, instance=None, created=False, 
 @receiver(post_save, sender=AccountTransferModel)
 def process_account_transfer_items_on_state_change(sender, instance, created, **kwargs):
     """
-    When a transfer's state changes to 'принято' (accepted), 
-    trigger the stock update for all its items.
+    Handle account transfer state changes:
+    - 'отказано' (rejected): Restore stock to sender warehouse
+    Note: 'принято' doesn't need action as stock was already deducted when items were added
     """
-    if not created and instance.state == 'принято':
-        # Re-save all transfer items to trigger their post_save signal
-        for item in instance.transfer_items.all():
-            item.save()
+    from core.models import MedicationsInStockModel
+
+    if created:
+        return  # Skip for newly created transfers
+
+    if instance.state == 'отказано':
+        # Restore stock to sender warehouse for all transfer items
+        for transfer_item in instance.transfer_items.all():
+            total_units_transfer = (transfer_item.quantity * transfer_item.item.item.in_pack) + transfer_item.unit_quantity
+
+            # Try to find existing stock in sender warehouse
+            sender_stock = MedicationsInStockModel.objects.filter(
+                item=transfer_item.item.item,
+                warehouse=instance.sender,
+                expire_date=transfer_item.expire_date,
+                income_seria=transfer_item.income_seria
+            ).first()
+
+            if sender_stock:
+                # Add back to existing stock
+                total_units_sender = (sender_stock.quantity * sender_stock.item.in_pack) + sender_stock.unit_quantity
+                new_total_units = total_units_sender + total_units_transfer
+
+                sender_stock.quantity = new_total_units // sender_stock.item.in_pack
+                sender_stock.unit_quantity = new_total_units % sender_stock.item.in_pack
+                sender_stock.save()
+            else:
+                # Recreate stock entry in sender warehouse
+                MedicationsInStockModel.objects.create(
+                    item=transfer_item.item.item,
+                    income_seria=transfer_item.income_seria,
+                    quantity=transfer_item.quantity,
+                    unit_quantity=transfer_item.unit_quantity,
+                    expire_date=transfer_item.expire_date,
+                    warehouse=instance.sender,
+                    price=transfer_item.price,
+                    unit_price=transfer_item.unit_price,
+                )
 
 
 @receiver(post_save, sender=AccountTransferModel)

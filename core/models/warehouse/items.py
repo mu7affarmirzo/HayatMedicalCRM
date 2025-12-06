@@ -157,3 +157,58 @@ class MedicationsInStockModel(BaseAuditModel):
 
         verbose_name_plural = "Warehouses | In Stock Medication"
         verbose_name = "Warehouses | In Stock Medication"
+
+
+class MedicationExpenseModel(BaseAuditModel):
+    """Model for tracking medication write-offs and expenses"""
+
+    EXPENSE_TYPE_CHOICES = [
+        ('expired', 'Истек срок годности'),  # Expired
+        ('damaged', 'Повреждено'),  # Damaged
+        ('charity', 'Благотворительность'),  # Charity
+        ('ambulance', 'Скорая помощь'),  # Ambulance
+        ('lost', 'Утеряно'),  # Lost
+        ('other', 'Другое'),  # Other
+    ]
+
+    stock_item = models.ForeignKey(
+        MedicationsInStockModel,
+        on_delete=models.CASCADE,
+        related_name="expenses",
+        help_text="Stock item being written off"
+    )
+    expense_type = models.CharField(
+        max_length=20,
+        choices=EXPENSE_TYPE_CHOICES,
+        help_text="Reason for write-off"
+    )
+    quantity = models.PositiveIntegerField(default=0, help_text="Number of full packs")
+    unit_quantity = models.PositiveIntegerField(default=0, help_text="Number of individual units")
+
+    expense_date = models.DateField(default=timezone.now)
+    reason = models.TextField(blank=True, help_text="Additional details about the expense")
+
+    class Meta:
+        ordering = ['-expense_date', '-created_at']
+        verbose_name = "Warehouses | Medication Expense"
+        verbose_name_plural = "Warehouses | Medication Expenses"
+        indexes = [
+            models.Index(fields=['expense_date']),
+            models.Index(fields=['expense_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.stock_item.item.name} - {self.get_expense_type_display()} ({self.expense_date})"
+
+    @property
+    def total_units(self):
+        """Calculate total units in this expense"""
+        in_pack = self.stock_item.item.in_pack
+        return (self.quantity * in_pack) + self.unit_quantity
+
+    @property
+    def total_value(self):
+        """Calculate total value of this expense"""
+        pack_value = self.quantity * self.stock_item.price
+        unit_value = self.unit_quantity * self.stock_item.unit_price
+        return pack_value + unit_value

@@ -58,65 +58,45 @@ def transfer_item_overall_price(sender, instance, **kwargs):
 
 @receiver(post_save, sender=TransferItemsModel)
 def update_stock_on_transfer(sender, instance: TransferItemsModel, created, **kwargs):
+    """
+    NOTE: Stock is deducted from sender warehouse when item is added to transfer.
+    This signal only handles adding stock to receiver warehouse when transfer is accepted.
+    """
     from core.models import MedicationsInStockModel
 
     if instance.transfer.state != 'принято':
-        return  # Only process accepted transfers
+        return  # Only add to receiver warehouse when transfer is accepted
 
-    # Decrement stock from sender warehouse
-    sender_stock = MedicationsInStockModel.objects.filter(
+    # Add stock to receiver warehouse
+    total_units_transfer = (instance.quantity * instance.item.item.in_pack) + instance.unit_quantity
+
+    receiver_stock = MedicationsInStockModel.objects.filter(
         item=instance.item.item,
-        warehouse=instance.transfer.sender,
+        warehouse=instance.transfer.receiver,
         expire_date=instance.expire_date,
         income_seria=instance.income_seria
     ).first()
 
-    if sender_stock:
-        # Calculate total units
-        total_units_sender = (sender_stock.quantity * sender_stock.item.in_pack) + sender_stock.unit_quantity
-        total_units_transfer = (instance.quantity * instance.item.item.in_pack) + instance.unit_quantity
+    if receiver_stock:
+        # Update existing stock in receiver warehouse
+        total_units_receiver = (receiver_stock.quantity * receiver_stock.item.in_pack) + receiver_stock.unit_quantity
+        new_total_units = total_units_receiver + total_units_transfer
 
-        # Ensure we have enough stock
-        if total_units_sender >= total_units_transfer:
-            # Calculate remaining units
-            remaining_units = total_units_sender - total_units_transfer
-
-            # Update or delete sender stock
-            if remaining_units > 0:
-                sender_stock.quantity = remaining_units // sender_stock.item.in_pack
-                sender_stock.unit_quantity = remaining_units % sender_stock.item.in_pack
-                sender_stock.save()
-            else:
-                sender_stock.delete()
-
-            # Add stock to receiver warehouse
-            receiver_stock = MedicationsInStockModel.objects.filter(
-                item=instance.item.item,
-                warehouse=instance.transfer.receiver,
-                expire_date=instance.expire_date,
-                income_seria=instance.income_seria
-            ).first()
-
-            if receiver_stock:
-                # Update existing stock
-                total_units_receiver = (receiver_stock.quantity * receiver_stock.item.in_pack) + receiver_stock.unit_quantity
-                new_total_units = total_units_receiver + total_units_transfer
-
-                receiver_stock.quantity = new_total_units // receiver_stock.item.in_pack
-                receiver_stock.unit_quantity = new_total_units % receiver_stock.item.in_pack
-                receiver_stock.save()
-            else:
-                # Create new stock entry
-                MedicationsInStockModel.objects.create(
-                    item=instance.item.item,
-                    income_seria=instance.income_seria,
-                    quantity=instance.quantity,
-                    unit_quantity=instance.unit_quantity,
-                    expire_date=instance.expire_date,
-                    warehouse=instance.transfer.receiver,
-                    price=instance.price,
-                    unit_price=instance.unit_price,
-                )
+        receiver_stock.quantity = new_total_units // receiver_stock.item.in_pack
+        receiver_stock.unit_quantity = new_total_units % receiver_stock.item.in_pack
+        receiver_stock.save()
+    else:
+        # Create new stock entry in receiver warehouse
+        MedicationsInStockModel.objects.create(
+            item=instance.item.item,
+            income_seria=instance.income_seria,
+            quantity=instance.quantity,
+            unit_quantity=instance.unit_quantity,
+            expire_date=instance.expire_date,
+            warehouse=instance.transfer.receiver,
+            price=instance.price,
+            unit_price=instance.unit_price,
+        )
 
 
 @receiver(post_save, sender=TransferModel)
@@ -130,10 +110,52 @@ def create_transfer_serial_number(sender, instance=None, created=False, **kwargs
 @receiver(post_save, sender=TransferModel)
 def process_transfer_items_on_state_change(sender, instance, created, **kwargs):
     """
-    When a transfer's state changes to 'принято' (accepted), 
-    trigger the stock update for all its items.
+    Handle transfer state changes:
+    - 'принято' (accepted): Add stock to receiver warehouse
+    - 'отказано' (rejected): Restore stock to sender warehouse
     """
-    if not created and instance.state == 'принято':
+    from core.models import MedicationsInStockModel
+
+    if created:
+        return  # Skip for newly created transfers
+
+    # Get the previous state from database
+    if instance.state == 'принято':
         # Re-save all transfer items to trigger their post_save signal
+        # This will add stock to receiver warehouse
         for item in instance.transfer_items.all():
             item.save()
+
+    elif instance.state == 'отказано':
+        # Restore stock to sender warehouse for all transfer items
+        for transfer_item in instance.transfer_items.all():
+            total_units_transfer = (transfer_item.quantity * transfer_item.item.item.in_pack) + transfer_item.unit_quantity
+
+            # Try to find existing stock in sender warehouse
+            sender_stock = MedicationsInStockModel.objects.filter(
+                item=transfer_item.item.item,
+                warehouse=instance.sender,
+                expire_date=transfer_item.expire_date,
+                income_seria=transfer_item.income_seria
+            ).first()
+
+            if sender_stock:
+                # Add back to existing stock
+                total_units_sender = (sender_stock.quantity * sender_stock.item.in_pack) + sender_stock.unit_quantity
+                new_total_units = total_units_sender + total_units_transfer
+
+                sender_stock.quantity = new_total_units // sender_stock.item.in_pack
+                sender_stock.unit_quantity = new_total_units % sender_stock.item.in_pack
+                sender_stock.save()
+            else:
+                # Recreate stock entry in sender warehouse
+                MedicationsInStockModel.objects.create(
+                    item=transfer_item.item.item,
+                    income_seria=transfer_item.income_seria,
+                    quantity=transfer_item.quantity,
+                    unit_quantity=transfer_item.unit_quantity,
+                    expire_date=transfer_item.expire_date,
+                    warehouse=instance.sender,
+                    price=transfer_item.price,
+                    unit_price=transfer_item.unit_price,
+                )

@@ -277,22 +277,35 @@
             }
         });
 
-        // Update max quantity when batch is selected
+        // Store available stock when batch is selected
+        let availableQuantity = 0;
+        let availableUnitQuantity = 0;
+
         $('#batch').on('change', function() {
             var selectedOption = $(this).find('option:selected');
-            var maxQuantity = selectedOption.data('quantity') || 0;
-            var maxUnitQuantity = selectedOption.data('unit-quantity') || 0;
-            
-            $('#quantity').attr('max', maxQuantity);
-            $('#unit_quantity').attr('max', maxUnitQuantity);
-            
-            // Reset quantity inputs if they exceed the max
-            if (parseInt($('#quantity').val()) > maxQuantity) {
-                $('#quantity').val(maxQuantity);
-            }
-            
-            if (parseInt($('#unit_quantity').val()) > maxUnitQuantity) {
-                $('#unit_quantity').val(maxUnitQuantity);
+            availableQuantity = parseInt(selectedOption.data('quantity')) || 0;
+            availableUnitQuantity = parseInt(selectedOption.data('unit-quantity')) || 0;
+
+            // Remove max attributes - validation will be done on total units
+            $('#quantity').removeAttr('max');
+            $('#unit_quantity').removeAttr('max');
+
+            // Reset values to 0
+            $('#quantity').val(0);
+            $('#unit_quantity').val(0);
+        });
+
+        // Form validation before submit
+        $('form').on('submit', function(e) {
+            var quantity = parseInt($('#quantity').val()) || 0;
+            var unitQuantity = parseInt($('#unit_quantity').val()) || 0;
+
+            // Note: Total units validation is done on the server side
+            // This is just a basic check
+            if (quantity === 0 && unitQuantity === 0) {
+                e.preventDefault();
+                alert('Пожалуйста, укажите количество упаковок или единиц.');
+                return false;
             }
         });
     });

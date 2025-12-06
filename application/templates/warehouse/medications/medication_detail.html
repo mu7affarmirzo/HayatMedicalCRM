@@ -209,6 +209,8 @@
                                                 <tr>
                                                     <th>Серия</th>
                                                     <th>Количество</th>
+                                                    <th>Цена за уп.</th>
+                                                    <th>Цена за ед.</th>
                                                     <th>Срок годности</th>
                                                     <th>Статус</th>
                                                 </tr>
@@ -219,6 +221,8 @@
                                                     <tr class="{% if item.expire_date < today %}expired{% elif days_until_expire <= 30 %}expiring-soon{% endif %}">
                                                         <td>{{ item.income_seria|default:"Не указано" }}</td>
                                                         <td>{{ item.quantity }} уп. + {{ item.unit_quantity }} ед.</td>
+                                                        <td>{{ item.price|floatformat:0|intcomma }} сум</td>
+                                                        <td>{{ item.unit_price|floatformat:0|intcomma }} сум</td>
                                                         <td>{{ item.expire_date|date:"d.m.Y" }}</td>
                                                         <td>
                                                             {% if item.expire_date < today %}

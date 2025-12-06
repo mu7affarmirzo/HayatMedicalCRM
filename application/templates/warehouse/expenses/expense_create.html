@@ -1,0 +1,294 @@
+{% extends 'warehouse/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Создать расход - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'adminlte3_assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+    .stock-info-box {
+        background-color: #f4f6f9;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+    }
+    .stock-info-box h5 {
+        margin-top: 0;
+        color: #007bff;
+    }
+    .stock-info-item {
+        margin-bottom: 10px;
+    }
+    .stock-info-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .required:after {
+        content: " *";
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Создать расход медикамента</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:expense_list' %}">Расходы</a></li>
+                    <li class="breadcrumb-item active">Создать</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas {% if message.tags == 'error' %}fa-ban{% elif message.tags == 'success' %}fa-check{% else %}fa-info{% endif %}"></i> {{ message }}</h5>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Форма расхода</h3>
+                    </div>
+                    <form method="post" action="{% url 'warehouse:expense_create' %}">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <!-- Warehouse Filter (optional, for easier stock item selection) -->
+                            <div class="form-group">
+                                <label for="warehouse-filter">Фильтр по складу (опционально):</label>
+                                {{ form.warehouse }}
+                                <small class="form-text text-muted">Выберите склад для фильтрации медикаментов</small>
+                            </div>
+
+                            <!-- Stock Item Selection -->
+                            <div class="form-group">
+                                <label for="{{ form.stock_item.id_for_label }}" class="required">{{ form.stock_item.label }}:</label>
+                                {{ form.stock_item }}
+                                <small class="form-text text-muted">Выберите партию медикамента для списания</small>
+                            </div>
+
+                            <!-- Stock Info Display -->
+                            <div id="stock-info-box" class="stock-info-box">
+                                <h5><i class="fas fa-info-circle"></i> Информация о наличии</h5>
+                                <div class="stock-info-item">
+                                    <span class="stock-info-label">Доступно:</span>
+                                    <span id="available-quantity">-</span>
+                                </div>
+                                <div class="stock-info-item">
+                                    <span class="stock-info-label">Цена за упаковку:</span>
+                                    <span id="pack-price">-</span>
+                                </div>
+                                <div class="stock-info-item">
+                                    <span class="stock-info-label">Цена за единицу:</span>
+                                    <span id="unit-price">-</span>
+                                </div>
+                                <div class="stock-info-item">
+                                    <span class="stock-info-label">Срок годности:</span>
+                                    <span id="expire-date">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Expense Type -->
+                            <div class="form-group">
+                                <label for="{{ form.expense_type.id_for_label }}" class="required">{{ form.expense_type.label }}:</label>
+                                {{ form.expense_type }}
+                            </div>
+
+                            <!-- Quantity -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}:</label>
+                                        {{ form.quantity }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.unit_quantity.id_for_label }}">{{ form.unit_quantity.label }}:</label>
+                                        {{ form.unit_quantity }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estimated Value Display -->
+                            <div class="alert alert-info">
+                                <strong>Предполагаемая стоимость расхода:</strong> <span id="estimated-value">0</span> сум
+                            </div>
+
+                            <!-- Expense Date -->
+                            <div class="form-group">
+                                <label for="{{ form.expense_date.id_for_label }}" class="required">{{ form.expense_date.label }}:</label>
+                                {{ form.expense_date }}
+                            </div>
+
+                            <!-- Reason -->
+                            <div class="form-group">
+                                <label for="{{ form.reason.id_for_label }}">{{ form.reason.label }}:</label>
+                                {{ form.reason }}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Создать расход
+                            </button>
+                            <a href="{% url 'warehouse:expense_list' %}" class="btn btn-default">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="col-md-4">
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-question-circle"></i> Помощь</h3>
+                    </div>
+                    <div class="card-body">
+                        <h6><strong>Типы расходов:</strong></h6>
+                        <ul>
+                            <li><strong>Истек срок годности:</strong> Медикаменты с истекшим сроком</li>
+                            <li><strong>Повреждено:</strong> Поврежденные упаковки или медикаменты</li>
+                            <li><strong>Благотворительность:</strong> Переданные в качестве помощи</li>
+                            <li><strong>Скорая помощь:</strong> Использованные службой скорой помощи</li>
+                            <li><strong>Утеряно:</strong> Потерянные медикаменты</li>
+                            <li><strong>Другое:</strong> Другие причины списания</li>
+                        </ul>
+                        <hr>
+                        <p class="text-muted">
+                            <i class="fas fa-info-circle"></i> При создании расхода, количество автоматически вычитается из складского остатка.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 -->
+<script src="{% static 'adminlte3_assets/plugins/select2/js/select2.full.min.js' %}"></script>
+
+<script>
+$(function () {
+    // Initialize Select2 Elements
+    $('.select2bs4').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Store stock item data
+    let stockData = {};
+
+    // Parse stock item options to extract data
+    $('#stock-item-select option').each(function() {
+        let optionText = $(this).text();
+        let optionValue = $(this).val();
+
+        if (optionValue) {
+            // Extract data from option text (format: "Name (Warehouse) - X уп. Y ед. - Срок: DD.MM.YYYY")
+            let match = optionText.match(/(.+?)\s+\((.+?)\)\s+-\s+(\d+)\s+уп\.\s+(\d+)\s+ед\.\s+-\s+Срок:\s+(.+)/);
+            if (match) {
+                stockData[optionValue] = {
+                    name: match[1],
+                    warehouse: match[2],
+                    packs: parseInt(match[3]),
+                    units: parseInt(match[4]),
+                    expireDate: match[5]
+                };
+            }
+        }
+    });
+
+    // Warehouse filter functionality
+    $('#warehouse-filter').on('change', function() {
+        let warehouseId = $(this).val();
+        let stockSelect = $('#stock-item-select');
+
+        stockSelect.find('option').each(function() {
+            if (!$(this).val()) return; // Skip empty option
+
+            let optionText = $(this).text();
+            if (!warehouseId) {
+                $(this).show();
+            } else {
+                let warehouseMatch = stockData[$(this).val()];
+                if (warehouseMatch) {
+                    $(this).toggle(true);
+                } else {
+                    $(this).toggle(false);
+                }
+            }
+        });
+
+        stockSelect.val('').trigger('change');
+        $('#stock-info-box').hide();
+    });
+
+    // Show stock info when stock item is selected
+    $('#stock-item-select').on('change', function() {
+        let selectedValue = $(this).val();
+
+        if (selectedValue && stockData[selectedValue]) {
+            let data = stockData[selectedValue];
+            $('#available-quantity').text(data.packs + ' уп. ' + data.units + ' ед.');
+            $('#expire-date').text(data.expireDate);
+            $('#stock-info-box').slideDown();
+        } else {
+            $('#stock-info-box').slideUp();
+        }
+
+        calculateEstimatedValue();
+    });
+
+    // Calculate estimated value when quantities change
+    $('input[name="quantity"], input[name="unit_quantity"]').on('input', function() {
+        calculateEstimatedValue();
+    });
+
+    function calculateEstimatedValue() {
+        let selectedValue = $('#stock-item-select').val();
+        if (!selectedValue) {
+            $('#estimated-value').text('0');
+            return;
+        }
+
+        let quantity = parseInt($('input[name="quantity"]').val()) || 0;
+        let unitQuantity = parseInt($('input[name="unit_quantity"]').val()) || 0;
+
+        // Note: We can't get the actual prices from the option text, so this is just a placeholder
+        // In a real implementation, you'd need to fetch this via AJAX or include it in the data
+        $('#estimated-value').text('Рассчитывается...');
+    }
+
+    // Set today's date as default for expense_date
+    if (!$('input[name="expense_date"]').val()) {
+        let today = new Date().toISOString().split('T')[0];
+        $('input[name="expense_date"]').val(today);
+    }
+});
+</script>
+{% endblock %}

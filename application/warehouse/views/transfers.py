@@ -145,8 +145,16 @@ def transfer_add_items(request, pk):
                 income_seria=income_seria
             )
 
-            # Calculate total units
+            # Get medication to access in_pack
             medication = stock_item.item
+
+            # Auto-convert unit_quantity to packs + units if needed
+            if unit_quantity > 0 or quantity > 0:
+                total_units = (quantity * medication.in_pack) + unit_quantity
+                quantity = total_units // medication.in_pack
+                unit_quantity = total_units % medication.in_pack
+
+            # Calculate total units
             requested_total_units = (quantity * medication.in_pack) + unit_quantity
             available_total_units = (stock_item.quantity * medication.in_pack) + stock_item.unit_quantity
 

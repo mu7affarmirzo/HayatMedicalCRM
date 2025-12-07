@@ -517,9 +517,12 @@
                                 <h3 class="card-title">Итого к оплате</h3>
                             </div>
                             <div class="card-body text-center">
-                                <h2 class="billing-total">{{ billing_breakdown.total|intcomma }} сум</h2>
+                                <h2 class="billing-total">{{ billing_breakdown.grand_total_from_patients|intcomma }} сум</h2>
+                                <p class="text-muted small mb-1">
+                                    <i class="fas fa-info-circle"></i> Сумма всех пациентов
+                                </p>
                                 <p class="text-muted">
-                                    Статус: 
+                                    Статус:
                                     <span class="badge badge-{% if billing.billing_status == 'pending' %}warning{% elif billing.billing_status == 'calculated' %}success{% else %}primary{% endif %}">
                                         {{ billing.get_billing_status_display }}
                                     </span>

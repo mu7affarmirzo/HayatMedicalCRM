@@ -279,6 +279,11 @@ def billing_detail(request, booking_id):
     if stay_duration == 0:
         stay_duration = 1
 
+    # Calculate grand total from all patient subtotals
+    grand_total_from_patients = sum(
+        patient['totals']['subtotal'] for patient in patient_breakdowns
+    )
+
     # Prepare billing breakdown
     billing_breakdown = {
         'tariff_base': billing.tariff_base_amount,
@@ -286,6 +291,7 @@ def billing_detail(request, booking_id):
         'medications': billing.medications_amount,
         'lab_research': billing.lab_research_amount,
         'total': billing.total_amount,
+        'grand_total_from_patients': grand_total_from_patients,  # Sum of all patient subtotals
     }
 
     # Calculate payment totals
@@ -343,9 +349,12 @@ def calculate_billing_amounts(booking, billing, user):
         # Add your medication pricing logic here
         medications_total += med_session.quantity * getattr(med_session.prescribed_medication.medication, 'unit_price', 0)
     
-    # Calculate lab research amount
+    # Calculate lab research amount (only billable states)
     lab_research_total = 0
-    lab_tests = AssignedLabs.objects.filter(illness_history__booking=booking)
+    lab_tests = AssignedLabs.objects.filter(
+        illness_history__booking=booking,
+        state__in=['dispatched', 'results']  # Only billable states
+    )
     for lab in lab_tests:
         # Add your lab pricing logic here
         lab_research_total += getattr(lab.lab, 'price', 0)

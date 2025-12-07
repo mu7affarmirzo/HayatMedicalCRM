@@ -1,0 +1,371 @@
+{% extends 'cashbox/snippets/base.html' %}
+{% load static %}
+
+{% block title %}Квитанция об оплате #{{ payment.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+        body {
+            background: white;
+        }
+        .receipt-container {
+            box-shadow: none !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+
+    .receipt-container {
+        background: white;
+        padding: 40px;
+        max-width: 800px;
+        margin: 20px auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border: 1px solid #ddd;
+    }
+
+    .receipt-header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    .receipt-header h1 {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .receipt-header .receipt-number {
+        font-size: 18px;
+        color: #666;
+    }
+
+    .organization-info {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .organization-info h2 {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .receipt-details {
+        margin-bottom: 30px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .detail-row strong {
+        color: #333;
+    }
+
+    .amount-section {
+        background: #f8f9fa;
+        padding: 20px;
+        margin: 30px 0;
+        border-radius: 5px;
+        border: 2px solid #28a745;
+    }
+
+    .amount-section .total-amount {
+        font-size: 32px;
+        font-weight: bold;
+        color: #28a745;
+        text-align: center;
+    }
+
+    .amount-section .amount-label {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .payment-method-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-refunded {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .footer-section {
+        margin-top: 50px;
+        border-top: 2px solid #333;
+        padding-top: 20px;
+    }
+
+    .signature-line {
+        margin-top: 60px;
+        border-top: 1px solid #333;
+        width: 300px;
+        text-align: center;
+        padding-top: 10px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .print-buttons {
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .refund-badge {
+        background: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .qr-code-section {
+        text-align: center;
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Print Buttons (hidden when printing) -->
+    <div class="print-buttons no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Печать квитанции
+        </button>
+        <a href="{% url 'cashbox:billing_detail' payment.booking.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к счету
+        </a>
+    </div>
+
+    <!-- Receipt Container -->
+    <div class="receipt-container">
+        <!-- Organization Info -->
+        <div class="organization-info">
+            <h2>Hayat Medical Санаторий</h2>
+            <p>Узбекистан, г. Ташкент<br>
+            Тел: +998 (71) 123-45-67<br>
+            ИНН: 123456789</p>
+        </div>
+
+        <!-- Receipt Header -->
+        <div class="receipt-header">
+            <h1>КВИТАНЦИЯ ОБ ОПЛАТЕ</h1>
+            <div class="receipt-number">№ {{ payment.id }}</div>
+            <div class="receipt-number" style="font-size: 14px; margin-top: 5px;">
+                от {{ payment.created_at|date:"d.m.Y H:i" }}
+            </div>
+        </div>
+
+        <!-- Payment Status -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            {% if payment.status == 'COMPLETED' %}
+                <span class="status-badge status-completed">
+                    <i class="fas fa-check-circle"></i> Оплачено
+                </span>
+            {% elif payment.status == 'REFUNDED' %}
+                <span class="status-badge status-refunded">
+                    <i class="fas fa-undo"></i> Возвращено
+                </span>
+            {% endif %}
+        </div>
+
+        <!-- Patient Information -->
+        <div class="receipt-details">
+            <h4 style="margin-bottom: 15px; color: #333;">Информация о пациенте</h4>
+            <div class="detail-row">
+                <span><strong>Пациент:</strong></span>
+                <span>{{ patient.get_full_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span><strong>Номер бронирования:</strong></span>
+                <span>{{ booking.id }}</span>
+            </div>
+            <div class="detail-row">
+                <span><strong>Дата заезда:</strong></span>
+                <span>{{ booking.check_in_date|date:"d.m.Y" }}</span>
+            </div>
+            <div class="detail-row">
+                <span><strong>Дата выезда:</strong></span>
+                <span>{{ booking.check_out_date|date:"d.m.Y" }}</span>
+            </div>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="receipt-details">
+            <h4 style="margin-bottom: 15px; color: #333;">Детали платежа</h4>
+            <div class="detail-row">
+                <span><strong>Способ оплаты:</strong></span>
+                <span>
+                    <span class="payment-method-badge" style="background: #e3f2fd; color: #1976d2;">
+                        {{ payment.get_transaction_type_display }}
+                    </span>
+                </span>
+            </div>
+            {% if payment.reference_number %}
+            <div class="detail-row">
+                <span><strong>Номер транзакции:</strong></span>
+                <span>{{ payment.reference_number }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <span><strong>Принял оплату:</strong></span>
+                <span>{{ payment.created_by.get_full_name|default:payment.created_by.username }}</span>
+            </div>
+            {% if payment.notes %}
+            <div class="detail-row">
+                <span><strong>Примечание:</strong></span>
+                <span style="max-width: 400px; text-align: right;">{{ payment.notes }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Amount Section -->
+        <div class="amount-section">
+            <div class="amount-label">СУММА ПЛАТЕЖА</div>
+            <div class="total-amount">
+                {% if payment.amount < 0 %}
+                    <span class="refund-badge">ВОЗВРАТ</span>
+                    {{ payment.amount|floatformat:2|slice:"1:" }} сум
+                {% else %}
+                    {{ payment.amount|floatformat:2 }} сум
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Billing Summary -->
+        {% if billing %}
+        <div class="receipt-details">
+            <h4 style="margin-bottom: 15px; color: #333;">Сводка по счету</h4>
+            <div class="detail-row">
+                <span><strong>Базовый тариф:</strong></span>
+                <span>{{ billing.tariff_base_amount|floatformat:2 }} сум</span>
+            </div>
+            <div class="detail-row">
+                <span><strong>Дополнительные услуги:</strong></span>
+                <span>{{ billing.additional_services_amount|floatformat:2 }} сум</span>
+            </div>
+            <div class="detail-row">
+                <span><strong>Медикаменты:</strong></span>
+                <span>{{ billing.medications_amount|floatformat:2 }} сум</span>
+            </div>
+            <div class="detail-row">
+                <span><strong>Лабораторные исследования:</strong></span>
+                <span>{{ billing.lab_research_amount|floatformat:2 }} сум</span>
+            </div>
+            <div class="detail-row" style="border-top: 2px solid #333; margin-top: 10px; padding-top: 10px; font-size: 18px;">
+                <span><strong>ИТОГО:</strong></span>
+                <span><strong>{{ billing.total_amount|floatformat:2 }} сум</strong></span>
+            </div>
+
+            {% with total_paid=billing.transactions.all|length %}
+            {% if total_paid > 0 %}
+            <div class="detail-row">
+                <span><strong>Всего оплачено:</strong></span>
+                <span>
+                    {% widthratio billing.transactions.all|length 1 1 %} платеж(ей)
+                </span>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+        {% endif %}
+
+        <!-- QR Code Section (placeholder for future implementation) -->
+        {% comment %}
+        <div class="qr-code-section no-print">
+            <p style="font-size: 12px; color: #666;">Отсканируйте QR-код для проверки подлинности</p>
+            <!-- QR code would go here -->
+            <div style="width: 150px; height: 150px; margin: 10px auto; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;">
+                QR Code
+            </div>
+        </div>
+        {% endcomment %}
+
+        <!-- Footer -->
+        <div class="footer-section">
+            <div style="text-align: center; color: #666; font-size: 12px; margin-bottom: 30px;">
+                <p>Спасибо за выбор Hayat Medical Санаторий!</p>
+                <p>Данная квитанция является подтверждением оплаты.</p>
+                <p style="margin-top: 10px;">
+                    Документ сформирован автоматически {{ payment.created_at|date:"d.m.Y в H:i" }}
+                </p>
+            </div>
+
+            <!-- Signature -->
+            <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+                <div class="signature-line">
+                    Кассир: _______________________
+                    <br>
+                    <small>{{ payment.created_by.get_full_name|default:payment.created_by.username }}</small>
+                </div>
+                <div class="signature-line">
+                    Клиент: _______________________
+                    <br>
+                    <small>{{ patient.get_full_name }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print footer (only visible when printing) -->
+        <div class="print-only" style="display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; text-align: center; font-size: 10px; color: #999;">
+            <p>Hayat Medical CRM - Cashbox Module | Напечатано: {% now "d.m.Y H:i" %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-print if 'print' parameter is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === '1') {
+        window.onload = function() {
+            window.print();
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,1 @@
+# Cashbox tests package

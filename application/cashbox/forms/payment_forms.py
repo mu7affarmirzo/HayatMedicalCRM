@@ -110,3 +110,75 @@ class PaymentAcceptanceForm(forms.Form):
                 )
 
         return cleaned_data
+
+
+class RefundPaymentForm(forms.Form):
+    """Form for refunding a payment"""
+
+    refund_amount = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        label='Сумма возврата',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Введите сумму возврата',
+            'step': '0.01',
+            'min': '0'
+        }),
+        help_text='Оставьте пустым для полного возврата'
+    )
+
+    refund_reason = forms.CharField(
+        max_length=500,
+        required=True,
+        label='Причина возврата',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Укажите причину возврата (обязательно)'
+        })
+    )
+
+    confirm = forms.BooleanField(
+        required=True,
+        label='Подтверждаю возврат средств',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    def __init__(self, *args, payment=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.payment = payment
+
+        if payment:
+            # Pre-fill with full payment amount
+            self.fields['refund_amount'].initial = payment.amount
+            self.fields['refund_amount'].widget.attrs['max'] = str(payment.amount)
+
+    def clean_refund_amount(self):
+        """Validate refund amount"""
+        amount = self.cleaned_data.get('refund_amount')
+
+        if amount <= 0:
+            raise forms.ValidationError('Сумма возврата должна быть больше нуля')
+
+        if self.payment and amount > self.payment.amount:
+            raise forms.ValidationError(
+                f'Сумма возврата не может превышать сумму платежа: {self.payment.amount:,.2f} сум'
+            )
+
+        return amount
+
+    def clean(self):
+        """Additional validation"""
+        cleaned_data = super().clean()
+
+        if self.payment:
+            if self.payment.status == 'REFUNDED':
+                raise forms.ValidationError('Этот платеж уже возвращен')
+
+            if self.payment.status != 'COMPLETED':
+                raise forms.ValidationError('Можно вернуть только завершенные платежи')
+
+        return cleaned_data

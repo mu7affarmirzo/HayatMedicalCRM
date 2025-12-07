@@ -167,6 +167,9 @@
                                     <th>Количество (единиц)</th>
                                     <th>Цена за единицу</th>
                                     <th>Общая сумма</th>
+                                    {% if transfer.state == 'в ожидании' %}
+                                    <th>Действия</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -179,17 +182,32 @@
                                     <td>{{ item.unit_quantity }}</td>
                                     <td>{{ item.unit_price|intcomma }}</td>
                                     <td>{{ item.overall_price|intcomma }}</td>
+                                    {% if transfer.state == 'в ожидании' %}
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-warning edit-item-btn"
+                                                data-item-id="{{ item.id }}"
+                                                data-quantity="{{ item.quantity }}"
+                                                data-unit-quantity="{{ item.unit_quantity }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <a href="{% url 'warehouse:remove_transfer_item' transfer.id item.id %}"
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Вы уверены, что хотите удалить этот товар?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center">Товары не найдены</td>
+                                    <td colspan="{% if transfer.state == 'в ожидании' %}8{% else %}7{% endif %}" class="text-center">Товары не найдены</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="6" class="text-right">Итого:</th>
-                                    <th>{{ transfer.overall_sum|intcomma }}</th>
+                                    <th colspan="{% if transfer.state == 'в ожидании' %}7{% else %}6{% endif %}" class="text-right">Итого:</th>
+                                    <th{% if transfer.state == 'в ожидании' %} colspan="2"{% endif %}>{{ transfer.overall_sum|intcomma }}</th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -199,4 +217,63 @@
         </div>
     </div>
 </section>
+
+<!-- Edit Item Modal -->
+{% if transfer.state == 'в ожидании' %}
+<div class="modal fade" id="editItemModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Изменить товар</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editItemForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_quantity">Количество (упаковок)</label>
+                        <input type="number" class="form-control" id="edit_quantity" name="quantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_unit_quantity">Количество (единиц)</label>
+                        <input type="number" class="form-control" id="edit_unit_quantity" name="unit_quantity" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function () {
+        {% if transfer.state == 'в ожидании' %}
+        // Handle edit button click
+        $('.edit-item-btn').on('click', function() {
+            var itemId = $(this).data('item-id');
+            var quantity = $(this).data('quantity');
+            var unitQuantity = $(this).data('unit-quantity');
+
+            // Set form values
+            $('#edit_quantity').val(quantity);
+            $('#edit_unit_quantity').val(unitQuantity);
+
+            // Set form action URL
+            var formAction = "{% url 'warehouse:update_transfer_item' transfer.id 0 %}".replace('/0/', '/' + itemId + '/');
+            $('#editItemForm').attr('action', formAction);
+
+            // Show modal
+            $('#editItemModal').modal('show');
+        });
+        {% endif %}
+    });
+</script>
 {% endblock %}

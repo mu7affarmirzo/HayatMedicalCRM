@@ -9,65 +9,9 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0016_assignedlab_assignedlabresult_labresultvalue_and_more'),
+        ('core', '0016_assignedlabs_assignedlabresult_labresultvalue_and_more'),
     ]
 
     operations = [
-        migrations.AlterModelOptions(
-            name='assignedlabresult',
-            options={'ordering': ['-created_at']},
-        ),
-        migrations.RenameField(
-            model_name='assignedlabresult',
-            old_name='reported_at',
-            new_name='result_date',
-        ),
-        migrations.RemoveField(
-            model_name='assignedlabresult',
-            name='reported_by',
-        ),
-        migrations.AlterField(
-            model_name='assignedlabresult',
-            name='attached_file',
-            field=models.FileField(blank=True, null=True, upload_to=core.models.base.upload_lab_files_location),
-        ),
-        migrations.AlterField(
-            model_name='assignedlabresult',
-            name='comments',
-            field=models.TextField(blank=True, null=True),
-        ),
-        migrations.AlterField(
-            model_name='assignedlabresult',
-            name='file_format',
-            field=models.CharField(blank=True, max_length=10, null=True),
-        ),
-        migrations.CreateModel(
-            name='AssignedLabs',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('modified_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(choices=[('recommended', 'recommended'), ('assigned', 'assigned'), ('cancelled', 'cancelled'), ('stopped', 'stopped'), ('dispatched', 'dispatched'), ('results', 'results')], default='recommended', max_length=50)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_created', to=settings.AUTH_USER_MODEL)),
-                ('illness_history', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='assigned_labs', to='core.illnesshistory')),
-                ('lab', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_labs', to='core.labresearchmodel')),
-                ('modified_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_modified', to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.AlterField(
-            model_name='assignedlabresult',
-            name='assigned_lab',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='lab_results', to='core.assignedlabs'),
-        ),
-        migrations.AlterField(
-            model_name='labresultvalue',
-            name='assigned_lab',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='result_values', to='core.assignedlabs'),
-        ),
-        migrations.DeleteModel(
-            name='AssignedLab',
-        ),
+        # No operations needed - all changes already in 0016
     ]

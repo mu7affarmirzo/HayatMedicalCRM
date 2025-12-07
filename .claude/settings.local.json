@@ -7,7 +7,12 @@
       "Bash(python manage.py check:*)",
       "Bash(python3 manage.py:*)",
       "Bash(python manage.py:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(source:*)",
+      "Bash(ls:*)",
+      "Bash(python cashbox_diagnostics.py:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []

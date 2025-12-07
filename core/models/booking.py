@@ -301,6 +301,8 @@ class BookingBilling(BaseAuditModel):
         PENDING = 'pending', 'Pending'
         CALCULATED = 'calculated', 'Calculated'
         INVOICED = 'invoiced', 'Invoiced'
+        PAID = 'paid', 'Paid'
+        PARTIALLY_PAID = 'partially_paid', 'Partially Paid'
 
     booking = models.OneToOneField(
         Booking,

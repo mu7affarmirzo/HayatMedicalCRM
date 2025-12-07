@@ -192,15 +192,68 @@ def calculate_booking_billing(booking, include_medications=True, include_lab_res
 
     # Add medications if requested
     if include_medications:
-        # TODO: Implement medication billing calculation
-        # This would query prescribed medications and sum their costs
-        breakdown.medications_amount = 0
+        try:
+            # Import models
+            from core.models.sanatorium.prescriptions.medications import MedicationSession
+
+            # Query all medication sessions for this booking
+            medications = MedicationSession.objects.filter(
+                prescribed_medication__illness_history__booking=booking
+            ).select_related(
+                'prescribed_medication__medication'
+            )
+
+            # Calculate total cost
+            total = 0
+            for med_session in medications:
+                # Get unit price, default to 0 if None
+                medication = med_session.prescribed_medication.medication
+                unit_price = getattr(medication, 'unit_price', 0) or 0
+
+                # Calculate session cost
+                session_cost = med_session.quantity * unit_price
+                total += session_cost
+
+            breakdown.medications_amount = int(total)
+
+        except Exception as e:
+            # Log error but don't break billing calculation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error calculating medication billing for booking {booking.id}: {e}")
+            breakdown.medications_amount = 0
 
     # Add lab research if requested
     if include_lab_research:
-        # TODO: Implement lab research billing calculation
-        # This would query lab orders and sum their costs
-        breakdown.lab_research_amount = 0
+        try:
+            # Import models
+            from core.models.sanatorium.prescriptions.assigned_labs import AssignedLabs
+
+            # Define billable lab states (only bill performed labs)
+            BILLABLE_LAB_STATES = ['dispatched', 'results']
+
+            # Query all assigned labs for this booking
+            assigned_labs = AssignedLabs.objects.filter(
+                illness_history__booking=booking,
+                state__in=BILLABLE_LAB_STATES  # Only bill performed labs
+            ).select_related('lab')
+
+            # Calculate total cost
+            total = 0
+            for assigned_lab in assigned_labs:
+                # Get lab price, default to 0 if None
+                if assigned_lab.lab:
+                    lab_price = getattr(assigned_lab.lab, 'price', 0) or 0
+                    total += lab_price
+
+            breakdown.lab_research_amount = int(total)
+
+        except Exception as e:
+            # Log error but don't break billing calculation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error calculating lab billing for booking {booking.id}: {e}")
+            breakdown.lab_research_amount = 0
 
     # Calculate final total
     breakdown.calculate_grand_total()

@@ -185,12 +185,24 @@ def billing_detail(request, booking_id):
         'total': billing.total_amount,
     }
 
+    # Calculate payment totals
+    from django.db.models import Sum
+    total_paid = billing.transactions.filter(
+        status='COMPLETED'
+    ).aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+
+    remaining = billing.total_amount - float(total_paid)
+
     # Available actions based on billing status
     available_actions = []
     if billing.billing_status == 'pending':
         available_actions = ['calculate_billing']
     elif billing.billing_status == 'calculated':
         available_actions = ['calculate_billing', 'mark_invoiced']
+    elif billing.billing_status in ['invoiced', 'partially_paid']:
+        available_actions = ['calculate_billing', 'accept_payment']
 
     context = {
         'booking': booking,
@@ -203,6 +215,8 @@ def billing_detail(request, booking_id):
         'stay_duration': stay_duration,
         'billing_breakdown': billing_breakdown,
         'available_actions': available_actions,
+        'total_paid': total_paid,
+        'remaining': remaining,
     }
 
     return render(request, 'cashbox/billing/billing_detail.html', context)

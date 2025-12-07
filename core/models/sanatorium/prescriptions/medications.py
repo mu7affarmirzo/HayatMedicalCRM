@@ -234,6 +234,7 @@ class MedicationSession(BaseAuditModel):
     # Session details
     session_datetime = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    quantity = models.PositiveIntegerField(default=1, help_text="Number of units dispensed in this session")
 
     # Simple notes field for any relevant information
     notes = models.TextField(blank=True)

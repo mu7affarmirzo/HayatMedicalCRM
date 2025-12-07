@@ -81,6 +81,9 @@ class MedicationModel(BaseAuditModel):
     in_pack = models.PositiveIntegerField(default=10, help_text="Number of units in a standard package")
     unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='tablet')
 
+    # Pricing
+    unit_price = models.IntegerField(default=0, help_text="Standard unit price for billing calculations")
+
     # Batch information
     batch_number = models.CharField(max_length=50, blank=True, help_text="Batch or serial number")
     manufacture_date = models.DateField(null=True, blank=True)

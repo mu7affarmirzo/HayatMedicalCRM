@@ -107,7 +107,7 @@ def billing_detail(request, booking_id):
     Display detailed billing information for a specific booking with breakdown of all charges
     """
     booking = get_object_or_404(Booking, id=booking_id)
-    
+
     # Get or create billing record
     billing, created = BookingBilling.objects.get_or_create(
         booking=booking,
@@ -120,12 +120,12 @@ def billing_detail(request, booking_id):
     # Handle billing actions
     if request.method == 'POST':
         action = request.POST.get('action')
-        
+
         if action == 'calculate_billing':
             calculate_billing_amounts(booking, billing, request.user)
             messages.success(request, f'Счет для бронирования #{booking.booking_number} пересчитан.')
             return redirect('cashbox:billing_detail', booking_id=booking.id)
-        
+
         elif action == 'mark_invoiced':
             billing.billing_status = 'invoiced'
             billing.modified_by = request.user
@@ -140,36 +140,139 @@ def billing_detail(request, booking_id):
         'tariff__tariff_services__service'
     )
 
-    # Get additional services beyond tariff
-    additional_services = ServiceUsage.objects.filter(
-        booking=booking
-    ).select_related('service', 'booking_detail__client')
+    # Build detailed breakdown per patient/illness history
+    from core.models import IllnessHistory, ServiceSessionTracking
+    patient_breakdowns = []
 
-    # Get prescribed medications not included in tariff
-    prescribed_medications = MedicationSession.objects.filter(
-        prescribed_medication__illness_history__booking=booking
-    ).select_related(
-        'prescribed_medication__medication',
-        'prescribed_medication__illness_history__patient'
-    )
-    
-    # Add total_cost calculation for each medication session
-    for med in prescribed_medications:
-        unit_price = getattr(med.prescribed_medication.medication, 'unit_price', 0) or 0
-        med.total_cost = med.quantity * unit_price
+    for detail in booking_details:
+        # Get illness history for this patient
+        illness_histories = IllnessHistory.objects.filter(
+            booking=booking,
+            patient=detail.client
+        ).select_related('patient')
 
-    # Get lab tests beyond tariff inclusions
-    lab_tests = AssignedLabs.objects.filter(
-        illness_history__booking=booking
-    )
+        for illness_history in illness_histories:
+            patient_data = {
+                'booking_detail': detail,
+                'illness_history': illness_history,
+                'patient': detail.client,
+                'tariff': detail.tariff,
+                'room': detail.room,
+                'tariff_base_price': detail.price,
+                'services': {'included': [], 'extra': []},
+                'medications': [],
+                'labs': [],
+                'procedures': [],
+                'totals': {
+                    'tariff_base': detail.price,
+                    'services_extra': 0,
+                    'medications': 0,
+                    'labs': 0,
+                    'procedures': 0,
+                    'subtotal': detail.price
+                }
+            }
 
-    # Get procedures beyond tariff inclusions
-    procedures = IndividualProcedureSessionModel.objects.filter(
-        assigned_procedure__illness_history__booking=booking
-    ).select_related(
-        'assigned_procedure__medical_service',
-        'assigned_procedure__illness_history__patient'
-    )
+            # Get service session tracking (included services in tariff)
+            service_tracking = ServiceSessionTracking.objects.filter(
+                booking_detail=detail
+            ).select_related('service')
+
+            for tracking in service_tracking:
+                sessions_exceeded = tracking.sessions_used - tracking.sessions_included
+                if sessions_exceeded > 0:
+                    # Calculate extra cost
+                    extra_cost = sessions_exceeded * (tracking.service.price or 0)
+                    patient_data['totals']['services_extra'] += extra_cost
+
+                    patient_data['services']['extra'].append({
+                        'service': tracking.service,
+                        'included': tracking.sessions_included,
+                        'used': tracking.sessions_used,
+                        'exceeded': sessions_exceeded,
+                        'unit_price': tracking.service.price or 0,
+                        'total_cost': extra_cost
+                    })
+
+                patient_data['services']['included'].append({
+                    'service': tracking.service,
+                    'included': tracking.sessions_included,
+                    'used': tracking.sessions_used,
+                    'exceeded': max(0, sessions_exceeded)
+                })
+
+            # Get medications for this illness history
+            medications = MedicationSession.objects.filter(
+                prescribed_medication__illness_history=illness_history
+            ).select_related(
+                'prescribed_medication__medication'
+            )
+
+            for med in medications:
+                unit_price = getattr(med.prescribed_medication.medication, 'unit_price', 0) or 0
+                total_cost = med.quantity * unit_price
+                patient_data['medications'].append({
+                    'medication': med.prescribed_medication.medication,
+                    'quantity': med.quantity,
+                    'unit_price': unit_price,
+                    'total_cost': total_cost,
+                    'session': med
+                })
+                patient_data['totals']['medications'] += total_cost
+
+            # Get lab tests for this illness history
+            labs = AssignedLabs.objects.filter(
+                illness_history=illness_history
+            ).select_related('lab')
+
+            for lab in labs:
+                # Check if lab is in billable state
+                is_billable = lab.state in ['dispatched', 'results']
+                lab_price = getattr(lab.lab, 'price', 0) or 0 if is_billable else 0
+
+                patient_data['labs'].append({
+                    'lab': lab.lab,
+                    'state': lab.state,
+                    'is_billable': is_billable,
+                    'price': lab_price,
+                    'assigned_lab': lab
+                })
+
+                if is_billable:
+                    patient_data['totals']['labs'] += lab_price
+
+            # Get procedures for this illness history
+            procedures = IndividualProcedureSessionModel.objects.filter(
+                assigned_procedure__illness_history=illness_history
+            ).select_related(
+                'assigned_procedure__medical_service'
+            )
+
+            for proc in procedures:
+                # Check if billable
+                is_billable = getattr(proc, 'is_billable', False)
+                proc_price = getattr(proc, 'billed_amount', 0) or 0
+
+                patient_data['procedures'].append({
+                    'procedure': proc.assigned_procedure.medical_service,
+                    'session': proc,
+                    'is_billable': is_billable,
+                    'price': proc_price
+                })
+
+                if is_billable:
+                    patient_data['totals']['procedures'] += proc_price
+
+            # Calculate subtotal
+            patient_data['totals']['subtotal'] = (
+                patient_data['totals']['tariff_base'] +
+                patient_data['totals']['services_extra'] +
+                patient_data['totals']['medications'] +
+                patient_data['totals']['labs'] +
+                patient_data['totals']['procedures']
+            )
+
+            patient_breakdowns.append(patient_data)
 
     # Calculate stay duration
     stay_duration = (booking.end_date - booking.start_date).days
@@ -208,10 +311,7 @@ def billing_detail(request, booking_id):
         'booking': booking,
         'billing': billing,
         'booking_details': booking_details,
-        'additional_services': additional_services,
-        'prescribed_medications': prescribed_medications,
-        'lab_tests': lab_tests,
-        'procedures': procedures,
+        'patient_breakdowns': patient_breakdowns,
         'stay_duration': stay_duration,
         'billing_breakdown': billing_breakdown,
         'available_actions': available_actions,
@@ -248,7 +348,7 @@ def calculate_billing_amounts(booking, billing, user):
     lab_tests = AssignedLabs.objects.filter(illness_history__booking=booking)
     for lab in lab_tests:
         # Add your lab pricing logic here
-        lab_research_total += getattr(lab.lab_research, 'price', 0)
+        lab_research_total += getattr(lab.lab, 'price', 0)
     
     # Update billing record
     billing.tariff_base_amount = int(tariff_base)

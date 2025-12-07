@@ -106,11 +106,332 @@
             </div>
         </div>
 
+        <!-- Detailed Per-Patient Breakdown -->
+        {% if patient_breakdowns %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-md"></i> Детальная разбивка по пациентам
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for breakdown in patient_breakdowns %}
+                <div class="patient-breakdown-section mb-4 p-3 border rounded">
+                    <h4 class="text-primary">
+                        <i class="fas fa-user"></i> {{ breakdown.patient.full_name }}
+                    </h4>
+                    <p class="text-muted">
+                        <i class="fas fa-door-open"></i> {{ breakdown.room.name }} ({{ breakdown.room.room_type.name }}) |
+                        <i class="fas fa-tag"></i> {{ breakdown.tariff.name }}
+                    </p>
+
+                    <!-- Tariff Base -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-primary">
+                                <div class="card-header">
+                                    <h5 class="card-title"><i class="fas fa-file-invoice"></i> Базовый тариф</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ breakdown.tariff.name }}</span>
+                                        <strong class="text-primary">{{ breakdown.tariff_base_price|intcomma }} сум</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Breakdown -->
+                    {% if breakdown.services.included %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-info">
+                                <div class="card-header">
+                                    <h5 class="card-title"><i class="fas fa-spa"></i> Услуги в тарифе</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Услуга</th>
+                                                <th class="text-center">Включено</th>
+                                                <th class="text-center">Использовано</th>
+                                                <th class="text-center">Превышение</th>
+                                                <th class="text-right">Стоимость</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for svc in breakdown.services.included %}
+                                            <tr {% if svc.exceeded > 0 %}class="table-warning"{% endif %}>
+                                                <td>{{ svc.service.name }}</td>
+                                                <td class="text-center">{{ svc.included }}</td>
+                                                <td class="text-center">
+                                                    {% if svc.used > svc.included %}
+                                                        <span class="badge badge-warning">{{ svc.used }}</span>
+                                                    {% else %}
+                                                        {{ svc.used }}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if svc.exceeded > 0 %}
+                                                        <span class="badge badge-danger">+{{ svc.exceeded }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-right">
+                                                    {% if svc.exceeded > 0 %}
+                                                        <span class="text-success">Включено</span>
+                                                    {% else %}
+                                                        <span class="text-success">Включено</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Extra Services (Charged) -->
+                    {% if breakdown.services.extra %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-warning">
+                                <div class="card-header">
+                                    <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Дополнительные услуги (оплачиваются)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Услуга</th>
+                                                <th class="text-center">Количество</th>
+                                                <th class="text-right">Цена за сеанс</th>
+                                                <th class="text-right">Стоимость</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for svc in breakdown.services.extra %}
+                                            <tr>
+                                                <td>{{ svc.service.name }}</td>
+                                                <td class="text-center">{{ svc.exceeded }}</td>
+                                                <td class="text-right">{{ svc.unit_price|intcomma }} сум</td>
+                                                <td class="text-right"><strong class="text-warning">{{ svc.total_cost|intcomma }} сум</strong></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-warning">
+                                                <td colspan="3" class="text-right"><strong>Итого доп. услуги:</strong></td>
+                                                <td class="text-right"><strong>{{ breakdown.totals.services_extra|intcomma }} сум</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Medications -->
+                    {% if breakdown.medications %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-success">
+                                <div class="card-header">
+                                    <h5 class="card-title"><i class="fas fa-pills"></i> Медикаменты</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Название</th>
+                                                <th class="text-center">Количество</th>
+                                                <th class="text-right">Цена за единицу</th>
+                                                <th class="text-right">Стоимость</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for med in breakdown.medications %}
+                                            <tr>
+                                                <!-- <td>{{ med.medication.item.name }}</td> -->
+                                                <td>{{ med.medication.income_seria }}</td>
+                                                <td class="text-center">{{ med.quantity }}</td>
+                                                <td class="text-right">{{ med.unit_price|intcomma }} сум</td>
+                                                <td class="text-right"><strong>{{ med.total_cost|intcomma }} сум</strong></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-success">
+                                                <td colspan="3" class="text-right"><strong>Итого медикаменты:</strong></td>
+                                                <td class="text-right"><strong>{{ breakdown.totals.medications|intcomma }} сум</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Lab Tests -->
+                    {% if breakdown.labs %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-secondary">
+                                <div class="card-header">
+                                    <h5 class="card-title"><i class="fas fa-vials"></i> Лабораторные исследования</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Исследование</th>
+                                                <th class="text-center">Статус</th>
+                                                <th class="text-right">Стоимость</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for lab in breakdown.labs %}
+                                            <tr {% if not lab.is_billable %}class="table-light"{% endif %}>
+                                                <td>{{ lab.lab.name }}</td>
+                                                <td class="text-center">
+                                                    <span class="badge badge-{% if lab.is_billable %}success{% else %}secondary{% endif %}">
+                                                        {{ lab.state }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-right">
+                                                    {% if lab.is_billable %}
+                                                        <strong>{{ lab.price|intcomma }} сум</strong>
+                                                    {% else %}
+                                                        <span class="text-muted">не оплачивается</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        {% if breakdown.totals.labs > 0 %}
+                                        <tfoot>
+                                            <tr class="table-secondary">
+                                                <td colspan="2" class="text-right"><strong>Итого анализы:</strong></td>
+                                                <td class="text-right"><strong>{{ breakdown.totals.labs|intcomma }} сум</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Procedures -->
+                    {% if breakdown.procedures %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-info">
+                                <div class="card-header">
+                                    <h5 class="card-title"><i class="fas fa-procedures"></i> Процедуры</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Процедура</th>
+                                                <th class="text-right">Стоимость</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for proc in breakdown.procedures %}
+                                            <tr>
+                                                <td>{{ proc.procedure.name }}</td>
+                                                <td class="text-right">
+                                                    {% if proc.is_billable %}
+                                                        <strong>{{ proc.price|intcomma }} сум</strong>
+                                                    {% else %}
+                                                        <span class="text-muted">включено</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        {% if breakdown.totals.procedures > 0 %}
+                                        <tfoot>
+                                            <tr class="table-info">
+                                                <td class="text-right"><strong>Итого процедуры:</strong></td>
+                                                <td class="text-right"><strong>{{ breakdown.totals.procedures|intcomma }} сум</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Patient Subtotal -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card card-primary">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Итого по пациенту:</h5>
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <td>Базовый тариф:</td>
+                                            <td class="text-right">{{ breakdown.totals.tariff_base|intcomma }} сум</td>
+                                        </tr>
+                                        {% if breakdown.totals.services_extra > 0 %}
+                                        <tr>
+                                            <td>Доп. услуги:</td>
+                                            <td class="text-right text-warning"><strong>{{ breakdown.totals.services_extra|intcomma }} сум</strong></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if breakdown.totals.medications > 0 %}
+                                        <tr>
+                                            <td>Медикаменты:</td>
+                                            <td class="text-right">{{ breakdown.totals.medications|intcomma }} сум</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if breakdown.totals.labs > 0 %}
+                                        <tr>
+                                            <td>Анализы:</td>
+                                            <td class="text-right">{{ breakdown.totals.labs|intcomma }} сум</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if breakdown.totals.procedures > 0 %}
+                                        <tr>
+                                            <td>Процедуры:</td>
+                                            <td class="text-right">{{ breakdown.totals.procedures|intcomma }} сум</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr class="table-primary">
+                                            <td><strong>ИТОГО ПО ПАЦИЕНТУ:</strong></td>
+                                            <td class="text-right"><strong class="h5">{{ breakdown.totals.subtotal|intcomma }} сум</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if not forloop.last %}<hr>{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Billing Summary -->
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-calculator"></i> Расчет стоимости
+                    <i class="fas fa-calculator"></i> Общий расчет стоимости
                 </h3>
                 <div class="card-tools">
                     {% if 'calculate_billing' in available_actions %}
@@ -122,7 +443,7 @@
                         </button>
                     </form>
                     {% endif %}
-                    
+
                     {% if 'mark_invoiced' in available_actions %}
                     <form method="post" style="display: inline;">
                         {% csrf_token %}

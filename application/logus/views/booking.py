@@ -1,15 +1,24 @@
 import uuid
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from application.logus.forms.patient_form import PatientRegistrationForm
 from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType, TariffRoomPrice, District, Region
-from application.logus.forms.booking import BookingInitialForm, RoomSelectionForm, BookingConfirmationForm
+from core.models.tariffs import ServiceSessionTracking
+from application.logus.forms.booking import (
+    BookingInitialForm, RoomSelectionForm, BookingConfirmationForm,
+    TariffChangeForm, ServiceSessionRecordForm
+)
+from application.logus.utils.room_capacity import (
+    get_rooms_with_capacity, validate_booking_capacity, check_room_capacity
+)
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -114,6 +123,22 @@ def booking_confirm(request):
         form = BookingConfirmationForm(request.POST)
         if form.is_valid():
             try:
+                # TASK-007: Validate room capacity before creating booking
+                booking_details_data = [{'room_id': room_id, 'client_id': patient.id}
+                                       for room_id in selected_room_ids]
+                is_valid, capacity_errors = validate_booking_capacity(
+                    booking_details_data, start_date, end_date
+                )
+
+                if not is_valid:
+                    for error in capacity_errors:
+                        messages.error(request, error)
+                    logger.warning(
+                        f"Booking capacity validation failed for patient {patient.id}: {capacity_errors}"
+                    )
+                    # Redirect back to room selection
+                    return redirect('logus:booking_select_rooms')
+
                 # Create the main booking
                 booking = Booking.objects.create(
                     booking_number=generate_booking_number(),
@@ -291,17 +316,18 @@ def booking_detail(request, booking_id):
 
 def get_available_rooms(start_date, end_date):
     """
-    Get rooms that are not booked in the given date range
+    Get rooms that have available capacity in the given date range.
+    Updated to check room capacity instead of binary availability (TASK-007).
     """
-    # Find all rooms that have bookings overlapping with the requested period
-    booked_room_ids = BookingDetail.objects.filter(
-        booking__start_date__lt=end_date,
-        booking__end_date__gt=start_date,
-        booking__status__in=['pending', 'confirmed', 'checked_in']
-    ).values_list('room_id', flat=True)
+    # Use the capacity-aware utility function
+    rooms_with_capacity = get_rooms_with_capacity(start_date, end_date)
 
-    # Get all rooms except those booked
-    available_rooms = Room.objects.exclude(id__in=booked_room_ids)
+    # Convert list back to queryset-like structure for compatibility
+    # Extract room IDs that have capacity
+    room_ids_with_capacity = [room.id for room in rooms_with_capacity]
+
+    # Return as queryset
+    available_rooms = Room.objects.filter(id__in=room_ids_with_capacity, is_active=True)
 
     return available_rooms
 
@@ -406,21 +432,32 @@ def check_room_availability_ajax(request):
         }, status=400)
 
 
-@csrf_exempt
+@login_required
+@require_POST
 def add_new_patient(request):
-    if request.method == 'POST':
+    """
+    DEPRECATED: This is a duplicate of the patient creation view.
+    Redirects to logus:patient_create_view instead.
+
+    TODO: Update all references to use logus:patient_create_view and remove this function.
+    """
+    try:
         form = PatientRegistrationForm(request.POST)
         if form.is_valid():
             patient = form.save(commit=False)
             patient.created_by = request.user
             patient.modified_by = request.user
             patient.save()
-            return redirect('logus:booking_start')  # Replace with your success URL
-        print(form.errors)
+            messages.success(request, f'Пациент "{patient.full_name}" успешно создан!')
+            return redirect('logus:booking_start')
+        else:
+            logger.warning(f"Form validation errors: {form.errors}")
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
+            return redirect('logus:booking_start')
+    except Exception as e:
+        logger.error(f"Error creating patient: {e}", exc_info=True)
+        messages.error(request, 'Произошла ошибка при создании пациента')
         return redirect('logus:booking_start')
-    else:
-        return redirect('logus:booking_start')
-    return render(request, 'logus/booking/booking_start.html', {'form': form})
 
 
 def get_districts(request):
@@ -429,22 +466,272 @@ def get_districts(request):
     return JsonResponse(list(districts), safe=False)
 
 
-@csrf_exempt
+@login_required
+@require_http_methods(["GET", "POST"])
 def patient_registration(request):
-    # Form processing logic here
-    if request.method == 'POST':
-        form = PatientRegistrationForm(request.POST)
-        if form.is_valid():
-            patient = form.save(commit=False)
-            patient.created_by = request.user
-            patient.modified_by = request.user
-            patient.save()
-            return redirect('logus:booking_start')  # Replace with your success URL
-    # else:
-    #     return redirect('logus:booking_start')
-    form = PatientRegistrationForm()
-    context = {
-        'form': form,
-        'regions': Region.objects.filter(is_active=True)
-    }
-    return render(request, 'logus/booking/patient_registration_page.html', context)
+    """
+    DEPRECATED: This is a duplicate of the patient creation view.
+    Use logus:patient_create_view instead.
+
+    Patient registration view for booking flow.
+    """
+    try:
+        if request.method == 'POST':
+            form = PatientRegistrationForm(request.POST)
+            if form.is_valid():
+                patient = form.save(commit=False)
+                patient.created_by = request.user
+                patient.modified_by = request.user
+                patient.save()
+                messages.success(request, f'Пациент "{patient.full_name}" успешно создан!')
+                return redirect('logus:booking_start')
+            else:
+                logger.warning(f"Form validation errors: {form.errors}")
+                messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
+        else:
+            form = PatientRegistrationForm()
+
+        context = {
+            'form': form,
+            'regions': Region.objects.filter(is_active=True)
+        }
+        return render(request, 'logus/booking/patient_registration_page.html', context)
+
+    except Exception as e:
+        logger.error(f"Error in patient registration: {e}", exc_info=True)
+        messages.error(request, 'Произошла ошибка при регистрации пациента')
+        return redirect('logus:booking_start')
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def tariff_change_view(request, detail_id):
+    """
+    Handle mid-stay tariff and/or room change for a booking detail.
+    Implements TASK-013 from RECEPTION_IMPROVEMENT_TASKS.md
+    """
+    try:
+        # Get the current active booking detail
+        booking_detail = get_object_or_404(BookingDetail, id=detail_id, is_current=True)
+        booking = booking_detail.booking
+
+        # Check if booking is in a state that allows tariff changes
+        if booking.status not in ['confirmed', 'checked_in', 'in_progress']:
+            messages.error(
+                request,
+                f'Невозможно изменить тариф для бронирования со статусом "{booking.get_status_display()}"'
+            )
+            return redirect('logus:booking_detail', booking_id=booking.id)
+
+        if request.method == 'POST':
+            form = TariffChangeForm(request.POST, booking_detail=booking_detail)
+            if form.is_valid():
+                try:
+                    new_tariff = form.cleaned_data['new_tariff']
+                    new_room = form.cleaned_data['new_room']
+                    change_date = form.cleaned_data['change_date']
+                    reason = form.cleaned_data['reason']
+
+                    # Log the change attempt
+                    logger.info(
+                        f"Tariff change initiated by {request.user.username} for BookingDetail {detail_id}: "
+                        f"Old: {booking_detail.tariff.name}/{booking_detail.room.name}, "
+                        f"New: {new_tariff.name}/{new_room.name}, Date: {change_date}"
+                    )
+
+                    # Use the static method to create new booking detail
+                    new_detail = BookingDetail.change_tariff(
+                        booking=booking,
+                        client=booking_detail.client,
+                        new_tariff=new_tariff,
+                        new_room=new_room,
+                        change_datetime=change_date
+                    )
+
+                    # Set audit fields
+                    new_detail.created_by = request.user
+                    new_detail.modified_by = request.user
+                    new_detail.save(update_fields=['created_by', 'modified_by', 'updated_at'])
+
+                    # Add reason to booking notes
+                    current_notes = booking.notes or ''
+                    change_note = (
+                        f"\n\n--- Изменение тарифа/комнаты {timezone.now().strftime('%d.%m.%Y %H:%M')} ---\n"
+                        f"Пациент: {booking_detail.client.full_name}\n"
+                        f"Старый тариф: {booking_detail.tariff.name}, Комната: {booking_detail.room.name}\n"
+                        f"Новый тариф: {new_tariff.name}, Комната: {new_room.name}\n"
+                        f"Вступает в силу: {change_date.strftime('%d.%m.%Y %H:%M')}\n"
+                        f"Причина: {reason}\n"
+                        f"Изменено: {request.user.get_full_name() or request.user.username}"
+                    )
+                    booking.notes = current_notes + change_note
+                    booking.modified_by = request.user
+                    booking.save(update_fields=['notes', 'modified_by', 'updated_at'])
+
+                    # Log success
+                    logger.info(
+                        f"Tariff change completed successfully. New BookingDetail ID: {new_detail.id}"
+                    )
+
+                    messages.success(
+                        request,
+                        f'Тариф/комната успешно изменены для {booking_detail.client.full_name}. '
+                        f'Новый тариф: {new_tariff.name}, Комната: {new_room.name}'
+                    )
+
+                    return redirect('logus:booking_detail', booking_id=booking.id)
+
+                except Exception as e:
+                    logger.error(f"Error during tariff change: {e}", exc_info=True)
+                    messages.error(request, f'Ошибка при изменении тарифа: {str(e)}')
+            else:
+                logger.warning(f"Form validation errors: {form.errors}")
+                messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
+        else:
+            form = TariffChangeForm(booking_detail=booking_detail)
+
+        context = {
+            'form': form,
+            'booking': booking,
+            'booking_detail': booking_detail,
+            'patient': booking_detail.client,
+        }
+
+        return render(request, 'logus/booking/booking_detail_tariff_change.html', context)
+
+    except Exception as e:
+        logger.error(f"Error in tariff_change_view: {e}", exc_info=True)
+        messages.error(request, 'Произошла ошибка при загрузке формы изменения тарифа')
+        return redirect('logus:booking_list')
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def record_service_session(request, tracking_id):
+    """
+    Record a service session as used for a patient.
+    Implements TASK-015 from RECEPTION_IMPROVEMENT_TASKS.md
+
+    Args:
+        tracking_id: ServiceSessionTracking ID
+    """
+    try:
+        # Get the service tracking record
+        tracking = get_object_or_404(ServiceSessionTracking, id=tracking_id)
+        booking_detail = tracking.booking_detail
+        booking = booking_detail.booking
+
+        # Check if booking is active
+        if booking.status not in ['confirmed', 'checked_in', 'in_progress']:
+            messages.error(
+                request,
+                f'Невозможно записать сеанс для бронирования со статусом "{booking.get_status_display()}"'
+            )
+            return redirect('logus:booking_detail', booking_id=booking.id)
+
+        if request.method == 'POST':
+            form = ServiceSessionRecordForm(request.POST, tracking=tracking)
+            if form.is_valid():
+                try:
+                    session_date = form.cleaned_data['session_date']
+                    notes = form.cleaned_data.get('notes', '')
+                    performed_by = form.cleaned_data.get('performed_by', '')
+
+                    # Check if session exceeds included amount
+                    sessions_before = tracking.sessions_used
+                    is_billable = sessions_before >= tracking.sessions_included
+
+                    # Increment session counter
+                    tracking.increment_session(is_billable=is_billable)
+
+                    # Log the session recording
+                    logger.info(
+                        f"Service session recorded by {request.user.username}: "
+                        f"Tracking ID {tracking_id}, Service: {tracking.service.name}, "
+                        f"Patient: {booking_detail.client.full_name}, "
+                        f"Session {tracking.sessions_used}/{tracking.sessions_included}, "
+                        f"Billable: {is_billable}"
+                    )
+
+                    # Add note to booking
+                    session_note = (
+                        f"\n\n--- Сеанс записан {timezone.now().strftime('%d.%m.%Y %H:%M')} ---\n"
+                        f"Пациент: {booking_detail.client.full_name}\n"
+                        f"Услуга: {tracking.service.name}\n"
+                        f"Дата сеанса: {session_date.strftime('%d.%m.%Y %H:%M')}\n"
+                        f"Сеанс: {tracking.sessions_used} из {tracking.sessions_included} включённых\n"
+                    )
+                    if performed_by:
+                        session_note += f"Исполнитель: {performed_by}\n"
+                    if notes:
+                        session_note += f"Заметки: {notes}\n"
+                    if is_billable:
+                        session_note += "⚠️ ДОПОЛНИТЕЛЬНАЯ ОПЛАТА: Сеанс превышает включённое количество\n"
+                    session_note += f"Записано: {request.user.get_full_name() or request.user.username}"
+
+                    current_notes = booking.notes or ''
+                    booking.notes = current_notes + session_note
+                    booking.modified_by = request.user
+                    booking.save(update_fields=['notes', 'modified_by', 'updated_at'])
+
+                    # If session is billable, create ServiceUsage record for billing
+                    if is_billable:
+                        from core.models.services import ServiceUsage
+
+                        ServiceUsage.objects.create(
+                            booking_detail=booking_detail,
+                            service=tracking.service,
+                            quantity=1,
+                            price=tracking.service.base_price or 0,
+                            date_used=session_date,
+                            notes=f"Дополнительный сеанс (превышение тарифа). {notes}",
+                            created_by=request.user,
+                            modified_by=request.user
+                        )
+
+                        logger.info(
+                            f"ServiceUsage created for billable session: "
+                            f"Service {tracking.service.name}, Price {tracking.service.base_price}"
+                        )
+
+                    # Success message
+                    if is_billable:
+                        messages.warning(
+                            request,
+                            f'Сеанс записан ({tracking.sessions_used}/{tracking.sessions_included}). '
+                            f'⚠️ Это дополнительный сеанс, требуется оплата: {tracking.service.base_price} сум'
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f'Сеанс успешно записан для {booking_detail.client.full_name}. '
+                            f'Использовано: {tracking.sessions_used}/{tracking.sessions_included}'
+                        )
+
+                    return redirect('logus:booking_detail', booking_id=booking.id)
+
+                except Exception as e:
+                    logger.error(f"Error recording service session: {e}", exc_info=True)
+                    messages.error(request, f'Ошибка при записи сеанса: {str(e)}')
+            else:
+                logger.warning(f"Form validation errors: {form.errors}")
+                messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
+        else:
+            form = ServiceSessionRecordForm(tracking=tracking)
+
+        context = {
+            'form': form,
+            'tracking': tracking,
+            'booking': booking,
+            'booking_detail': booking_detail,
+            'patient': booking_detail.client,
+            'sessions_remaining': tracking.sessions_remaining,
+            'will_be_billable': tracking.sessions_used >= tracking.sessions_included,
+        }
+
+        return render(request, 'logus/booking/record_service_session.html', context)
+
+    except Exception as e:
+        logger.error(f"Error in record_service_session view: {e}", exc_info=True)
+        messages.error(request, 'Произошла ошибка при загрузке формы записи сеанса')
+        return redirect('logus:booking_list')

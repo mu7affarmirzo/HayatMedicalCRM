@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django import forms
 from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, TariffRoomPrice
+from application.logus.utils.room_capacity import check_room_capacity
 
 
 class BookingForm(forms.ModelForm):
@@ -183,6 +184,30 @@ def booking_detail_add_view(request, booking_id):
     if request.method == 'POST':
         form = BookingDetailForm(request.POST, booking=booking)
         if form.is_valid():
+            # TASK-007: Check room capacity before adding guest
+            room = form.cleaned_data['room']
+            has_capacity, current_occupancy, available_spots, capacity_message = check_room_capacity(
+                room,
+                booking.start_date,
+                booking.end_date,
+                guests_to_add=1,
+                exclude_booking_id=booking.id  # Exclude current booking for updates
+            )
+
+            if not has_capacity:
+                messages.error(request, capacity_message)
+                messages.info(
+                    request,
+                    f'Пожалуйста, выберите другую комнату или измените даты бронирования.'
+                )
+                # Render the form again with error
+                context = {
+                    'form': form,
+                    'booking': booking,
+                    'title': f'Добавление гостя к бронированию #{booking.booking_number}',
+                }
+                return render(request, 'logus/booking/booking_detail_form.html', context)
+
             # Save the booking detail with the current user
             booking_detail = form.save(commit=False)
             booking_detail.booking = booking

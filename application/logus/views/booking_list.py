@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from core.models import Booking, BookingDetail, TariffService, IllnessHistory
+from core.models.tariffs import ServiceSessionTracking
 
 
 @login_required
@@ -73,6 +74,15 @@ def booking_detail_view(request, booking_id):
     # We'll just pass the illness_histories directly to the template
     # No need for a mapping dictionary since we'll loop through the histories in the template
 
+    # Get service session tracking for all booking details (TASK-016)
+    # Annotate each booking detail with its tracking records
+    # Note: Using 'service_tracking_list' to avoid conflict with reverse relation
+    for detail in booking_details:
+        detail.service_tracking_list = ServiceSessionTracking.objects.filter(
+            booking_detail=detail,
+            booking_detail__is_current=True
+        ).select_related('service', 'tariff_service').order_by('service__name')
+
     # Calculate stay duration
     stay_duration = (booking.end_date - booking.start_date).days
     if stay_duration == 0:  # Handle same-day stays
@@ -94,7 +104,7 @@ def booking_detail_view(request, booking_id):
 
     context = {
         'booking': booking,
-        'booking_details': booking_details,
+        'booking_details': booking_details,  # Now includes service_tracking attribute (TASK-016)
         'additional_services': additional_services,
         'illness_histories': illness_histories,
         'stay_duration': stay_duration,

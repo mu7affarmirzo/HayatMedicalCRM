@@ -1,0 +1,207 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}Запись сеанса - {{ tracking.service.name }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Запись сеанса услуги</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">Запись сеанса</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Service Info Card -->
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-heartbeat mr-1"></i> Информация об услуге</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Пациент:</strong><br>
+                                {{ patient.full_name }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Услуга:</strong><br>
+                                {{ tracking.service.name }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Использовано сеансов:</strong><br>
+                                <span class="badge badge-{% if tracking.sessions_used < tracking.sessions_included %}success{% elif tracking.sessions_used == tracking.sessions_included %}warning{% else %}danger{% endif %} badge-lg">
+                                    {{ tracking.sessions_used }} / {{ tracking.sessions_included }}
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Осталось бесплатных:</strong><br>
+                                <span class="badge badge-{% if sessions_remaining > 0 %}success{% else %}danger{% endif %} badge-lg">
+                                    {{ sessions_remaining }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if will_be_billable %}
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-warning">
+                                    <h5><i class="icon fas fa-exclamation-triangle"></i> Внимание!</h5>
+                                    Этот сеанс превысит количество включённых в тариф.
+                                    <strong>Будет выставлен счёт: {{ tracking.service.base_price|floatformat:0 }} сум</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-success">
+                                    <i class="icon fas fa-check"></i>
+                                    Этот сеанс входит в тариф и не требует дополнительной оплаты.
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- /.card -->
+
+                <!-- Session Recording Form Card -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-clipboard-check mr-1"></i> Запись сеанса</h3>
+                    </div>
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <i class="icon fas fa-ban"></i>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.session_date.id_for_label }}">Дата и время сеанса <span class="text-danger">*</span></label>
+                                        {{ form.session_date }}
+                                        {% if form.session_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.session_date.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.session_date.help_text %}
+                                        <small class="form-text text-muted">{{ form.session_date.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.performed_by.id_for_label }}">Исполнитель</label>
+                                        {{ form.performed_by }}
+                                        {% if form.performed_by.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.performed_by.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.performed_by.help_text %}
+                                        <small class="form-text text-muted">{{ form.performed_by.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.notes.id_for_label }}">Заметки о сеансе</label>
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.notes.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.notes.help_text %}
+                                        <small class="form-text text-muted">{{ form.notes.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="callout callout-info">
+                                        <h5>После записи сеанса:</h5>
+                                        <p class="mb-0">
+                                            - Счётчик использованных сеансов увеличится: {{ tracking.sessions_used }} → {{ tracking.sessions_used|add:1 }}<br>
+                                            {% if will_be_billable %}
+                                            - Будет автоматически создан счёт на оплату дополнительного сеанса<br>
+                                            - Информация о сеансе будет добавлена в примечания к бронированию
+                                            {% else %}
+                                            - Информация о сеансе будет добавлена в примечания к бронированию
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-{% if will_be_billable %}warning{% else %}primary{% endif %}">
+                                <i class="fas fa-check mr-1"></i>
+                                {% if will_be_billable %}
+                                Записать сеанс (с оплатой)
+                                {% else %}
+                                Записать сеанс
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'logus:booking_detail' booking.id %}" class="btn btn-default">
+                                <i class="fas fa-times mr-1"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Set focus on session date field
+        $('#{{ form.session_date.id_for_label }}').focus();
+    });
+</script>
+{% endblock %}

@@ -38,4 +38,8 @@ urlpatterns = [
     path('booking-details/<int:detail_id>/add-service/', booking_add_service_view, name='booking_add_service'),
     path('services/<int:service_id>/edit/', service_usage_edit_view, name='service_usage_edit'),
     path('services/<int:service_id>/delete/', service_usage_delete_view, name='service_usage_delete'),
+
+    # Tariff change and service session tracking (TASK-013, TASK-015)
+    path('booking-details/<int:detail_id>/change-tariff/', booking.tariff_change_view, name='tariff_change'),
+    path('service-tracking/<int:tracking_id>/record-session/', booking.record_service_session, name='record_service_session'),
 ]

@@ -290,3 +290,213 @@ class ServiceUsageForm(forms.ModelForm):
             cleaned_data['price'] = base_price * quantity
 
         return cleaned_data
+
+
+class TariffChangeForm(forms.Form):
+    """
+    Form for changing tariff and/or room mid-stay for a booking detail.
+    Implements the change_tariff() static method from BookingDetail model.
+    """
+    new_tariff = forms.ModelChoiceField(
+        queryset=Tariff.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Новый тариф",
+        help_text="Выберите новый тариф для пациента"
+    )
+
+    new_room = forms.ModelChoiceField(
+        queryset=Room.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Новая комната",
+        help_text="Выберите новую комнату для пациента"
+    )
+
+    change_date = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={
+            'class': 'form-control',
+            'type': 'datetime-local'
+        }),
+        label="Дата и время изменения",
+        help_text="Когда вступает в силу новый тариф/комната",
+        initial=timezone.now
+    )
+
+    reason = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Укажите причину изменения тарифа/комнаты'
+        }),
+        label="Причина изменения",
+        help_text="Обязательное поле для аудита",
+        required=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        booking_detail = kwargs.pop('booking_detail', None)
+        super().__init__(*args, **kwargs)
+
+        if booking_detail:
+            self.booking_detail = booking_detail
+
+            # Set current values as initial
+            self.fields['new_tariff'].initial = booking_detail.tariff
+            self.fields['new_room'].initial = booking_detail.room
+
+            # Filter available rooms for the booking dates
+            if booking_detail.booking:
+                from application.logus.views.booking import get_available_rooms
+
+                available_rooms = get_available_rooms(
+                    booking_detail.booking.start_date,
+                    booking_detail.booking.end_date
+                )
+                # Include current room in the list
+                current_room_qs = Room.objects.filter(id=booking_detail.room.id)
+                self.fields['new_room'].queryset = (available_rooms | current_room_qs).distinct()
+
+            # Set min/max for change_date based on booking dates
+            if booking_detail.booking:
+                self.fields['change_date'].widget.attrs['min'] = booking_detail.booking.start_date.strftime('%Y-%m-%dT%H:%M')
+                self.fields['change_date'].widget.attrs['max'] = booking_detail.booking.end_date.strftime('%Y-%m-%dT%H:%M')
+
+    def clean_change_date(self):
+        """Validate change date is within booking period"""
+        change_date = self.cleaned_data.get('change_date')
+
+        if hasattr(self, 'booking_detail'):
+            booking = self.booking_detail.booking
+
+            # Must be within booking period
+            if change_date < booking.start_date:
+                raise ValidationError(
+                    f'Дата изменения не может быть раньше даты заезда ({booking.start_date.strftime("%d.%m.%Y %H:%M")})'
+                )
+
+            if change_date > booking.end_date:
+                raise ValidationError(
+                    f'Дата изменения не может быть позже даты выезда ({booking.end_date.strftime("%d.%m.%Y %H:%M")})'
+                )
+
+            # Cannot be in the past (except for current time adjustments)
+            if change_date < timezone.now() - timezone.timedelta(hours=1):
+                raise ValidationError(
+                    'Дата изменения не может быть в прошлом (допускается отклонение до 1 часа)'
+                )
+
+        return change_date
+
+    def clean(self):
+        """Validate that something is actually changing"""
+        cleaned_data = super().clean()
+
+        if hasattr(self, 'booking_detail'):
+            new_tariff = cleaned_data.get('new_tariff')
+            new_room = cleaned_data.get('new_room')
+
+            # Check if anything changed
+            if (new_tariff == self.booking_detail.tariff and
+                new_room == self.booking_detail.room):
+                raise ValidationError(
+                    'Необходимо изменить хотя бы тариф или комнату. '
+                    'Если вы хотите оставить текущие значения, отмените операцию.'
+                )
+
+            # Validate room capacity if changing room
+            if new_room and new_room != self.booking_detail.room:
+                # Check if room is truly available
+                change_date = cleaned_data.get('change_date')
+
+                if change_date:
+                    from application.logus.views.booking import get_available_rooms
+
+                    # Check room is available from change_date onwards
+                    available_rooms = get_available_rooms(
+                        change_date,
+                        self.booking_detail.booking.end_date
+                    )
+
+                    # Exclude current room from check (we're vacating it)
+                    available_rooms = available_rooms.exclude(id=self.booking_detail.room.id)
+
+                    if not available_rooms.filter(id=new_room.id).exists():
+                        raise ValidationError(
+                            f'Комната "{new_room.name}" недоступна в выбранный период. '
+                            'Выберите другую комнату или измените дату.'
+                        )
+
+        return cleaned_data
+
+
+class ServiceSessionRecordForm(forms.Form):
+    """
+    Form for recording a service session (marks session as used).
+    Used with ServiceSessionTracking model.
+    """
+    notes = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'Дополнительные заметки о сеансе (необязательно)'
+        }),
+        label="Заметки",
+        required=False
+    )
+
+    performed_by = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Кто провел сеанс'
+        }),
+        label="Исполнитель",
+        help_text="Врач/медсестра, проводившая процедуру",
+        required=False
+    )
+
+    session_date = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={
+            'class': 'form-control',
+            'type': 'datetime-local'
+        }),
+        label="Дата и время сеанса",
+        initial=timezone.now,
+        help_text="Когда был проведен сеанс"
+    )
+
+    def __init__(self, *args, **kwargs):
+        tracking = kwargs.pop('tracking', None)
+        super().__init__(*args, **kwargs)
+
+        if tracking:
+            self.tracking = tracking
+
+            # Set min/max dates based on booking period
+            if tracking.booking_detail and tracking.booking_detail.booking:
+                booking = tracking.booking_detail.booking
+                self.fields['session_date'].widget.attrs['min'] = booking.start_date.strftime('%Y-%m-%dT%H:%M')
+                self.fields['session_date'].widget.attrs['max'] = booking.end_date.strftime('%Y-%m-%dT%H:%M')
+
+    def clean_session_date(self):
+        """Validate session date is within booking period"""
+        session_date = self.cleaned_data.get('session_date')
+
+        if hasattr(self, 'tracking'):
+            booking = self.tracking.booking_detail.booking
+
+            if session_date < booking.start_date:
+                raise ValidationError(
+                    f'Дата сеанса не может быть раньше даты заезда ({booking.start_date.strftime("%d.%m.%Y")})'
+                )
+
+            if session_date > booking.end_date:
+                raise ValidationError(
+                    f'Дата сеанса не может быть позже даты выезда ({booking.end_date.strftime("%d.%m.%Y")})'
+                )
+
+            # Cannot be in the future
+            if session_date > timezone.now() + timezone.timedelta(hours=1):
+                raise ValidationError(
+                    'Дата сеанса не может быть в будущем (допускается отклонение до 1 часа)'
+                )
+
+        return session_date

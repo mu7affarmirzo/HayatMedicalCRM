@@ -12,7 +12,9 @@
       "Bash(source:*)",
       "Bash(ls:*)",
       "Bash(python cashbox_diagnostics.py:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(wc:*)",
+      "Bash(python3 -m py_compile:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,202 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}Изменение тарифа/комнаты - {{ patient.full_name }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Изменение тарифа/комнаты</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_list' %}">Бронирования</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'logus:booking_detail' booking.id %}">{{ booking.booking_number }}</a></li>
+                    <li class="breadcrumb-item active">Изменение тарифа</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Current Info Card -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i> Текущая информация</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Пациент:</strong><br>
+                                {{ patient.full_name }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Текущий тариф:</strong><br>
+                                {{ booking_detail.tariff.name }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Текущая комната:</strong><br>
+                                {{ booking_detail.room.name }} ({{ booking_detail.room.room_type.name }})
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Текущая цена:</strong><br>
+                                {{ booking_detail.price|floatformat:0 }} сум/день
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <i class="icon fas fa-info"></i>
+                                    <strong>Внимание:</strong> Изменение тарифа/комнаты создаст новую запись в истории бронирования.
+                                    Стоимость будет пересчитана пропорционально оставшимся дням проживания.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card -->
+
+                <!-- Change Form Card -->
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-exchange-alt mr-1"></i> Форма изменения тарифа/комнаты</h3>
+                    </div>
+                    <!-- form start -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <i class="icon fas fa-ban"></i>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.new_tariff.id_for_label }}">Новый тариф <span class="text-danger">*</span></label>
+                                        {{ form.new_tariff }}
+                                        {% if form.new_tariff.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.new_tariff.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.new_tariff.help_text %}
+                                        <small class="form-text text-muted">{{ form.new_tariff.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.new_room.id_for_label }}">Новая комната <span class="text-danger">*</span></label>
+                                        {{ form.new_room }}
+                                        {% if form.new_room.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.new_room.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.new_room.help_text %}
+                                        <small class="form-text text-muted">{{ form.new_room.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.change_date.id_for_label }}">Дата и время изменения <span class="text-danger">*</span></label>
+                                        {{ form.change_date }}
+                                        {% if form.change_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.change_date.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.change_date.help_text %}
+                                        <small class="form-text text-muted">{{ form.change_date.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Период бронирования:</label>
+                                        <p class="form-control-static">
+                                            {{ booking.start_date|date:"d.m.Y H:i" }} - {{ booking.end_date|date:"d.m.Y H:i" }}
+                                        </p>
+                                        <small class="form-text text-muted">
+                                            Дата изменения должна быть в пределах этого периода
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.reason.id_for_label }}">Причина изменения <span class="text-danger">*</span></label>
+                                        {{ form.reason }}
+                                        {% if form.reason.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.reason.errors %}
+                                            <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if form.reason.help_text %}
+                                        <small class="form-text text-muted">{{ form.reason.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save mr-1"></i> Изменить тариф/комнату
+                            </button>
+                            <a href="{% url 'logus:booking_detail' booking.id %}" class="btn btn-default">
+                                <i class="fas fa-times mr-1"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(function() {
+        // Initialize Select2 Elements
+        $('.select2, select').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

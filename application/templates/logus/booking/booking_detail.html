@@ -226,24 +226,41 @@
                                             <td>
                                                 <div class="btn-group">
                                                     <a href="{% url 'logus:booking_detail_view' detail.id %}"
-                                                       class="btn btn-sm btn-info">
+                                                       class="btn btn-sm btn-info"
+                                                       data-toggle="tooltip"
+                                                       title="Просмотр">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     {% if booking.status != 'cancelled' and booking.status != 'completed' %}
                                                         <a href="{% url 'logus:booking_detail_edit' detail.id %}"
-                                                           class="btn btn-sm btn-warning">
+                                                           class="btn btn-sm btn-warning"
+                                                           data-toggle="tooltip"
+                                                           title="Редактировать">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                         <button type="button" class="btn btn-sm btn-danger"
                                                                 data-toggle="modal"
-                                                                data-target="#deleteDetailModal{{ detail.id }}">
+                                                                data-target="#deleteDetailModal{{ detail.id }}"
+                                                                data-toggle="tooltip"
+                                                                title="Удалить">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     {% endif %}
 
+                                                    {% if booking.status == 'checked_in' or booking.status == 'confirmed' or booking.status == 'in_progress' %}
+                                                        <a href="{% url 'logus:tariff_change' detail.id %}"
+                                                           class="btn btn-sm btn-primary"
+                                                           data-toggle="tooltip"
+                                                           title="Изменить тариф/комнату">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </a>
+                                                    {% endif %}
+
                                                     {% if booking.status == 'checked_in' %}
                                                         <a href="{% url 'logus:booking_add_service' detail.id %}"
-                                                           class="btn btn-sm btn-success">
+                                                           class="btn btn-sm btn-success"
+                                                           data-toggle="tooltip"
+                                                           title="Добавить услугу">
                                                             <i class="fas fa-plus"></i> Услуга
                                                         </a>
                                                     {% endif %}
@@ -292,8 +309,93 @@
                 </div>
             </div>
 
-            <!-- Add this section to your existing booking_detail.html template -->
-            <!-- After the Guests section and before the Actions buttons -->
+            <!-- Service Session Tracking Section (TASK-016) -->
+            {% if booking.status == 'checked_in' or booking.status == 'in_progress' %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-success">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-heartbeat mr-1"></i> Отслеживание сеансов услуг
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            {% for detail in booking_details %}
+                                {% if detail.service_tracking_list %}
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-user mr-2"></i>{{ detail.client.full_name }}
+                                            <small class="text-muted">- {{ detail.tariff.name }}</small>
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table table-sm mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 30%">Услуга</th>
+                                                    <th style="width: 20%" class="text-center">Прогресс</th>
+                                                    <th style="width: 15%" class="text-center">Использовано</th>
+                                                    <th style="width: 15%" class="text-center">Осталось</th>
+                                                    <th style="width: 20%" class="text-center">Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for tracking in detail.service_tracking_list %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ tracking.service.name }}</strong>
+                                                        {% if tracking.service.base_price %}
+                                                        <br><small class="text-muted">Цена за доп. сеанс: {{ tracking.service.base_price|floatformat:0 }} сум</small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="progress" style="height: 25px;">
+                                                            {% widthratio tracking.sessions_used tracking.sessions_included 100 as percent %}
+                                                            <div class="progress-bar {% if percent < 80 %}bg-success{% elif percent < 100 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                                 role="progressbar"
+                                                                 style="width: {% if percent > 100 %}100{% else %}{{ percent }}{% endif %}%"
+                                                                 aria-valuenow="{{ tracking.sessions_used }}"
+                                                                 aria-valuemin="0"
+                                                                 aria-valuemax="{{ tracking.sessions_included }}">
+                                                                {{ tracking.sessions_used }}/{{ tracking.sessions_included }}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-{% if tracking.sessions_used >= tracking.sessions_included %}danger{% else %}success{% endif %} badge-lg">
+                                                            {{ tracking.sessions_used }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-{% if tracking.sessions_remaining > 0 %}success{% else %}danger{% endif %} badge-lg">
+                                                            {{ tracking.sessions_remaining }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="{% url 'logus:record_service_session' tracking.id %}"
+                                                           class="btn btn-sm btn-{% if tracking.sessions_used >= tracking.sessions_included %}warning{% else %}success{% endif %}">
+                                                            <i class="fas fa-check-circle mr-1"></i>
+                                                            {% if tracking.sessions_used >= tracking.sessions_included %}
+                                                            Записать (доп. оплата)
+                                                            {% else %}
+                                                            Записать сеанс
+                                                            {% endif %}
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Illness Histories section -->
             <div class="row">

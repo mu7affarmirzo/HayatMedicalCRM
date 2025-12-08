@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, UpdateView, ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -7,11 +6,14 @@ from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
-
 from django.db import models
+from django.views.decorators.http import require_http_methods
+import logging
 
 from application.logus.forms.patient_form import PatientRegistrationForm, SimplePatientForm, PatientForm
 from core.models import PatientModel, Region, District
+
+logger = logging.getLogger(__name__)
 
 
 class PatientListView(LoginRequiredMixin, ListView):
@@ -74,8 +76,16 @@ def patient_create_view(request):
     return render(request, 'logus/patients/patient_form.html', context)
 
 
-@csrf_exempt
+@login_required
+@require_http_methods(["GET", "POST"])
 def add_new_patient(request):
+    """
+    DEPRECATED: Use patient_create_view instead.
+    This view is kept for backward compatibility.
+
+    View for creating a new patient with SimplePatientForm.
+    Includes date format conversion (DD.MM.YYYY -> YYYY-MM-DD).
+    """
     context = {}
     next_url = request.GET.get('next')
 
@@ -90,36 +100,48 @@ def add_new_patient(request):
     context['action'] = _('Регистрация нового пациента')
 
     if request.method == 'POST':
-        post_data = request.POST.copy()
+        try:
+            post_data = request.POST.copy()
 
-        # Convert date before form initialization
-        date_of_birth = post_data.get('date_of_birth')
-        print(f"Original date: {date_of_birth}")
+            # Convert date before form initialization
+            date_of_birth = post_data.get('date_of_birth')
+            logger.debug(f"Original date: {date_of_birth}")
 
-        # If it's in DD.MM.YYYY format, convert it
-        if date_of_birth and '.' in date_of_birth:
-            try:
-                day, month, year = date_of_birth.split('.')
-                # Convert to YYYY-MM-DD format for Django
-                converted_date = f"{year}-{month}-{day}"
-                # Update the POST data
-                post_data['date_of_birth'] = converted_date
-                print(f"Converted date: {converted_date}")
-            except (ValueError, TypeError) as e:
-                print(f"Date conversion error: {e}")
+            # If it's in DD.MM.YYYY format, convert it
+            if date_of_birth and '.' in date_of_birth:
+                try:
+                    day, month, year = date_of_birth.split('.')
+                    # Convert to YYYY-MM-DD format for Django
+                    converted_date = f"{year}-{month}-{day}"
+                    # Update the POST data
+                    post_data['date_of_birth'] = converted_date
+                    logger.debug(f"Converted date: {converted_date}")
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Date conversion error: {e}")
+                    messages.error(request, _('Неверный формат даты. Используйте ДД.ММ.ГГГГ'))
 
-        # Create form with modified data
-        form = SimplePatientForm(post_data)
-        if form.is_valid():
-            patient = form.save(commit=False)
-            patient.save()
+            # Create form with modified data
+            form = SimplePatientForm(post_data)
+            if form.is_valid():
+                patient = form.save(commit=False)
+                patient.created_by = request.user
+                patient.modified_by = request.user
+                patient.save()
 
-            if next_url:
-                redirect_url = f"{next_url}?patient_id={patient.id}"
-                return redirect(redirect_url)
-            return redirect('logus:booking_start')
+                messages.success(request, f'Пациент "{patient.full_name}" успешно создан!')
 
-        print(form.errors)
+                if next_url:
+                    redirect_url = f"{next_url}?patient_id={patient.id}"
+                    return redirect(redirect_url)
+                return redirect('logus:booking_start')
+            else:
+                logger.warning(f"Form validation errors: {form.errors}")
+                messages.error(request, _('Пожалуйста, исправьте ошибки в форме'))
+                context['form'] = form
+
+        except Exception as e:
+            logger.error(f"Error creating patient: {e}", exc_info=True)
+            messages.error(request, _('Произошла ошибка при создании пациента'))
 
     return render(request, 'logus/patients/patient_registration.html', context)
 

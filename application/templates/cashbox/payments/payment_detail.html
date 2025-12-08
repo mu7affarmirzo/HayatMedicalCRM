@@ -1,0 +1,346 @@
+{% extends 'cashbox/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Детали платежа #{{ payment.id }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Детали платежа #{{ payment.id }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'cashbox:billing_list' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cashbox:payments_list' %}">Платежи</a></li>
+                    <li class="breadcrumb-item active">#{{ payment.id }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Payment Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-receipt"></i> Информация о платеже
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-lg badge-{% if payment.status == 'COMPLETED' %}success{% elif payment.status == 'PENDING' %}warning{% elif payment.status == 'REFUNDED' %}danger{% else %}secondary{% endif %}">
+                        {{ payment.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">ID транзакции:</th>
+                                <td><strong>#{{ payment.id }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Дата создания:</th>
+                                <td>{{ payment.created_at|date:"d.m.Y H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Сумма:</th>
+                                <td>
+                                    <span class="h4 {% if payment.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ payment.amount|intcomma }} сум
+                                    </span>
+                                    {% if payment.amount < 0 %}
+                                        <span class="badge badge-warning ml-2">Возврат</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Метод оплаты:</th>
+                                <td>
+                                    <span class="badge badge-{% if payment.transaction_type == 'CASH' %}success{% elif payment.transaction_type == 'CARD' %}primary{% elif payment.transaction_type == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                        {{ payment.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Статус:</th>
+                                <td>
+                                    <span class="badge badge-{% if payment.status == 'COMPLETED' %}success{% elif payment.status == 'PENDING' %}warning{% elif payment.status == 'REFUNDED' %}danger{% else %}secondary{% endif %}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% if payment.reference_number %}
+                            <tr>
+                                <th>Номер ссылки:</th>
+                                <td><code>{{ payment.reference_number }}</code></td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Пациент:</th>
+                                <td>
+                                    {% if payment.patient %}
+                                        <strong>{{ payment.patient.full_name }}</strong><br>
+                                        <small class="text-muted">{{ payment.patient.phone|default:"Телефон не указан" }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Не указан</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Бронирование:</th>
+                                <td>
+                                    {% if payment.booking %}
+                                        <a href="{% url 'cashbox:billing_detail' payment.booking.id %}">
+                                            {{ payment.booking.booking_number }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Кассир:</th>
+                                <td>{{ payment.created_by.get_full_name|default:payment.created_by.username }}</td>
+                            </tr>
+                            {% if payment.modified_by and payment.modified_at != payment.created_at %}
+                            <tr>
+                                <th>Изменено:</th>
+                                <td>
+                                    {{ payment.modified_by.get_full_name|default:payment.modified_by.username }}<br>
+                                    <small class="text-muted">{{ payment.modified_at|date:"d.m.Y H:i:s" }}</small>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+
+                {% if payment.notes %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h5><i class="icon fas fa-info"></i> Примечания:</h5>
+                            <pre style="white-space: pre-wrap;">{{ payment.notes }}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'cashbox:payments_list' %}" class="btn btn-default">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+                {% if payment.status == 'COMPLETED' and payment.amount > 0 %}
+                <a href="{% url 'cashbox:payment_receipt' payment.id %}" class="btn btn-success" target="_blank">
+                    <i class="fas fa-print"></i> Печать квитанции
+                </a>
+                {% if can_refund %}
+                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#refundModal">
+                    <i class="fas fa-undo"></i> Оформить возврат
+                </button>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Related Transactions (Refunds) -->
+        {% if related_transactions %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-link"></i> Связанные транзакции
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Общая сумма возвратов: <strong>{{ refund_total|intcomma }} сум</strong>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Дата</th>
+                                <th>Сумма</th>
+                                <th>Кассир</th>
+                                <th>Примечания</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in related_transactions %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'cashbox:payment_detail' transaction.id %}">
+                                        #{{ transaction.id }}
+                                    </a>
+                                </td>
+                                <td>{{ transaction.created_at|date:"d.m.Y H:i" }}</td>
+                                <td class="text-danger">{{ transaction.amount|intcomma }} сум</td>
+                                <td>{{ transaction.created_by.get_full_name|default:transaction.created_by.username }}</td>
+                                <td><small>{{ transaction.notes|truncatewords:15 }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Other Transactions for Same Booking -->
+        {% if booking_transactions %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list"></i> Другие платежи по этому бронированию
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Дата</th>
+                                <th>Сумма</th>
+                                <th>Метод</th>
+                                <th>Статус</th>
+                                <th>Кассир</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in booking_transactions %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'cashbox:payment_detail' transaction.id %}">
+                                        #{{ transaction.id }}
+                                    </a>
+                                </td>
+                                <td>{{ transaction.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <span class="{% if transaction.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ transaction.amount|intcomma }} сум
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-sm badge-{% if transaction.transaction_type == 'CASH' %}success{% elif transaction.transaction_type == 'CARD' %}primary{% elif transaction.transaction_type == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-sm badge-{% if transaction.status == 'COMPLETED' %}success{% elif transaction.status == 'PENDING' %}warning{% elif transaction.status == 'REFUNDED' %}danger{% else %}secondary{% endif %}">
+                                        {{ transaction.get_status_display }}
+                                    </span>
+                                </td>
+                                <td><small>{{ transaction.created_by.get_full_name|default:transaction.created_by.username }}</small></td>
+                                <td>
+                                    <a href="{% url 'cashbox:payment_detail' transaction.id %}" class="btn btn-xs btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+
+<!-- Refund Modal -->
+{% if can_refund %}
+<div class="modal fade" id="refundModal" tabindex="-1" role="dialog" aria-labelledby="refundModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="{% url 'cashbox:refund_payment' payment.id %}">
+                {% csrf_token %}
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="refundModalLabel">
+                        <i class="fas fa-undo"></i> Оформить возврат
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Внимание!</strong> Это действие нельзя отменить.
+                    </div>
+
+                    <div class="form-group">
+                        <label for="refund_amount">Сумма возврата <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="refund_amount" name="refund_amount"
+                               step="0.01" min="0.01" max="{{ payment.amount }}"
+                               value="{{ payment.amount }}" required>
+                        <small class="form-text text-muted">
+                            Максимум: {{ payment.amount|intcomma }} сум
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="refund_reason">Причина возврата <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="refund_reason" name="refund_reason"
+                                  rows="3" required placeholder="Укажите причину возврата платежа"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="confirm" name="confirm" required>
+                            <label class="custom-control-label" for="confirm">
+                                Я подтверждаю, что хочу оформить возврат
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-undo"></i> Оформить возврат
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Validate refund amount
+    $('#refund_amount').on('input', function() {
+        var maxAmount = {{ payment.amount }};
+        var currentAmount = parseFloat($(this).val());
+
+        if (currentAmount > maxAmount) {
+            $(this).val(maxAmount);
+        }
+        if (currentAmount < 0) {
+            $(this).val(0);
+        }
+    });
+});
+</script>
+{% endblock %}

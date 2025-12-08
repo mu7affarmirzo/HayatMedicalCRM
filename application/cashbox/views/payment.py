@@ -3,11 +3,13 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, Q, Count
+from django.core.paginator import Paginator
 from decimal import Decimal
+from datetime import datetime, timedelta
 
 from HayatMedicalCRM.auth.decorators import cashbox_required
-from core.models import Booking, BookingBilling, TransactionsModel
+from core.models import Booking, BookingBilling, TransactionsModel, PatientModel
 from application.cashbox.forms.payment_forms import PaymentAcceptanceForm, RefundPaymentForm
 
 
@@ -247,3 +249,132 @@ def refund_payment(request, transaction_id):
             }, status=400)
 
     return redirect('cashbox:billing_detail', booking_id=payment.booking.id)
+
+
+@cashbox_required
+def payments_list(request):
+    """
+    Display list of all payments with filtering and search
+    """
+    # Get filter parameters
+    status = request.GET.get('status', '')
+    payment_method = request.GET.get('payment_method', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search = request.GET.get('search', '')
+
+    # Base query
+    payments = TransactionsModel.objects.all().select_related(
+        'patient', 'booking', 'billing', 'created_by'
+    ).order_by('-created_at')
+
+    # Apply filters
+    if status:
+        payments = payments.filter(status=status)
+
+    if payment_method:
+        payments = payments.filter(transaction_type=payment_method)
+
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            payments = payments.filter(created_at__date__gte=date_from_obj)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            payments = payments.filter(created_at__date__lte=date_to_obj)
+        except ValueError:
+            pass
+
+    if search:
+        payments = payments.filter(
+            Q(patient__f_name__icontains=search) |
+            Q(patient__l_name__icontains=search) |
+            Q(booking__booking_number__icontains=search) |
+            Q(reference_number__icontains=search) |
+            Q(id__icontains=search)
+        )
+
+    # Calculate statistics
+    stats = payments.aggregate(
+        total_amount=Sum('amount'),
+        count=Count('id')
+    )
+
+    # Statistics by status
+    stats_by_status = {}
+    for st in TransactionsModel.TransactionStatus.choices:
+        count = payments.filter(status=st[0]).count()
+        amount = payments.filter(status=st[0]).aggregate(Sum('amount'))['amount__sum'] or 0
+        stats_by_status[st[0]] = {
+            'count': count,
+            'amount': amount,
+            'label': st[1]
+        }
+
+    # Pagination
+    paginator = Paginator(payments, 25)  # Show 25 payments per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'payments': page_obj.object_list,
+        'stats': stats,
+        'stats_by_status': stats_by_status,
+        'status_choices': TransactionsModel.TransactionStatus.choices,
+        'payment_method_choices': TransactionsModel.TransactionType.choices,
+        # Filters
+        'filter_status': status,
+        'filter_payment_method': payment_method,
+        'filter_date_from': date_from,
+        'filter_date_to': date_to,
+        'filter_search': search,
+    }
+
+    return render(request, 'cashbox/payments/payments_list.html', context)
+
+
+@cashbox_required
+def payment_detail(request, transaction_id):
+    """
+    Display detailed information about a specific payment
+    """
+    payment = get_object_or_404(
+        TransactionsModel.objects.select_related(
+            'patient', 'booking', 'billing', 'created_by', 'modified_by'
+        ),
+        id=transaction_id
+    )
+
+    # Get related transactions (e.g., refunds for this payment)
+    related_transactions = TransactionsModel.objects.filter(
+        Q(reference_number__contains=f'REFUND-{payment.id}') |
+        Q(notes__contains=f'#{payment.id}')
+    ).exclude(id=payment.id).order_by('-created_at')
+
+    # Get all transactions for this booking
+    booking_transactions = TransactionsModel.objects.filter(
+        booking=payment.booking
+    ).exclude(id=payment.id).select_related('created_by').order_by('-created_at')
+
+    # Calculate refund total if this is a COMPLETED payment
+    refund_total = Decimal('0')
+    if payment.status == 'COMPLETED':
+        refund_total = related_transactions.aggregate(
+            Sum('amount')
+        )['amount__sum'] or Decimal('0')
+        refund_total = abs(refund_total)  # Make positive for display
+
+    context = {
+        'payment': payment,
+        'related_transactions': related_transactions,
+        'booking_transactions': booking_transactions,
+        'refund_total': refund_total,
+        'can_refund': payment.status == 'COMPLETED',
+    }
+
+    return render(request, 'cashbox/payments/payment_detail.html', context)

@@ -1,0 +1,489 @@
+{% extends 'cashbox/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Отчет кассира - {{ cashier.get_full_name }} - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Отчет кассира</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'cashbox:billing_list' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Отчет кассира</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Filters -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-filter"></i> Параметры отчета
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label for="cashier_id" class="mr-2">Кассир:</label>
+                        <select class="form-control select2" id="cashier_id" name="cashier_id">
+                            {% for user in all_cashiers %}
+                                <option value="{{ user.id }}" {% if user.id == cashier.id %}selected{% endif %}>
+                                    {{ user.get_full_name|default:user.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="date_from" class="mr-2">С:</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from"
+                               value="{{ date_from|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="date_to" class="mr-2">По:</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to"
+                               value="{{ date_to|date:'Y-m-d' }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Показать отчет
+                    </button>
+                    <button type="button" class="btn btn-success ml-2" onclick="window.print()">
+                        <i class="fas fa-print"></i> Печать
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ total_payments|intcomma }} <small>сум</small></h3>
+                        <p>Всего поступлений</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ total_refunds|intcomma }} <small>сум</small></h3>
+                        <p>Всего возвратов</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-minus-circle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>{{ net_total|intcomma }} <small>сум</small></h3>
+                        <p>Чистая сумма</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-equals"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ transaction_count }}</h3>
+                        <p>Количество операций</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cashier Info -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user"></i> Информация о кассире
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">ФИО:</th>
+                                <td><strong>{{ cashier.get_full_name|default:cashier.username }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Логин:</th>
+                                <td>{{ cashier.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ cashier.email|default:"—" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Период отчета:</th>
+                                <td><strong>{{ date_from|date:"d.m.Y" }} - {{ date_to|date:"d.m.Y" }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Время формирования:</th>
+                                <td>{{ "now"|date:"d.m.Y H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Всего операций:</th>
+                                <td><strong>{{ transaction_count }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-money-bill-wave"></i> Разбивка по методам оплаты
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for method_code, method_data in payment_methods_stats.items %}
+                        {% if method_data.count > 0 %}
+                        <div class="col-md-4">
+                            <div class="card card-outline card-{% if method_code == 'CASH' %}success{% elif method_code == 'CARD' %}primary{% elif method_code == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-{% if method_code == 'CASH' %}money-bill-wave{% elif method_code == 'CARD' %}credit-card{% elif method_code == 'TRANSFER' %}exchange-alt{% else %}question{% endif %}"></i>
+                                        {{ method_data.label }}
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="text-{% if method_code == 'CASH' %}success{% elif method_code == 'CARD' %}primary{% elif method_code == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                        {{ method_data.total|intcomma }} сум
+                                    </h4>
+                                    <p class="text-muted">
+                                        Операций: <strong>{{ method_data.count }}</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="table-responsive mt-3">
+                    <table class="table table-bordered table-sm">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Метод оплаты</th>
+                                <th class="text-center">Количество</th>
+                                <th class="text-right">Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for method_code, method_data in payment_methods_stats.items %}
+                            {% if method_data.count > 0 %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-{% if method_code == 'CASH' %}success{% elif method_code == 'CARD' %}primary{% elif method_code == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                        {{ method_data.label }}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ method_data.count }}</td>
+                                <td class="text-right"><strong>{{ method_data.total|intcomma }} сум</strong></td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="thead-light">
+                            <tr>
+                                <th>ИТОГО</th>
+                                <th class="text-center">{{ transaction_count }}</th>
+                                <th class="text-right"><strong>{{ net_total|intcomma }} сум</strong></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Breakdown -->
+        {% if daily_stats %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-line"></i> Разбивка по дням
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th class="text-center">Операций</th>
+                                <th class="text-right">Сумма</th>
+                                <th class="text-center">Средняя сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_stats %}
+                            <tr>
+                                <td>{{ day.date|date:"d.m.Y (l)" }}</td>
+                                <td class="text-center">{{ day.count }}</td>
+                                <td class="text-right">
+                                    <span class="{% if day.total > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ day.total|intcomma }} сум
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% widthratio day.total day.count 1 %} сум
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="thead-light">
+                            <tr>
+                                <th>ИТОГО</th>
+                                <th class="text-center">{{ transaction_count }}</th>
+                                <th class="text-right"><strong>{{ net_total|intcomma }} сум</strong></th>
+                                <th class="text-center">
+                                    {% if transaction_count > 0 %}
+                                        {% widthratio net_total transaction_count 1 %} сум
+                                    {% else %}
+                                        0 сум
+                                    {% endif %}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Chart -->
+                <div class="mt-4">
+                    <canvas id="dailyChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Transactions List -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list"></i> Список операций
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Дата/Время</th>
+                                <th>ID</th>
+                                <th>Пациент</th>
+                                <th>Бронирование</th>
+                                <th>Метод</th>
+                                <th class="text-right">Сумма</th>
+                                <th>Примечания</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr {% if transaction.amount < 0 %}class="table-warning"{% endif %}>
+                                <td>{{ transaction.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'cashbox:payment_detail' transaction.id %}">
+                                        #{{ transaction.id }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if transaction.patient %}
+                                        {{ transaction.patient.full_name }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if transaction.booking %}
+                                        <a href="{% url 'cashbox:billing_detail' transaction.booking.id %}">
+                                            {{ transaction.booking.booking_number }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-sm badge-{% if transaction.transaction_type == 'CASH' %}success{% elif transaction.transaction_type == 'CARD' %}primary{% elif transaction.transaction_type == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td class="text-right">
+                                    <span class="{% if transaction.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ transaction.amount|intcomma }} сум
+                                    </span>
+                                </td>
+                                <td><small>{{ transaction.notes|truncatewords:10 }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle"></i> Нет операций за выбранный период
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-calculator"></i> Итоги работы кассира
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 offset-md-6">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>Всего поступлений:</th>
+                                <td class="text-right text-success"><strong>{{ total_payments|intcomma }} сум</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Всего возвратов:</th>
+                                <td class="text-right text-danger"><strong>-{{ total_refunds|intcomma }} сум</strong></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <th>ЧИСТАЯ СУММА:</th>
+                                <td class="text-right"><strong class="h4">{{ net_total|intcomma }} сум</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Всего операций:</th>
+                                <td class="text-right"><strong>{{ transaction_count }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'plugins/chart.js/Chart.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Initialize select2
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Set max date to today
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById("date_to").setAttribute('max', today);
+
+    // Date validation
+    $('#date_from').on('change', function() {
+        var dateFrom = $(this).val();
+        $('#date_to').attr('min', dateFrom);
+    });
+
+    // Daily chart
+    {% if daily_stats %}
+    var ctx = document.getElementById('dailyChart').getContext('2d');
+    var dailyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for day in daily_stats %}
+                    '{{ day.date|date:"d.m" }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Сумма (сум)',
+                data: [
+                    {% for day in daily_stats %}
+                        {{ day.total }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(60, 141, 188, 0.3)',
+                borderColor: 'rgba(60, 141, 188, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' сум';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+
+// Print styles
+var style = document.createElement('style');
+style.innerHTML = `
+    @media print {
+        .content-header, .card-header .btn, .breadcrumb, .sidebar, .main-header, .main-footer {
+            display: none !important;
+        }
+        .card {
+            border: 1px solid #000 !important;
+            page-break-inside: avoid;
+        }
+        body {
+            font-size: 12pt;
+        }
+        canvas {
+            max-height: 400px !important;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends 'cashbox/snippets/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Список платежей - Hayat Medical Center{% endblock %}
+
+{% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Платежи</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'cashbox:billing_list' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Платежи</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Statistics Cards -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ stats.total_amount|intcomma|default:"0" }} <small>сум</small></h3>
+                        <p>Всего платежей</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ stats.count }}</h3>
+                        <p>Количество транзакций</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                </div>
+            </div>
+            {% for status_key, status_data in stats_by_status.items %}
+                {% if status_data.count > 0 %}
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-{% if status_key == 'COMPLETED' %}success{% elif status_key == 'PENDING' %}warning{% elif status_key == 'REFUNDED' %}danger{% else %}secondary{% endif %}">
+                        <div class="inner">
+                            <h3>{{ status_data.count }}</h3>
+                            <p>{{ status_data.label }}</p>
+                            <small>{{ status_data.amount|intcomma }} сум</small>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-{% if status_key == 'COMPLETED' %}check-circle{% elif status_key == 'PENDING' %}clock{% elif status_key == 'REFUNDED' %}undo{% else %}question-circle{% endif %}"></i>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Filter Card -->
+        <div class="card filter-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-filter"></i> Фильтры
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label for="search" class="mr-2">Поиск:</label>
+                        <input type="text" class="form-control" id="search" name="search" value="{{ filter_search }}" placeholder="Пациент, номер брони, ID">
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="status" class="mr-2">Статус:</label>
+                        <select class="form-control select2" id="status" name="status">
+                            <option value="">Все статусы</option>
+                            {% for code, display in status_choices %}
+                                <option value="{{ code }}" {% if filter_status == code %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="payment_method" class="mr-2">Метод оплаты:</label>
+                        <select class="form-control select2" id="payment_method" name="payment_method">
+                            <option value="">Все методы</option>
+                            {% for code, display in payment_method_choices %}
+                                <option value="{{ code }}" {% if filter_payment_method == code %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="date_from" class="mr-2">С:</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ filter_date_from }}">
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="date_to" class="mr-2">По:</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ filter_date_to }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mr-2">
+                        <i class="fas fa-search"></i> Поиск
+                    </button>
+                    <a href="{% url 'cashbox:payments_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Сбросить
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Payments List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list"></i> Список платежей
+                </h3>
+            </div>
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Дата/Время</th>
+                            <th>Пациент</th>
+                            <th>Бронирование</th>
+                            <th>Сумма</th>
+                            <th>Метод оплаты</th>
+                            <th>Статус</th>
+                            <th>Кассир</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr {% if payment.amount < 0 %}class="table-warning"{% endif %}>
+                            <td>
+                                <a href="{% url 'cashbox:payment_detail' payment.id %}" class="font-weight-bold">
+                                    #{{ payment.id }}
+                                </a>
+                            </td>
+                            <td>
+                                <small>{{ payment.created_at|date:"d.m.Y H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if payment.patient %}
+                                    {{ payment.patient.full_name }}<br>
+                                    <small class="text-muted">{{ payment.patient.phone|default:"" }}</small>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.booking %}
+                                    <a href="{% url 'cashbox:billing_detail' payment.booking.id %}">
+                                        {{ payment.booking.booking_number }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="billing-amount {% if payment.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ payment.amount|intcomma }} сум
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if payment.transaction_type == 'CASH' %}success{% elif payment.transaction_type == 'CARD' %}primary{% elif payment.transaction_type == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                    {{ payment.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if payment.status == 'COMPLETED' %}success{% elif payment.status == 'PENDING' %}warning{% elif payment.status == 'REFUNDED' %}danger{% else %}secondary{% endif %}">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>{{ payment.created_by.get_full_name|default:payment.created_by.username }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'cashbox:payment_detail' payment.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if payment.status == 'COMPLETED' and payment.amount > 0 %}
+                                    <a href="{% url 'cashbox:payment_receipt' payment.id %}" class="btn btn-sm btn-success" target="_blank">
+                                        <i class="fas fa-receipt"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> Нет данных для отображения
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_search %}&search={{ filter_search }}{% endif %}{% if filter_status %}&status={{ filter_status }}{% endif %}{% if filter_payment_method %}&payment_method={{ filter_payment_method }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}">Предыдущая</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if filter_search %}&search={{ filter_search }}{% endif %}{% if filter_status %}&status={{ filter_status }}{% endif %}{% if filter_payment_method %}&payment_method={{ filter_payment_method }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_search %}&search={{ filter_search }}{% endif %}{% if filter_status %}&status={{ filter_status }}{% endif %}{% if filter_payment_method %}&payment_method={{ filter_payment_method }}{% endif %}{% if filter_date_from %}&date_from={{ filter_date_from }}{% endif %}{% if filter_date_to %}&date_to={{ filter_date_to }}{% endif %}">Следующая</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize select2 for better dropdowns
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    });
+});
+</script>
+{% endblock %}

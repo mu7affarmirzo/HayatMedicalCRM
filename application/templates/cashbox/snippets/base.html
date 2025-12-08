@@ -112,22 +112,108 @@
             <!-- Sidebar Menu -->
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <!-- Dashboard -->
                     <li class="nav-item">
-                        <a href="{% url 'cashbox:billing_list' %}" class="nav-link {% if request.resolver_match.url_name == 'billing_list' %}active{% endif %}">
-                            <i class="nav-icon fas fa-calculator"></i>
-                            <p>Расчет счетов</p>
+                        <a href="{% url 'cashbox:billing_list' %}" class="nav-link {% if request.resolver_match.url_name == 'billing_list' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Панель управления</p>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
+
+                    <!-- Billing Section -->
+                    <li class="nav-item {% if 'billing' in request.resolver_match.url_name %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'billing' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p>
+                                Счета
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:billing_list' %}" class="nav-link {% if request.resolver_match.url_name == 'billing_list' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Список счетов</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Payments Section -->
+                    <li class="nav-item {% if 'payment' in request.resolver_match.url_name %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'payment' in request.resolver_match.url_name %}active{% endif %}">
                             <i class="nav-icon fas fa-credit-card"></i>
-                            <p>Платежи</p>
+                            <p>
+                                Платежи
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:payments_list' %}" class="nav-link {% if request.resolver_match.url_name == 'payments_list' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Все платежи</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:payments_list' %}?status=COMPLETED" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Завершенные</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:payments_list' %}?status=REFUNDED" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Возвраты</p>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
+
+                    <!-- Reports Section -->
+                    <li class="nav-item {% if 'report' in request.resolver_match.url_name %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            <p>
+                                Отчеты
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:report_daily' %}" class="nav-link {% if request.resolver_match.url_name == 'report_daily' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Дневной отчет</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:report_period' %}" class="nav-link {% if request.resolver_match.url_name == 'report_period' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Отчет по периоду</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:report_cashier' %}" class="nav-link {% if request.resolver_match.url_name == 'report_cashier' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Отчет кассира</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'cashbox:report_payment_methods' %}" class="nav-link {% if request.resolver_match.url_name == 'report_payment_methods' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>По методам оплаты</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-header">ДОПОЛНИТЕЛЬНО</li>
+
+                    <!-- Settings -->
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-chart-bar"></i>
-                            <p>Отчеты</p>
+                            <i class="nav-icon fas fa-cog"></i>
+                            <p>Настройки</p>
                         </a>
                     </li>
                 </ul>

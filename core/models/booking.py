@@ -38,6 +38,16 @@ class Booking(BaseAuditModel):
         default=BookingStatus.PENDING
     )
 
+    class Meta:
+        indexes = [
+            # TASK-052: Database optimization indexes
+            models.Index(fields=['booking_number'], name='idx_booking_number'),
+            models.Index(fields=['status'], name='idx_booking_status'),
+            models.Index(fields=['start_date', 'end_date'], name='idx_booking_dates'),
+            models.Index(fields=['staff'], name='idx_booking_staff'),
+            models.Index(fields=['-created_at'], name='idx_booking_created'),
+        ]
+
     def __str__(self):
         return f"Booking #{self.booking_number}"
 
@@ -404,6 +414,177 @@ class ServiceUsage(BaseAuditModel):
         if not self.price:
             self.price = self.service.base_price * self.quantity
         super().save(*args, **kwargs)
+
+
+class BookingHistory(BaseAuditModel):
+    """
+    TASK-021: Audit trail model for tracking all changes to bookings.
+    Records what changed, when it changed, who changed it, and the old/new values.
+    """
+
+    class ActionType(models.TextChoices):
+        CREATED = 'created', 'Создано'
+        STATUS_CHANGED = 'status_changed', 'Изменен статус'
+        DATES_CHANGED = 'dates_changed', 'Изменены даты'
+        TARIFF_CHANGED = 'tariff_changed', 'Изменен тариф'
+        ROOM_CHANGED = 'room_changed', 'Изменена комната'
+        GUEST_ADDED = 'guest_added', 'Добавлен гость'
+        GUEST_REMOVED = 'guest_removed', 'Удален гость'
+        SERVICE_ADDED = 'service_added', 'Добавлена услуга'
+        SERVICE_REMOVED = 'service_removed', 'Удалена услуга'
+        SERVICE_SESSION_RECORDED = 'service_session_recorded', 'Записана сессия услуги'
+        NOTES_UPDATED = 'notes_updated', 'Обновлены примечания'
+        OTHER = 'other', 'Другое'
+
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='history',
+        help_text="Бронирование, к которому относится запись истории",
+        db_index=True
+    )
+
+    action = models.CharField(
+        max_length=50,
+        choices=ActionType.choices,
+        help_text="Тип выполненного действия",
+        db_index=True
+    )
+
+    field_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Название измененного поля (если применимо)"
+    )
+
+    old_value = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Предыдущее значение"
+    )
+
+    new_value = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Новое значение"
+    )
+
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Описание изменения"
+    )
+
+    changed_by = models.ForeignKey(
+        'Account',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='booking_changes',
+        help_text="Пользователь, который внес изменение",
+        db_index=True
+    )
+
+    changed_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Когда было сделано изменение",
+        db_index=True
+    )
+
+    # Optional: link to specific booking detail if relevant
+    booking_detail = models.ForeignKey(
+        BookingDetail,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='history',
+        help_text="Конкретная деталь бронирования (если применимо)"
+    )
+
+    class Meta:
+        ordering = ['-changed_at']
+        verbose_name = 'Booking History'
+        verbose_name_plural = 'Booking Histories'
+        indexes = [
+            models.Index(fields=['booking', '-changed_at'], name='idx_booking_hist_date'),
+            models.Index(fields=['booking', 'action'], name='idx_booking_hist_action'),
+            models.Index(fields=['changed_by', '-changed_at'], name='idx_booking_hist_user'),
+        ]
+
+    def __str__(self):
+        return f"{self.booking.booking_number} - {self.get_action_display()} by {self.changed_by} at {self.changed_at}"
+
+    @classmethod
+    def log_change(cls, booking, action, changed_by, field_name=None, old_value=None,
+                   new_value=None, description=None, booking_detail=None):
+        """
+        Convenience method to create a history record.
+
+        Args:
+            booking: Booking instance
+            action: ActionType choice value
+            changed_by: User (Account) who made the change
+            field_name: Name of the field that changed (optional)
+            old_value: Previous value (optional)
+            new_value: New value (optional)
+            description: Human-readable description (optional)
+            booking_detail: Related BookingDetail (optional)
+
+        Returns:
+            BookingHistory instance
+        """
+        # Convert values to strings if they're not None
+        old_value_str = str(old_value) if old_value is not None else None
+        new_value_str = str(new_value) if new_value is not None else None
+
+        return cls.objects.create(
+            booking=booking,
+            action=action,
+            field_name=field_name,
+            old_value=old_value_str,
+            new_value=new_value_str,
+            description=description,
+            changed_by=changed_by,
+            booking_detail=booking_detail
+        )
+
+    @property
+    def action_icon(self):
+        """Return FontAwesome icon class for this action type"""
+        icon_mapping = {
+            self.ActionType.CREATED: 'fa-plus-circle',
+            self.ActionType.STATUS_CHANGED: 'fa-exchange-alt',
+            self.ActionType.DATES_CHANGED: 'fa-calendar-alt',
+            self.ActionType.TARIFF_CHANGED: 'fa-money-bill-wave',
+            self.ActionType.ROOM_CHANGED: 'fa-door-open',
+            self.ActionType.GUEST_ADDED: 'fa-user-plus',
+            self.ActionType.GUEST_REMOVED: 'fa-user-minus',
+            self.ActionType.SERVICE_ADDED: 'fa-briefcase-medical',
+            self.ActionType.SERVICE_REMOVED: 'fa-times-circle',
+            self.ActionType.SERVICE_SESSION_RECORDED: 'fa-check-circle',
+            self.ActionType.NOTES_UPDATED: 'fa-sticky-note',
+            self.ActionType.OTHER: 'fa-info-circle',
+        }
+        return icon_mapping.get(self.action, 'fa-info-circle')
+
+    @property
+    def action_color(self):
+        """Return Bootstrap color class for this action type"""
+        color_mapping = {
+            self.ActionType.CREATED: 'success',
+            self.ActionType.STATUS_CHANGED: 'info',
+            self.ActionType.DATES_CHANGED: 'warning',
+            self.ActionType.TARIFF_CHANGED: 'primary',
+            self.ActionType.ROOM_CHANGED: 'primary',
+            self.ActionType.GUEST_ADDED: 'success',
+            self.ActionType.GUEST_REMOVED: 'danger',
+            self.ActionType.SERVICE_ADDED: 'success',
+            self.ActionType.SERVICE_REMOVED: 'danger',
+            self.ActionType.SERVICE_SESSION_RECORDED: 'info',
+            self.ActionType.NOTES_UPDATED: 'secondary',
+            self.ActionType.OTHER: 'secondary',
+        }
+        return color_mapping.get(self.action, 'secondary')
 
 
 

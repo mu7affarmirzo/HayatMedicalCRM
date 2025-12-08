@@ -75,18 +75,177 @@
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
+                        <!-- TASK-020: Advanced Search Form -->
                         <div class="row mb-3">
-                            <div class="col-md-8">
-                                <form method="get" class="form-inline">
+                            <div class="col-12">
+                                <!-- Quick Search -->
+                                <form method="get" id="quickSearchForm">
                                     <div class="input-group">
-                                        <input type="text" name="search" class="form-control" placeholder="Поиск пациентов..." value="{{ request.GET.search|default:'' }}">
+                                        <input type="text" name="search" class="form-control" placeholder="Быстрый поиск по ФИО, телефону или email..." value="{{ request.GET.search|default:'' }}">
                                         <div class="input-group-append">
                                             <button type="submit" class="btn btn-default">
                                                 <i class="fas fa-search"></i>
                                             </button>
+                                            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#advancedSearch">
+                                                <i class="fas fa-filter"></i> Расширенный поиск
+                                            </button>
+                                            {% if has_filters %}
+                                            <a href="{% url 'logus:patient_list' %}" class="btn btn-warning">
+                                                <i class="fas fa-times"></i> Очистить фильтры
+                                            </a>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </form>
+
+                                <!-- Advanced Search Panel (Collapsible) -->
+                                <div class="collapse mt-3 {% if has_filters %}show{% endif %}" id="advancedSearch">
+                                    <div class="card card-info">
+                                        <div class="card-header">
+                                            <h3 class="card-title"><i class="fas fa-filter"></i> Расширенный поиск пациентов</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <form method="get" id="advancedSearchForm">
+                                                <div class="row">
+                                                    <!-- Text Search Fields -->
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.search_name.id_for_label }}">{{ search_form.search_name.label }}</label>
+                                                            {{ search_form.search_name }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.phone_number.id_for_label }}">{{ search_form.phone_number.label }}</label>
+                                                            {{ search_form.phone_number }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.email.id_for_label }}">{{ search_form.email.label }}</label>
+                                                            {{ search_form.email }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.doc_number.id_for_label }}">{{ search_form.doc_number.label }}</label>
+                                                            {{ search_form.doc_number }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <!-- Age Range -->
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.age_from.id_for_label }}">{{ search_form.age_from.label }}</label>
+                                                            {{ search_form.age_from }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.age_to.id_for_label }}">{{ search_form.age_to.label }}</label>
+                                                            {{ search_form.age_to }}
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Date of Birth Range -->
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.date_of_birth_from.id_for_label }}">{{ search_form.date_of_birth_from.label }}</label>
+                                                            {{ search_form.date_of_birth_from }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.date_of_birth_to.id_for_label }}">{{ search_form.date_of_birth_to.label }}</label>
+                                                            {{ search_form.date_of_birth_to }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <!-- Registration Date Range -->
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.registered_from.id_for_label }}">{{ search_form.registered_from.label }}</label>
+                                                            {{ search_form.registered_from }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.registered_to.id_for_label }}">{{ search_form.registered_to.label }}</label>
+                                                            {{ search_form.registered_to }}
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Location Filters -->
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.region.id_for_label }}">{{ search_form.region.label }}</label>
+                                                            {{ search_form.region }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.district.id_for_label }}">{{ search_form.district.label }}</label>
+                                                            {{ search_form.district }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <!-- Gender and Status Filters -->
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.gender.id_for_label }}">{{ search_form.gender.label }}</label>
+                                                            {{ search_form.gender }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.is_active.id_for_label }}">{{ search_form.is_active.label }}</label>
+                                                            {{ search_form.is_active }}
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Sort By -->
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="{{ search_form.sort_by.id_for_label }}">{{ search_form.sort_by.label }}</label>
+                                                            {{ search_form.sort_by }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class="fas fa-search"></i> Применить фильтры
+                                                        </button>
+                                                        <a href="{% url 'logus:patient_list' %}" class="btn btn-default">
+                                                            <i class="fas fa-undo"></i> Сбросить
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- End Advanced Search Panel -->
+
+                                <!-- Display Active Filters Summary -->
+                                {% if has_filters %}
+                                <div class="alert alert-info mt-2">
+                                    <i class="fas fa-info-circle"></i> <strong>Активные фильтры:</strong>
+                                    {% if request.GET.search_name %}<span class="badge badge-light">ФИО: {{ request.GET.search_name }}</span> {% endif %}
+                                    {% if request.GET.phone_number %}<span class="badge badge-light">Телефон: {{ request.GET.phone_number }}</span> {% endif %}
+                                    {% if request.GET.age_from %}<span class="badge badge-light">Возраст от: {{ request.GET.age_from }}</span> {% endif %}
+                                    {% if request.GET.age_to %}<span class="badge badge-light">Возраст до: {{ request.GET.age_to }}</span> {% endif %}
+                                    {% if request.GET.region %}<span class="badge badge-light">Регион</span> {% endif %}
+                                    {% if request.GET.gender %}<span class="badge badge-light">Пол</span> {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -228,8 +387,35 @@
                 { "orderable": false, "targets": 6 }  // Disable sorting on action column
             ]
         });
+
+        // TASK-020: Handle region-district dependency in advanced search
+        $('#id_region').on('change', function() {
+            var regionId = $(this).val();
+            var districtField = $('#id_district');
+
+            if (regionId) {
+                // Load districts for selected region
+                $.ajax({
+                    url: '{% url "logus:get_districts" %}',
+                    data: {
+                        'region_id': regionId
+                    },
+                    success: function(data) {
+                        districtField.empty();
+                        districtField.append('<option value="">Все районы</option>');
+                        $.each(data, function(index, district) {
+                            districtField.append('<option value="' + district.id + '">' + district.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                // Clear district field if no region selected
+                districtField.empty();
+                districtField.append('<option value="">Все районы</option>');
+            }
+        });
     });
-    
+
     // Function to create a booking for a patient
     function createBooking(patientId) {
         window.location.href = "{% url 'logus:booking_start' %}?patient_id=" + patientId;

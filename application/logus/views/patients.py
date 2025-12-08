@@ -10,24 +10,35 @@ from django.db import models
 from django.views.decorators.http import require_http_methods
 import logging
 
-from application.logus.forms.patient_form import PatientRegistrationForm, SimplePatientForm, PatientForm
+from application.logus.forms.patient_form import (
+    PatientRegistrationForm, SimplePatientForm, PatientForm, AdvancedPatientSearchForm
+)
 from core.models import PatientModel, Region, District
+import datetime
 
 logger = logging.getLogger(__name__)
 
 
 class PatientListView(LoginRequiredMixin, ListView):
-    """View for listing patients"""
+    """
+    TASK-019: View for listing patients with advanced search capabilities
+    Supports: basic search, advanced filters (age, region, gender, date ranges)
+    """
     model = PatientModel
     template_name = 'logus/patients/patients_list.html'
     context_object_name = 'patients'
     paginate_by = 15
 
     def get_queryset(self):
-        """Customize query to include search functionality"""
+        """
+        Customize query to include search and advanced filtering functionality
+        """
         queryset = super().get_queryset()
 
-        # Search functionality
+        # TASK-053: Fix N+1 query - select related region and district
+        queryset = queryset.select_related('region', 'district', 'created_by', 'modified_by')
+
+        # Basic search functionality (kept for backwards compatibility)
         search_query = self.request.GET.get('search', '')
         if search_query:
             queryset = queryset.filter(
@@ -38,7 +49,162 @@ class PatientListView(LoginRequiredMixin, ListView):
                 models.Q(email__icontains=search_query)
             )
 
+        # Advanced search filters
+        # Name search
+        search_name = self.request.GET.get('search_name', '')
+        if search_name:
+            queryset = queryset.filter(
+                models.Q(f_name__icontains=search_name) |
+                models.Q(l_name__icontains=search_name) |
+                models.Q(mid_name__icontains=search_name)
+            )
+
+        # Phone number filter
+        phone_number = self.request.GET.get('phone_number', '')
+        if phone_number:
+            # Remove formatting characters for comparison
+            cleaned_phone = phone_number.replace(' ', '').replace('-', '').replace('+', '')
+            queryset = queryset.filter(
+                models.Q(mobile_phone_number__icontains=cleaned_phone) |
+                models.Q(home_phone_number__icontains=cleaned_phone)
+            )
+
+        # Email filter
+        email = self.request.GET.get('email', '')
+        if email:
+            queryset = queryset.filter(email__icontains=email)
+
+        # Document number filter
+        doc_number = self.request.GET.get('doc_number', '')
+        if doc_number:
+            queryset = queryset.filter(doc_number__icontains=doc_number)
+
+        # Age range filter
+        age_from = self.request.GET.get('age_from')
+        age_to = self.request.GET.get('age_to')
+
+        if age_from or age_to:
+            today = datetime.date.today()
+
+            if age_to:
+                try:
+                    age_to_int = int(age_to)
+                    # Calculate date of birth for minimum age (age_to)
+                    dob_from = today - datetime.timedelta(days=age_to_int * 365.25 + 365.25)
+                    queryset = queryset.filter(date_of_birth__gte=dob_from)
+                except (ValueError, TypeError):
+                    pass
+
+            if age_from:
+                try:
+                    age_from_int = int(age_from)
+                    # Calculate date of birth for maximum age (age_from)
+                    dob_to = today - datetime.timedelta(days=age_from_int * 365.25)
+                    queryset = queryset.filter(date_of_birth__lte=dob_to)
+                except (ValueError, TypeError):
+                    pass
+
+        # Date of birth range filter
+        dob_from = self.request.GET.get('date_of_birth_from')
+        if dob_from:
+            try:
+                dob_from_date = datetime.datetime.strptime(dob_from, '%Y-%m-%d').date()
+                queryset = queryset.filter(date_of_birth__gte=dob_from_date)
+            except (ValueError, TypeError):
+                pass
+
+        dob_to = self.request.GET.get('date_of_birth_to')
+        if dob_to:
+            try:
+                dob_to_date = datetime.datetime.strptime(dob_to, '%Y-%m-%d').date()
+                queryset = queryset.filter(date_of_birth__lte=dob_to_date)
+            except (ValueError, TypeError):
+                pass
+
+        # Registration date range filter
+        reg_from = self.request.GET.get('registered_from')
+        if reg_from:
+            try:
+                reg_from_date = datetime.datetime.strptime(reg_from, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__gte=reg_from_date)
+            except (ValueError, TypeError):
+                pass
+
+        reg_to = self.request.GET.get('registered_to')
+        if reg_to:
+            try:
+                reg_to_date = datetime.datetime.strptime(reg_to, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__lte=reg_to_date)
+            except (ValueError, TypeError):
+                pass
+
+        # Region filter
+        region = self.request.GET.get('region')
+        if region:
+            try:
+                region_id = int(region)
+                queryset = queryset.filter(region_id=region_id)
+            except (ValueError, TypeError):
+                pass
+
+        # District filter
+        district = self.request.GET.get('district')
+        if district:
+            try:
+                district_id = int(district)
+                queryset = queryset.filter(district_id=district_id)
+            except (ValueError, TypeError):
+                pass
+
+        # Gender filter
+        gender = self.request.GET.get('gender')
+        if gender in ['True', 'False']:
+            queryset = queryset.filter(gender=(gender == 'True'))
+
+        # Active status filter
+        is_active = self.request.GET.get('is_active')
+        if is_active in ['True', 'False']:
+            queryset = queryset.filter(is_active=(is_active == 'True'))
+
+        # Sorting
+        sort_by = self.request.GET.get('sort_by', '-created_at')
+        # Validate sort_by to prevent SQL injection
+        allowed_sorts = [
+            '-created_at', 'created_at',
+            'l_name', '-l_name',
+            'date_of_birth', '-date_of_birth'
+        ]
+        if sort_by in allowed_sorts:
+            queryset = queryset.order_by(sort_by)
+
         return queryset
+
+    def get_context_data(self, **kwargs):
+        """Add search form to context"""
+        context = super().get_context_data(**kwargs)
+
+        # Initialize the advanced search form with GET parameters
+        context['search_form'] = AdvancedPatientSearchForm(self.request.GET or None)
+
+        # Add flag to indicate if advanced search is active
+        context['has_filters'] = any([
+            self.request.GET.get('search_name'),
+            self.request.GET.get('phone_number'),
+            self.request.GET.get('email'),
+            self.request.GET.get('doc_number'),
+            self.request.GET.get('age_from'),
+            self.request.GET.get('age_to'),
+            self.request.GET.get('date_of_birth_from'),
+            self.request.GET.get('date_of_birth_to'),
+            self.request.GET.get('registered_from'),
+            self.request.GET.get('registered_to'),
+            self.request.GET.get('region'),
+            self.request.GET.get('district'),
+            self.request.GET.get('gender'),
+            self.request.GET.get('is_active'),
+        ])
+
+        return context
 
 
 @login_required

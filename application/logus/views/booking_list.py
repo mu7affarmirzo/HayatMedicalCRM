@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from core.models import Booking, BookingDetail, TariffService, IllnessHistory
+from core.models.booking import BookingHistory
 from core.models.tariffs import ServiceSessionTracking
 
 
@@ -16,6 +17,7 @@ from core.models.tariffs import ServiceSessionTracking
 def booking_detail_view(request, booking_id):
     """
     Display detailed information for a specific booking
+    TASK-023: Now includes booking history
     """
     # Get the booking or return 404 if not found
     booking = get_object_or_404(Booking, id=booking_id)
@@ -102,6 +104,11 @@ def booking_detail_view(request, booking_id):
     elif booking.status == 'checked_in':
         available_actions = ['complete']
 
+    # TASK-023: Get booking history
+    booking_history = BookingHistory.objects.filter(
+        booking=booking
+    ).select_related('changed_by', 'booking_detail', 'booking_detail__client').order_by('-changed_at')[:50]  # Limit to last 50 changes
+
     context = {
         'booking': booking,
         'booking_details': booking_details,  # Now includes service_tracking attribute (TASK-016)
@@ -113,6 +120,7 @@ def booking_detail_view(request, booking_id):
         'total_price': total_price,
         'available_actions': available_actions,
         'status_badge_class': get_status_badge_class(booking.status),
+        'booking_history': booking_history,  # TASK-023: Add booking history to context
     }
 
     return render(request, 'logus/booking/booking_detail.html', context)
@@ -137,8 +145,16 @@ def booking_list(request):
     Includes filtering options by date, status, and search term
     """
     # Get all bookings ordered by start date (most recent first)
-    bookings = Booking.objects.all().select_related('staff').prefetch_related(
-        'details__client', 'details__room', 'details__tariff'
+    # TASK-053: Optimized with select_related and prefetch_related to avoid N+1 queries
+    bookings = Booking.objects.all().select_related(
+        'staff', 'created_by', 'modified_by'
+    ).prefetch_related(
+        'details__client',
+        'details__client__region',
+        'details__client__district',
+        'details__room',
+        'details__room__room_type',
+        'details__tariff'
     ).order_by('-start_date')
 
     # Initialize filters

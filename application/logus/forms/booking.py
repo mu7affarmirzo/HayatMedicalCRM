@@ -500,3 +500,274 @@ class ServiceSessionRecordForm(forms.Form):
                 )
 
         return session_date
+
+
+class CheckInForm(forms.Form):
+    """
+    TASK-024: Enhanced check-in form with medical screening
+    Used when checking in a guest to record initial health assessment
+    """
+
+    # Check-in details
+    actual_checkin_time = forms.DateTimeField(
+        label='Фактическое время заселения',
+        required=True,
+        widget=forms.DateTimeInput(attrs={
+            'class': 'form-control',
+            'type': 'datetime-local'
+        }),
+        help_text='Время фактического заселения гостя'
+    )
+
+    room_condition = forms.ChoiceField(
+        label='Состояние комнаты',
+        required=True,
+        choices=[
+            ('excellent', 'Отличное'),
+            ('good', 'Хорошее'),
+            ('fair', 'Удовлетворительное'),
+            ('poor', 'Требует внимания')
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    # Medical screening fields
+    temperature = forms.DecimalField(
+        label='Температура тела (°C)',
+        required=False,
+        max_digits=4,
+        decimal_places=1,
+        min_value=35.0,
+        max_value=42.0,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '36.6',
+            'step': '0.1'
+        })
+    )
+
+    blood_pressure_systolic = forms.IntegerField(
+        label='Артериальное давление (систолическое)',
+        required=False,
+        min_value=60,
+        max_value=250,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '120'
+        })
+    )
+
+    blood_pressure_diastolic = forms.IntegerField(
+        label='Артериальное давление (диастолическое)',
+        required=False,
+        min_value=40,
+        max_value=150,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '80'
+        })
+    )
+
+    pulse = forms.IntegerField(
+        label='Пульс (уд/мин)',
+        required=False,
+        min_value=40,
+        max_value=200,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '70'
+        })
+    )
+
+    weight = forms.DecimalField(
+        label='Вес (кг)',
+        required=False,
+        max_digits=5,
+        decimal_places=2,
+        min_value=1.0,
+        max_value=300.0,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '70.0',
+            'step': '0.1'
+        })
+    )
+
+    height = forms.IntegerField(
+        label='Рост (см)',
+        required=False,
+        min_value=50,
+        max_value=250,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '170'
+        })
+    )
+
+    allergies = forms.CharField(
+        label='Аллергии',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'Укажите известные аллергии или оставьте пустым'
+        })
+    )
+
+    current_medications = forms.CharField(
+        label='Текущие лекарства',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'Укажите принимаемые лекарства или оставьте пустым'
+        })
+    )
+
+    medical_conditions = forms.CharField(
+        label='Хронические заболевания',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'Укажите хронические заболевания или оставьте пустым'
+        })
+    )
+
+    mobility_status = forms.ChoiceField(
+        label='Статус мобильности',
+        required=True,
+        choices=[
+            ('fully_mobile', 'Полностью мобильный'),
+            ('needs_assistance', 'Нуждается в помощи'),
+            ('wheelchair', 'Инвалидная коляска'),
+            ('bedridden', 'Лежачий')
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        initial='fully_mobile'
+    )
+
+    special_dietary_requirements = forms.CharField(
+        label='Особые диетические требования',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'Укажите диетические ограничения или требования'
+        })
+    )
+
+    emergency_contact_name = forms.CharField(
+        label='ФИО контактного лица',
+        required=False,
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'ФИО родственника или контактного лица'
+        })
+    )
+
+    emergency_contact_phone = forms.CharField(
+        label='Телефон контактного лица',
+        required=False,
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '+998 XX XXX-XX-XX'
+        })
+    )
+
+    emergency_contact_relationship = forms.CharField(
+        label='Отношение',
+        required=False,
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Например: супруг(а), сын/дочь, друг'
+        })
+    )
+
+    # Additional check-in notes
+    check_in_notes = forms.CharField(
+        label='Примечания при заселении',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Любые дополнительные заметки о заселении'
+        })
+    )
+
+    # Staff confirmation
+    belongings_checked = forms.BooleanField(
+        label='Личные вещи проверены',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    room_orientation_completed = forms.BooleanField(
+        label='Ориентация по комнате проведена',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    facility_tour_completed = forms.BooleanField(
+        label='Экскурсия по учреждению проведена',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    documents_signed = forms.BooleanField(
+        label='Документы подписаны',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.booking_detail = kwargs.pop('booking_detail', None)
+        super().__init__(*args, **kwargs)
+
+        # Set initial check-in time to now
+        if not self.is_bound:
+            self.initial['actual_checkin_time'] = timezone.now().strftime('%Y-%m-%dT%H:%M')
+
+    def clean_actual_checkin_time(self):
+        """Validate check-in time"""
+        checkin_time = self.cleaned_data.get('actual_checkin_time')
+
+        if self.booking_detail:
+            booking = self.booking_detail.booking
+
+            # Cannot check in before the start date
+            if checkin_time < booking.start_date - timezone.timedelta(hours=2):
+                raise ValidationError(
+                    f'Время заселения не может быть более чем на 2 часа раньше времени заезда '
+                    f'({booking.start_date.strftime("%d.%m.%Y %H:%M")})'
+                )
+
+            # Check-in time shouldn't be too far in the future
+            if checkin_time > timezone.now() + timezone.timedelta(hours=1):
+                raise ValidationError('Время заселения не может быть в будущем')
+
+        return checkin_time
+
+    def clean(self):
+        """Additional validation"""
+        cleaned_data = super().clean()
+
+        # Validate blood pressure values if either is provided
+        systolic = cleaned_data.get('blood_pressure_systolic')
+        diastolic = cleaned_data.get('blood_pressure_diastolic')
+
+        if systolic and diastolic:
+            if systolic <= diastolic:
+                raise ValidationError(
+                    'Систолическое давление должно быть выше диастолического'
+                )
+
+        # If emergency contact name is provided, phone should also be provided
+        if cleaned_data.get('emergency_contact_name') and not cleaned_data.get('emergency_contact_phone'):
+            self.add_error('emergency_contact_phone',
+                          'Пожалуйста, укажите телефон контактного лица')
+
+        return cleaned_data

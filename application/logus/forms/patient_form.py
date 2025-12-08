@@ -275,3 +275,219 @@ class PatientQuickForm(forms.ModelForm):
                 'required': True
             }),
         }
+
+
+class AdvancedPatientSearchForm(forms.Form):
+    """
+    TASK-018: Advanced patient search form with multiple filter criteria
+    Allows searching by: name, age range, region, district, gender, date ranges
+    """
+
+    # Text search fields
+    search_name = forms.CharField(
+        label=_('ФИО (Поиск)'),
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Введите имя, фамилию или отчество'
+        })
+    )
+
+    phone_number = forms.CharField(
+        label=_('Номер телефона'),
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '+998 XX XXX-XX-XX'
+        })
+    )
+
+    email = forms.EmailField(
+        label=_('Email'),
+        required=False,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'email@example.com'
+        })
+    )
+
+    doc_number = forms.CharField(
+        label=_('Номер документа'),
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Паспорт или другой документ'
+        })
+    )
+
+    # Age range filters
+    age_from = forms.IntegerField(
+        label=_('Возраст от'),
+        required=False,
+        min_value=0,
+        max_value=120,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '0'
+        })
+    )
+
+    age_to = forms.IntegerField(
+        label=_('Возраст до'),
+        required=False,
+        min_value=0,
+        max_value=120,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '120'
+        })
+    )
+
+    # Date range filters
+    date_of_birth_from = forms.DateField(
+        label=_('Дата рождения от'),
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    date_of_birth_to = forms.DateField(
+        label=_('Дата рождения до'),
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    # Registration date range
+    registered_from = forms.DateField(
+        label=_('Зарегистрирован от'),
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    registered_to = forms.DateField(
+        label=_('Зарегистрирован до'),
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    # Location filters
+    region = forms.ModelChoiceField(
+        label=_('Регион'),
+        queryset=Region.objects.filter(is_active=True),
+        required=False,
+        empty_label=_('Все регионы'),
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    district = forms.ModelChoiceField(
+        label=_('Район'),
+        queryset=District.objects.none(),
+        required=False,
+        empty_label=_('Все районы'),
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    # Gender filter
+    gender = forms.ChoiceField(
+        label=_('Пол'),
+        choices=[
+            ('', _('Все')),
+            ('True', _('Мужской')),
+            ('False', _('Женский'))
+        ],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    # Active status filter
+    is_active = forms.ChoiceField(
+        label=_('Статус'),
+        choices=[
+            ('', _('Все')),
+            ('True', _('Активные')),
+            ('False', _('Неактивные'))
+        ],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    # Sort options
+    sort_by = forms.ChoiceField(
+        label=_('Сортировка'),
+        choices=[
+            ('-created_at', _('Новые первые')),
+            ('created_at', _('Старые первые')),
+            ('l_name', _('По фамилии (А-Я)')),
+            ('-l_name', _('По фамилии (Я-А)')),
+            ('date_of_birth', _('По возрасту (старшие первые)')),
+            ('-date_of_birth', _('По возрасту (младшие первые)'))
+        ],
+        required=False,
+        initial='-created_at',
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # If form is bound and has a region value, populate districts
+        if self.is_bound and 'region' in self.data and self.data['region']:
+            try:
+                region_id = int(self.data['region'])
+                self.fields['district'].queryset = District.objects.filter(
+                    region_id=region_id,
+                    is_active=True
+                )
+            except (ValueError, TypeError):
+                pass
+
+    def clean(self):
+        """Validate the form data"""
+        cleaned_data = super().clean()
+
+        # Validate age range
+        age_from = cleaned_data.get('age_from')
+        age_to = cleaned_data.get('age_to')
+
+        if age_from is not None and age_to is not None:
+            if age_from > age_to:
+                raise ValidationError(_('Возраст "от" не может быть больше возраста "до"'))
+
+        # Validate date of birth range
+        dob_from = cleaned_data.get('date_of_birth_from')
+        dob_to = cleaned_data.get('date_of_birth_to')
+
+        if dob_from and dob_to:
+            if dob_from > dob_to:
+                raise ValidationError(_('Дата рождения "от" не может быть позже даты "до"'))
+
+        # Validate registration date range
+        reg_from = cleaned_data.get('registered_from')
+        reg_to = cleaned_data.get('registered_to')
+
+        if reg_from and reg_to:
+            if reg_from > reg_to:
+                raise ValidationError(_('Дата регистрации "от" не может быть позже даты "до"'))
+
+        return cleaned_data

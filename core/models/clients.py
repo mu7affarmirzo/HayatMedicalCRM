@@ -95,5 +95,15 @@ class PatientModel(BaseAuditModel):
 
     class Meta:
         ordering = ('-created_at',)
+        indexes = [
+            # TASK-052: Database optimization indexes
+            models.Index(fields=['f_name', 'l_name'], name='idx_patient_name'),
+            models.Index(fields=['mobile_phone_number'], name='idx_patient_mobile'),
+            models.Index(fields=['email'], name='idx_patient_email'),
+            models.Index(fields=['date_of_birth'], name='idx_patient_dob'),
+            models.Index(fields=['region', 'district'], name='idx_patient_location'),
+            models.Index(fields=['is_active'], name='idx_patient_active'),
+            models.Index(fields=['-created_at'], name='idx_patient_created'),
+        ]
 
 

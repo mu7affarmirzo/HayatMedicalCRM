@@ -55,6 +55,12 @@
                                 </div>
                                 <div class="step">
                                     <div class="step-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="step-text">Назначение пациентов</div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon">
                                         <i class="fas fa-check-circle"></i>
                                     </div>
                                     <div class="step-text">Подтверждение</div>
@@ -103,8 +109,11 @@
                                         <div class="form-group">
                                             <label>&nbsp;</label>
                                             <div>
-                                                <a href="{% url 'logus:patient_create' %}?next={{ request.path|urlencode }}" class="btn btn-warning">
-                                                    <i class="fas fa-plus"></i> Добавить нового пациента
+                                                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modal-quick-patient">
+                                                    <i class="fas fa-plus"></i> Быстро добавить пациента
+                                                </button>
+                                                <a href="{% url 'logus:patient_create' %}?next={{ request.path|urlencode }}" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-user-plus"></i> Полная форма
                                                 </a>
                                             </div>
                                         </div>
@@ -209,12 +218,12 @@
                 </div>
             </div>
 
-            <!-- Add New Patient Modal -->
-            <div class="modal fade" id="modal-default">
+            <!-- Quick Add Patient Modal (TASK-044) -->
+            <div class="modal fade" id="modal-quick-patient">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Добавить пациента</h4>
+                        <div class="modal-header bg-warning">
+                            <h4 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Быстро добавить пациента</h4>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -223,6 +232,14 @@
                         <form id="registerPatientForm" method="POST" action="{% url 'logus:add-new-patient' %}">
                             {% csrf_token %}
                             <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Заполните основные данные для быстрого создания пациента. Дополнительные данные можно добавить позже.
+                                </div>
+
+                                <div id="patient-form-errors" class="alert alert-danger d-none"></div>
+                                <div id="patient-form-success" class="alert alert-success d-none"></div>
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -251,8 +268,14 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="patient_phone">Телефон <span class="text-danger">*</span></label>
-                                            <input name="mobile_phone_number" type="text" class="form-control"
-                                                   id="patient_phone" placeholder="L998901002030" required>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                </div>
+                                                <input name="mobile_phone_number" type="text" class="form-control"
+                                                       id="patient_phone" placeholder="+998 90 123 45 67" required>
+                                            </div>
+                                            <small class="form-text text-muted">Формат: +998 XX XXX XX XX</small>
                                         </div>
                                     </div>
                                 </div>
@@ -262,48 +285,45 @@
                                         <div class="form-group">
                                             <label for="patient_inn">ПИНФЛ</label>
                                             <input name="INN" type="text" class="form-control" id="patient_inn"
-                                                   placeholder="123456789">
+                                                   placeholder="12345678901234" maxlength="14">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Дата рождения <span class="text-danger">*</span></label>
-                                            <div class="input-group date" id="reservationdate" data-target-input="nearest">
+                                            <div class="input-group date" id="birthdatepicker" data-target-input="nearest">
                                                 <input name="date_of_birth" type="text"
-                                                   class="form-control datetimepicker-input"
-                                                   data-target="#reservationdate"/>
-                                                <div class="input-group-append" data-target="#reservationdate"
-                                                 data-toggle="datetimepicker">
-                                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                                            </div>
+                                                       class="form-control datetimepicker-input"
+                                                       data-target="#birthdatepicker" required/>
+                                                <div class="input-group-append" data-target="#birthdatepicker"
+                                                     data-toggle="datetimepicker">
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <div class="form-group">
                                             <label>Пол <span class="text-danger">*</span></label>
                                             <div class="mt-2">
                                                 <div class="custom-control custom-radio custom-control-inline">
                                                     <input value='True' class="custom-control-input" type="radio"
                                                            id="customRadio_male" name="gender" checked>
-                                                    <label for="customRadio_male" class="custom-control-label">Мужчина</label>
+                                                    <label for="customRadio_male" class="custom-control-label">
+                                                        <i class="fas fa-mars mr-1"></i>Мужчина
+                                                    </label>
                                                 </div>
                                                 <div class="custom-control custom-radio custom-control-inline">
                                                     <input value='False' class="custom-control-input" type="radio"
                                                            id="customRadio_female" name="gender">
-                                                    <label for="customRadio_female" class="custom-control-label">Женщина</label>
+                                                    <label for="customRadio_female" class="custom-control-label">
+                                                        <i class="fas fa-venus mr-1"></i>Женщина
+                                                    </label>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="patient_address">Адрес</label>
-                                            <textarea name="address" class="form-control" id="patient_address" rows="3"
-                                                      placeholder="Ташкентская область, Кибрайский район..."></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -311,9 +331,11 @@
                             <!-- /.modal-body -->
 
                             <div class="modal-footer justify-content-between">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Сохранить
+                                <button type="button" class="btn btn-default" data-dismiss="modal">
+                                    <i class="fas fa-times mr-1"></i>Закрыть
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="save-patient-btn">
+                                    <i class="fas fa-save mr-1"></i>Сохранить и выбрать
                                 </button>
                             </div>
                         </form>
@@ -668,8 +690,8 @@
                 });
             }
 
-            // Initialize birth date picker when modal is shown
-            $('#modal-default').on('shown.bs.modal', function () {
+            // Initialize birth date picker when modal is shown (TASK-044)
+            $('#modal-quick-patient').on('shown.bs.modal', function () {
                 // Small delay to ensure modal is fully rendered
                 setTimeout(function() {
                     initBirthDatePicker();
@@ -677,9 +699,13 @@
             });
 
             // Clean up when modal is hidden
-            $('#modal-default').on('hidden.bs.modal', function () {
+            $('#modal-quick-patient').on('hidden.bs.modal', function () {
                 // Reset form
                 $('#registerPatientForm')[0].reset();
+
+                // Hide error/success messages
+                $('#patient-form-errors').addClass('d-none').html('');
+                $('#patient-form-success').addClass('d-none').html('');
 
                 // Destroy date picker instance
                 if ($('#birthdatepicker').hasClass('datetimepicker-input')) {
@@ -833,9 +859,18 @@
                 localUpdateRoomAvailability();
             });
 
-            // Handle new patient form submission
+            // Handle new patient form submission (TASK-045: Enhanced AJAX handler)
             $('#registerPatientForm').on('submit', function(e) {
                 e.preventDefault();
+
+                // Hide previous messages
+                $('#patient-form-errors').addClass('d-none').html('');
+                $('#patient-form-success').addClass('d-none').html('');
+
+                // Disable submit button and show loading state
+                const $submitBtn = $('#save-patient-btn');
+                const originalBtnText = $submitBtn.html();
+                $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Сохранение...');
 
                 const formData = $(this).serialize();
 
@@ -845,21 +880,50 @@
                     data: formData,
                     success: function(response) {
                         if (response.success) {
+                            // Show success message
+                            $('#patient-form-success').removeClass('d-none').html(
+                                '<i class="fas fa-check-circle mr-2"></i>Пациент успешно добавлен!'
+                            );
+
                             // Add new patient to select dropdown
                             const newOption = new Option(response.patient.full_name, response.patient.id, true, true);
                             $('#id_patient').append(newOption).trigger('change');
 
-                            // Close modal
-                            $('#modal-default').modal('hide');
+                            // Close modal after short delay
+                            setTimeout(function() {
+                                $('#modal-quick-patient').modal('hide');
 
-                            // Show success message
-                            alert('Пациент успешно добавлен!');
+                                // Show toast notification (if available)
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success('Пациент ' + response.patient.full_name + ' успешно добавлен и выбран!', 'Успех');
+                                }
+                            }, 1000);
                         } else {
-                            alert('Ошибка при добавлении пациента: ' + response.error);
+                            // Show error message
+                            let errorHtml = '<ul class="mb-0">';
+                            if (typeof response.error === 'string') {
+                                errorHtml += '<li>' + response.error + '</li>';
+                            } else if (typeof response.error === 'object') {
+                                for (let field in response.error) {
+                                    errorHtml += '<li><strong>' + field + ':</strong> ' + response.error[field] + '</li>';
+                                }
+                            }
+                            errorHtml += '</ul>';
+                            $('#patient-form-errors').removeClass('d-none').html(errorHtml);
                         }
                     },
-                    error: function() {
-                        alert('Произошла ошибка при сохранении данных пациента.');
+                    error: function(xhr) {
+                        let errorMsg = 'Произошла ошибка при сохранении данных пациента.';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMsg = xhr.responseJSON.error;
+                        }
+                        $('#patient-form-errors').removeClass('d-none').html(
+                            '<i class="fas fa-exclamation-triangle mr-2"></i>' + errorMsg
+                        );
+                    },
+                    complete: function() {
+                        // Re-enable submit button
+                        $submitBtn.prop('disabled', false).html(originalBtnText);
                     }
                 });
             });

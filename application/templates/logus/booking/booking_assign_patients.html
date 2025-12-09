@@ -1,0 +1,319 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}Назначение пациентов - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 60%;
+            width: 80%;
+            height: 2px;
+            background-color: #e9ecef;
+            z-index: 1;
+        }
+
+        .step.active:not(:last-child):after,
+        .step.completed:not(:last-child):after {
+            background-color: #007bff;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step.active .step-icon {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .step.completed .step-icon {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .step.active .step-text,
+        .step.completed .step-text {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .step.completed .step-text {
+            color: #28a745;
+        }
+
+        .patient-assignment-card {
+            border-left: 4px solid #007bff;
+        }
+
+        .room-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .primary-patient-badge {
+            background-color: #ffc107;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .select2-container.border-danger .select2-selection {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Назначение пациентов</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Главная</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'logus:booking_list' %}">Записи</a></li>
+                        <li class="breadcrumb-item active">Назначение пациентов</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Booking Process Steps -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body p-3">
+                            <div class="progress-steps">
+                                <div class="step completed">
+                                    <div class="step-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="step-text">Выбор пациента и дат</div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="step-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="step-text">Выбор комнаты</div>
+                                </div>
+                                <div class="step active">
+                                    <div class="step-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="step-text">Назначение пациентов</div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="step-text">Подтверждение</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Assignment Instructions -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <h5><i class="icon fas fa-info-circle"></i> Инструкция</h5>
+                        <p class="mb-0">
+                            Вы выбрали <strong>{{ guests_count }}</strong> {% if guests_count == 1 %}комнату{% elif guests_count < 5 %}комнаты{% else %}комнат{% endif %}.
+                            Пожалуйста, назначьте пациента для каждой комнаты.
+                            {% if guests_count > 1 %}
+                                Первая комната автоматически назначена основному пациенту <strong>{{ primary_patient.full_name }}</strong>.
+                                Вы можете изменить это при необходимости.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Assignment Form -->
+            <div class="row">
+                <div class="col-md-12">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <i class="icon fas fa-ban"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                            {% if 'patient_' in field.name %}
+                                {% with index=forloop.counter0 %}
+                                    <div class="card patient-assignment-card mb-3">
+                                        <div class="card-header bg-primary">
+                                            <h3 class="card-title">
+                                                <i class="fas fa-bed mr-2"></i>
+                                                Комната {{ forloop.counter }}
+                                                {% if forloop.counter == 1 %}
+                                                    <span class="primary-patient-badge">Основной пациент</span>
+                                                {% endif %}
+                                            </h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Room Information -->
+                                            <div class="room-info">
+                                                {% for room in selected_rooms %}
+                                                    {% if forloop.counter0 == index %}
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong><i class="fas fa-door-open mr-1"></i> Название:</strong>
+                                                                {{ room.name }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong><i class="fas fa-tag mr-1"></i> Тип:</strong>
+                                                                {{ room.room_type.name }}
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+
+                                            <!-- Patient Selection -->
+                                            <div class="form-group">
+                                                <label for="{{ field.id_for_label }}">
+                                                    <i class="fas fa-user-injured mr-1"></i>
+                                                    {{ field.label }}
+                                                </label>
+                                                {{ field }}
+                                                {% if field.errors %}
+                                                    <div class="text-danger mt-1">
+                                                        {% for error in field.errors %}
+                                                            <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Выберите пациента, который будет размещен в этой комнате
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Hidden fields for room IDs -->
+                        {% for field in form %}
+                            {% if 'room_' in field.name and 'patient_' not in field.name %}
+                                {{ field }}
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Action Buttons -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-arrow-right mr-2"></i>
+                                            Продолжить к подтверждению
+                                        </button>
+                                        <a href="{% url 'logus:booking_select_rooms' %}" class="btn btn-default btn-lg">
+                                            <i class="fas fa-arrow-left mr-2"></i>
+                                            Назад к выбору комнат
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        $(function () {
+            // Initialize Select2 for patient selection
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                placeholder: '-- Выберите пациента --',
+                allowClear: false
+            });
+
+            // Remove error styling when user selects a patient
+            $('.select2').on('change', function() {
+                $(this).next('.select2-container').removeClass('is-invalid border-danger');
+                // Also remove field-specific error messages
+                $(this).closest('.form-group').find('.text-danger').fadeOut();
+            });
+
+            // Highlight fields with server-side validation errors
+            {% if form.errors %}
+                $('.select2').each(function() {
+                    const fieldName = $(this).attr('name');
+                    {% for field in form %}
+                        {% if field.errors %}
+                            if (fieldName === '{{ field.name }}') {
+                                $(this).next('.select2-container').addClass('border-danger');
+                            }
+                        {% endif %}
+                    {% endfor %}
+                });
+
+                // Show toast notification if available
+                {% if form.non_field_errors %}
+                    if (typeof toastr !== 'undefined') {
+                        {% for error in form.non_field_errors %}
+                            toastr.error('{{ error|escapejs }}');
+                        {% endfor %}
+                    }
+                {% endif %}
+            {% endif %}
+        });
+    </script>
+{% endblock %}

@@ -609,6 +609,170 @@
   });
 </script>
 
+<!-- Global Keyboard Shortcuts (TASK-047) -->
+<script>
+  $(document).ready(function() {
+    // Global keyboard shortcut handler
+    $(document).on('keydown', function(e) {
+      // Ignore if user is typing in an input field
+      if ($(e.target).is('input, textarea, select')) {
+        return;
+      }
+
+      // Check for Ctrl/Cmd key combinations
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key.toLowerCase()) {
+          case 'n':
+            // Ctrl+N: New Booking
+            e.preventDefault();
+            const newBookingUrl = "{% url 'logus:booking_start' %}";
+            if (window.location.pathname !== newBookingUrl) {
+              window.location.href = newBookingUrl;
+              toastr.info('Открытие формы новой записи...', 'Навигация');
+            }
+            break;
+
+          case 'p':
+            // Ctrl+P: New Patient
+            e.preventDefault();
+            const newPatientUrl = "{% url 'logus:patient_create' %}";
+            if (window.location.pathname !== newPatientUrl) {
+              window.location.href = newPatientUrl;
+              toastr.info('Открытие формы нового пациента...', 'Навигация');
+            }
+            break;
+
+          case 'f':
+            // Ctrl+F: Focus on search (if exists)
+            e.preventDefault();
+            const $searchInput = $('input[type="search"], input[name="search"], input[placeholder*="Поиск"], input[placeholder*="поиск"]').first();
+            if ($searchInput.length) {
+              $searchInput.focus().select();
+              toastr.info('Поиск активирован', 'Навигация');
+            }
+            break;
+
+          case 'b':
+            // Ctrl+B: Bookings List
+            e.preventDefault();
+            const bookingsUrl = "{% url 'logus:booking_list' %}";
+            if (window.location.pathname !== bookingsUrl) {
+              window.location.href = bookingsUrl;
+              toastr.info('Открытие списка записей...', 'Навигация');
+            }
+            break;
+
+          case 'h':
+            // Ctrl+H: Home/Dashboard
+            e.preventDefault();
+            const homeUrl = "{% url 'logus:logus_dashboard' %}";
+            if (window.location.pathname !== homeUrl) {
+              window.location.href = homeUrl;
+              toastr.info('Переход на главную...', 'Навигация');
+            }
+            break;
+
+          case '?':
+            // Ctrl+?: Show keyboard shortcuts help
+            e.preventDefault();
+            showKeyboardShortcutsHelp();
+            break;
+        }
+      }
+
+      // Standalone key shortcuts
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        switch(e.key) {
+          case 'Escape':
+            // ESC: Close modals
+            $('.modal').modal('hide');
+            break;
+        }
+      }
+    });
+
+    // Function to show keyboard shortcuts help modal
+    function showKeyboardShortcutsHelp() {
+      const helpHtml = `
+        <div class="modal fade" id="keyboard-shortcuts-modal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-info">
+                <h5 class="modal-title">
+                  <i class="fas fa-keyboard mr-2"></i>Горячие клавиши
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                  <span>&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Комбинация</th>
+                      <th>Действие</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>N</kbd></td>
+                      <td>Новая запись</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>P</kbd></td>
+                      <td>Новый пациент</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
+                      <td>Поиск на странице</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>B</kbd></td>
+                      <td>Список записей</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>H</kbd></td>
+                      <td>Главная страница</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>?</kbd></td>
+                      <td>Показать эту справку</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>ESC</kbd></td>
+                      <td>Закрыть модальные окна</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="alert alert-info mt-3">
+                  <i class="fas fa-info-circle mr-2"></i>
+                  <small>Горячие клавиши не работают при вводе текста в полях формы.</small>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Remove existing modal if any
+      $('#keyboard-shortcuts-modal').remove();
+
+      // Add and show modal
+      $('body').append(helpHtml);
+      $('#keyboard-shortcuts-modal').modal('show');
+    }
+
+    // Add keyboard shortcut hint to footer (optional)
+    const $footer = $('.main-footer');
+    if ($footer.length) {
+      $footer.append('<div class="float-right d-none d-sm-block"><small class="text-muted"><i class="fas fa-keyboard mr-1"></i>Нажмите <kbd>Ctrl</kbd> + <kbd>?</kbd> для справки по горячим клавишам</small></div>');
+    }
+  });
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

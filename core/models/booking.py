@@ -17,6 +17,7 @@ class Booking(BaseAuditModel):
     """Main booking record"""
 
     class BookingStatus(models.TextChoices):
+        RESERVATION = 'reservation', 'Резервация'  # TASK-028: New reservation status
         PENDING = 'pending', 'В ожидании'
         CONFIRMED = 'confirmed', 'Подтверждено'
         CHECKED_IN = 'checked_in', 'Заселен'
@@ -60,6 +61,7 @@ class Booking(BaseAuditModel):
     def is_active(self):
         """Check if booking is currently active"""
         return self.status in [
+            self.BookingStatus.RESERVATION,
             self.BookingStatus.CONFIRMED,
             self.BookingStatus.CHECKED_IN,
             self.BookingStatus.IN_PROGRESS
@@ -69,6 +71,7 @@ class Booking(BaseAuditModel):
     def status_display_color(self):
         """Return CSS color class for status display"""
         color_mapping = {
+            self.BookingStatus.RESERVATION: 'secondary',
             self.BookingStatus.PENDING: 'warning',
             self.BookingStatus.CONFIRMED: 'info',
             self.BookingStatus.CHECKED_IN: 'primary',
@@ -586,6 +589,530 @@ class BookingHistory(BaseAuditModel):
         }
         return color_mapping.get(self.action, 'secondary')
 
+
+class BookingDeposit(BaseAuditModel):
+    """
+    TASK-029: Model to track deposits for reservations.
+    Stores deposit amount, payment method, and status.
+    """
+
+    class DepositStatus(models.TextChoices):
+        PENDING = 'pending', 'Ожидается'
+        PAID = 'paid', 'Оплачен'
+        REFUNDED = 'refunded', 'Возвращен'
+        FORFEITED = 'forfeited', 'Аннулирован'
+
+    class PaymentMethod(models.TextChoices):
+        CASH = 'cash', 'Наличные'
+        CARD = 'card', 'Карта'
+        BANK_TRANSFER = 'bank_transfer', 'Банковский перевод'
+        ONLINE = 'online', 'Онлайн оплата'
+
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='deposit',
+        help_text="Бронирование, к которому относится депозит",
+        db_index=True
+    )
+
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Сумма депозита"
+    )
+
+    deposit_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Процент от общей стоимости (если применимо)"
+    )
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        null=True,
+        blank=True,
+        help_text="Способ оплаты депозита"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=DepositStatus.choices,
+        default=DepositStatus.PENDING,
+        help_text="Статус депозита",
+        db_index=True
+    )
+
+    paid_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Когда был оплачен депозит"
+    )
+
+    refunded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Когда был возвращен депозит"
+    )
+
+    refund_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Сумма возврата (может отличаться от суммы депозита)"
+    )
+
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Примечания к депозиту"
+    )
+
+    receipt_number = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Номер квитанции об оплате",
+        db_index=True
+    )
+
+    processed_by = models.ForeignKey(
+        'Account',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processed_deposits',
+        help_text="Сотрудник, обработавший депозит"
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Booking Deposit'
+        verbose_name_plural = 'Booking Deposits'
+        indexes = [
+            models.Index(fields=['booking'], name='idx_deposit_booking'),
+            models.Index(fields=['status'], name='idx_deposit_status'),
+            models.Index(fields=['paid_at'], name='idx_deposit_paid_at'),
+            models.Index(fields=['receipt_number'], name='idx_deposit_receipt'),
+        ]
+
+    def __str__(self):
+        return f"Deposit for {self.booking.booking_number} - {self.amount} ({self.get_status_display()})"
+
+    def mark_as_paid(self, payment_method, processed_by, receipt_number=None):
+        """
+        Mark deposit as paid.
+
+        Args:
+            payment_method: PaymentMethod choice
+            processed_by: Account instance who processed the payment
+            receipt_number: Optional receipt number
+        """
+        self.status = self.DepositStatus.PAID
+        self.payment_method = payment_method
+        self.paid_at = timezone.now()
+        self.processed_by = processed_by
+        if receipt_number:
+            self.receipt_number = receipt_number
+        self.save(update_fields=['status', 'payment_method', 'paid_at', 'processed_by', 'receipt_number', 'updated_at'])
+
+    def refund(self, refund_amount=None, processed_by=None, notes=None):
+        """
+        Process a deposit refund.
+
+        Args:
+            refund_amount: Amount to refund (defaults to full deposit amount)
+            processed_by: Account instance who processed the refund
+            notes: Refund notes
+        """
+        self.status = self.DepositStatus.REFUNDED
+        self.refund_amount = refund_amount if refund_amount is not None else self.amount
+        self.refunded_at = timezone.now()
+        if processed_by:
+            self.processed_by = processed_by
+        if notes:
+            self.notes = (self.notes or '') + f'\nRefund: {notes}'
+        self.save(update_fields=['status', 'refund_amount', 'refunded_at', 'processed_by', 'notes', 'updated_at'])
+
+    def forfeit(self, notes=None):
+        """
+        Forfeit the deposit (e.g., due to late cancellation or no-show).
+
+        Args:
+            notes: Reason for forfeiture
+        """
+        self.status = self.DepositStatus.FORFEITED
+        if notes:
+            self.notes = (self.notes or '') + f'\nForfeited: {notes}'
+        self.save(update_fields=['status', 'notes', 'updated_at'])
+
+    @property
+    def is_paid(self):
+        """Check if deposit has been paid"""
+        return self.status == self.DepositStatus.PAID
+
+    @property
+    def is_refundable(self):
+        """Check if deposit can be refunded"""
+        return self.status == self.DepositStatus.PAID
+
+    @property
+    def status_color(self):
+        """Return Bootstrap color class for status display"""
+        color_mapping = {
+            self.DepositStatus.PENDING: 'warning',
+            self.DepositStatus.PAID: 'success',
+            self.DepositStatus.REFUNDED: 'info',
+            self.DepositStatus.FORFEITED: 'danger',
+        }
+        return color_mapping.get(self.status, 'secondary')
+
+
+class Waitlist(BaseAuditModel):
+    """
+    TASK-035: Waitlist model for managing booking requests when rooms are unavailable.
+    Automatically notifies when rooms become available.
+    """
+
+    class WaitlistStatus(models.TextChoices):
+        ACTIVE = 'active', 'Активен'
+        CONTACTED = 'contacted', 'Связались'
+        CONVERTED = 'converted', 'Преобразован в бронирование'
+        EXPIRED = 'expired', 'Истек'
+        CANCELLED = 'cancelled', 'Отменен'
+
+    class Priority(models.TextChoices):
+        LOW = 'low', 'Низкий'
+        NORMAL = 'normal', 'Обычный'
+        HIGH = 'high', 'Высокий'
+        URGENT = 'urgent', 'Срочный'
+
+    patient = models.ForeignKey(
+        PatientModel,
+        on_delete=models.CASCADE,
+        related_name='waitlist_entries',
+        help_text="Пациент в листе ожидания",
+        db_index=True
+    )
+
+    desired_start_date = models.DateTimeField(
+        help_text="Желаемая дата начала",
+        db_index=True
+    )
+
+    desired_end_date = models.DateTimeField(
+        help_text="Желаемая дата окончания",
+        db_index=True
+    )
+
+    desired_room_type = models.ForeignKey(
+        'RoomType',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='waitlist_entries',
+        help_text="Желаемый тип комнаты"
+    )
+
+    desired_tariff = models.ForeignKey(
+        'Tariff',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='waitlist_entries',
+        help_text="Желаемый тариф"
+    )
+
+    number_of_guests = models.PositiveSmallIntegerField(
+        default=1,
+        help_text="Количество гостей"
+    )
+
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+        help_text="Приоритет запроса",
+        db_index=True
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=WaitlistStatus.choices,
+        default=WaitlistStatus.ACTIVE,
+        help_text="Статус записи в листе ожидания",
+        db_index=True
+    )
+
+    contacted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Когда связались с клиентом"
+    )
+
+    contacted_by = models.ForeignKey(
+        'Account',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='waitlist_contacts',
+        help_text="Кто связался с клиентом"
+    )
+
+    converted_booking = models.ForeignKey(
+        Booking,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='waitlist_source',
+        help_text="Бронирование, созданное из листа ожидания"
+    )
+
+    converted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Когда был преобразован в бронирование"
+    )
+
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Когда истекает запрос (авто-расчет)",
+        db_index=True
+    )
+
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Примечания к запросу"
+    )
+
+    contact_preference = models.CharField(
+        max_length=20,
+        choices=[
+            ('phone', 'Телефон'),
+            ('email', 'Email'),
+            ('sms', 'SMS'),
+            ('any', 'Любой')
+        ],
+        default='phone',
+        help_text="Предпочтительный способ связи"
+    )
+
+    created_by = models.ForeignKey(
+        'Account',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='waitlist_created',
+        help_text="Кто создал запись"
+    )
+
+    class Meta:
+        ordering = ['priority', 'created_at']
+        verbose_name = 'Waitlist Entry'
+        verbose_name_plural = 'Waitlist Entries'
+        indexes = [
+            models.Index(fields=['status', 'priority', 'created_at'], name='idx_waitlist_status_priority'),
+            models.Index(fields=['desired_start_date', 'desired_end_date'], name='idx_waitlist_dates'),
+            models.Index(fields=['patient'], name='idx_waitlist_patient'),
+            models.Index(fields=['expires_at'], name='idx_waitlist_expires'),
+        ]
+
+    def __str__(self):
+        return f"Waitlist: {self.patient.full_name} - {self.desired_start_date.strftime('%Y-%m-%d')} ({self.get_status_display()})"
+
+    def save(self, *args, **kwargs):
+        """Auto-set expires_at if not set (default to desired_start_date)"""
+        if not self.expires_at and self.desired_start_date:
+            self.expires_at = self.desired_start_date
+        super().save(*args, **kwargs)
+
+    def mark_contacted(self, contacted_by, notes=None):
+        """
+        Mark that the patient has been contacted.
+
+        Args:
+            contacted_by: Account instance who contacted the patient
+            notes: Contact notes
+        """
+        self.status = self.WaitlistStatus.CONTACTED
+        self.contacted_at = timezone.now()
+        self.contacted_by = contacted_by
+        if notes:
+            self.notes = (self.notes or '') + f'\nContacted: {notes}'
+        self.save(update_fields=['status', 'contacted_at', 'contacted_by', 'notes', 'updated_at'])
+
+    def convert_to_booking(self, booking):
+        """
+        Convert waitlist entry to an actual booking.
+
+        Args:
+            booking: Booking instance that was created from this waitlist entry
+        """
+        self.status = self.WaitlistStatus.CONVERTED
+        self.converted_booking = booking
+        self.converted_at = timezone.now()
+        self.save(update_fields=['status', 'converted_booking', 'converted_at', 'updated_at'])
+
+    def cancel(self, reason=None):
+        """
+        Cancel the waitlist entry.
+
+        Args:
+            reason: Reason for cancellation
+        """
+        self.status = self.WaitlistStatus.CANCELLED
+        if reason:
+            self.notes = (self.notes or '') + f'\nCancelled: {reason}'
+        self.save(update_fields=['status', 'notes', 'updated_at'])
+
+    def mark_expired(self):
+        """Mark the waitlist entry as expired"""
+        self.status = self.WaitlistStatus.EXPIRED
+        self.save(update_fields=['status', 'updated_at'])
+
+    @property
+    def is_active(self):
+        """Check if waitlist entry is active"""
+        return self.status == self.WaitlistStatus.ACTIVE
+
+    @property
+    def status_color(self):
+        """Return Bootstrap color class for status display"""
+        color_mapping = {
+            self.WaitlistStatus.ACTIVE: 'warning',
+            self.WaitlistStatus.CONTACTED: 'info',
+            self.WaitlistStatus.CONVERTED: 'success',
+            self.WaitlistStatus.EXPIRED: 'secondary',
+            self.WaitlistStatus.CANCELLED: 'danger',
+        }
+        return color_mapping.get(self.status, 'secondary')
+
+    @property
+    def priority_color(self):
+        """Return Bootstrap color class for priority display"""
+        color_mapping = {
+            self.Priority.LOW: 'secondary',
+            self.Priority.NORMAL: 'info',
+            self.Priority.HIGH: 'warning',
+            self.Priority.URGENT: 'danger',
+        }
+        return color_mapping.get(self.priority, 'secondary')
+
+    @classmethod
+    def get_active_for_dates(cls, start_date, end_date, room_type=None):
+        """
+        Get active waitlist entries for a date range.
+
+        Args:
+            start_date: Start date
+            end_date: End date
+            room_type: Optional room type filter
+
+        Returns:
+            QuerySet of active Waitlist entries
+        """
+        queryset = cls.objects.filter(
+            status=cls.WaitlistStatus.ACTIVE,
+            desired_start_date__lte=end_date,
+            desired_end_date__gte=start_date
+        )
+        if room_type:
+            queryset = queryset.filter(desired_room_type=room_type)
+        return queryset
+
+    @classmethod
+    def check_and_expire_old_entries(cls):
+        """
+        Check and mark expired waitlist entries.
+        Should be called periodically (e.g., daily cron job).
+
+        Returns:
+            Number of entries marked as expired
+        """
+        now = timezone.now()
+        expired_entries = cls.objects.filter(
+            status=cls.WaitlistStatus.ACTIVE,
+            expires_at__lt=now
+        )
+        count = expired_entries.count()
+        expired_entries.update(status=cls.WaitlistStatus.EXPIRED, updated_at=now)
+        return count
+
+
+class CheckInLog(BaseAuditModel):
+    """TASK-026: Detailed check-in log with medical screening data"""
+
+    class RoomCondition(models.TextChoices):
+        EXCELLENT = 'excellent', 'Отличное'
+        GOOD = 'good', 'Хорошее'
+        FAIR = 'fair', 'Удовлетворительное'
+        POOR = 'poor', 'Требует внимания'
+
+    class MobilityStatus(models.TextChoices):
+        FULLY_MOBILE = 'fully_mobile', 'Полностью мобильный'
+        NEEDS_ASSISTANCE = 'needs_assistance', 'Нуждается в помощи'
+        WHEELCHAIR = 'wheelchair', 'Инвалидная коляска'
+        BEDRIDDEN = 'bedridden', 'Лежачий'
+
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='check_in_logs',
+        db_index=True
+    )
+    booking_detail = models.OneToOneField(
+        BookingDetail,
+        on_delete=models.CASCADE,
+        related_name='check_in_log',
+        db_index=True
+    )
+    check_in_time = models.DateTimeField()
+    room_condition = models.CharField(
+        max_length=20,
+        choices=RoomCondition.choices
+    )
+    temperature = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    blood_pressure_systolic = models.IntegerField(null=True, blank=True)
+    blood_pressure_diastolic = models.IntegerField(null=True, blank=True)
+    pulse = models.IntegerField(null=True, blank=True)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    height = models.IntegerField(null=True, blank=True)
+    allergies = models.TextField(blank=True, null=True)
+    current_medications = models.TextField(blank=True, null=True)
+    medical_conditions = models.TextField(blank=True, null=True)
+    mobility_status = models.CharField(
+        max_length=30,
+        choices=MobilityStatus.choices,
+        default=MobilityStatus.FULLY_MOBILE,
+        db_index=True
+    )
+    special_dietary_requirements = models.TextField(blank=True, null=True)
+    emergency_contact_name = models.CharField(max_length=255, blank=True, null=True)
+    emergency_contact_phone = models.CharField(max_length=50, blank=True, null=True)
+    emergency_contact_relationship = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    belongings_checked = models.BooleanField(default=False)
+    room_orientation_completed = models.BooleanField(default=False)
+    facility_tour_completed = models.BooleanField(default=False)
+    documents_signed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-check_in_time']
+        verbose_name = 'Check-in Log'
+        verbose_name_plural = 'Check-in Logs'
+        indexes = [
+            models.Index(fields=['booking', '-check_in_time'], name='idx_checkin_booking_time'),
+            models.Index(fields=['booking_detail'], name='idx_checkin_detail'),
+            models.Index(fields=['mobility_status'], name='idx_checkin_mobility'),
+        ]
+
+    def __str__(self):
+        return f"Check-in for {self.booking_detail.client.full_name} at {self.check_in_time.strftime('%Y-%m-%d %H:%M')}"
 
 
 @receiver(post_save, sender=Booking)

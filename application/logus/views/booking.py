@@ -8,11 +8,16 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
 
 from application.logus.forms.patient_form import PatientRegistrationForm
-from core.models import Booking, BookingDetail, Room, PatientModel, Tariff, RoomType, TariffRoomPrice, District, Region
+from core.models import (
+    Booking, BookingDetail, Room, PatientModel, Tariff, RoomType,
+    TariffRoomPrice, District, Region, CheckInLog
+)
+from core.models.booking import BookingHistory
 from core.models.tariffs import ServiceSessionTracking
 from application.logus.forms.booking import (
     BookingInitialForm, RoomSelectionForm, BookingConfirmationForm,
-    TariffChangeForm, ServiceSessionRecordForm
+    TariffChangeForm, ServiceSessionRecordForm, CheckInForm,
+    PatientAssignmentForm
 )
 from application.logus.utils.room_capacity import (
     get_rooms_with_capacity, validate_booking_capacity, check_room_capacity
@@ -49,7 +54,7 @@ def booking_start(request):
     return render(request, 'logus/booking/booking_start.html', {
         'form': form,
         'step': 1,
-        'total_steps': 3
+        'total_steps': 4
     })
 
 
@@ -84,7 +89,7 @@ def booking_select_rooms(request):
 
             booking_data['selected_rooms'] = selected_rooms
             request.session['booking_data'] = booking_data
-            return redirect('logus:booking_confirm')
+            return redirect('logus:booking_assign_patients')
     else:
         form = RoomSelectionForm(available_rooms=available_rooms, guests_count=guests_count)
 
@@ -94,11 +99,60 @@ def booking_select_rooms(request):
     return render(request, 'logus/booking/booking_select_rooms.html', {
         'form': form,
         'step': 2,
-        'total_steps': 3,
+        'total_steps': 4,
         'room_type_availability': room_type_availability,
         'start_date': start_date,
         'end_date': end_date,
         'date_range': get_date_range(start_date, end_date)
+    })
+
+
+@login_required
+def booking_assign_patients(request):
+    """
+    TASK-050: Third step of booking process - assign patients to each room
+    For multi-guest bookings, this allows different patients per room
+    """
+    # Check if we have the necessary data from previous steps
+    booking_data = request.session.get('booking_data')
+    if not booking_data or 'selected_rooms' not in booking_data:
+        messages.error(request, 'Пожалуйста, начните процесс бронирования сначала')
+        return redirect('logus:booking_start')
+
+    # Get data from session
+    primary_patient_id = booking_data['patient_id']
+    primary_patient = get_object_or_404(PatientModel, id=primary_patient_id)
+    selected_room_ids = booking_data['selected_rooms']
+    selected_rooms = Room.objects.filter(id__in=selected_room_ids)
+
+    if request.method == 'POST':
+        form = PatientAssignmentForm(
+            request.POST,
+            primary_patient=primary_patient,
+            selected_rooms=list(selected_rooms)
+        )
+        if form.is_valid():
+            # Get patient-room assignments
+            assignments = form.get_assignments()  # List of (patient_id, room_id) tuples
+
+            # Store assignments in session
+            booking_data['patient_assignments'] = assignments
+            request.session['booking_data'] = booking_data
+
+            return redirect('logus:booking_confirm')
+    else:
+        form = PatientAssignmentForm(
+            primary_patient=primary_patient,
+            selected_rooms=list(selected_rooms)
+        )
+
+    return render(request, 'logus/booking/booking_assign_patients.html', {
+        'form': form,
+        'step': 3,
+        'total_steps': 4,
+        'primary_patient': primary_patient,
+        'selected_rooms': selected_rooms,
+        'guests_count': len(selected_rooms)
     })
 
 
@@ -109,23 +163,25 @@ def booking_confirm(request):
     """
     # Check if we have the necessary data from previous steps
     booking_data = request.session.get('booking_data')
-    if not booking_data or 'selected_rooms' not in booking_data:
+    if not booking_data or 'selected_rooms' not in booking_data or 'patient_assignments' not in booking_data:
         messages.error(request, 'Пожалуйста, начните процесс бронирования сначала')
-        return redirect('booking_start')  # Fixed: removed 'logus:' namespace
+        return redirect('logus:booking_start')
 
     start_date = timezone.datetime.fromisoformat(booking_data['start_date'])
     end_date = timezone.datetime.fromisoformat(booking_data['end_date'])
     patient = get_object_or_404(PatientModel, id=booking_data['patient_id'])
     selected_room_ids = booking_data['selected_rooms']
     selected_rooms = Room.objects.filter(id__in=selected_room_ids)
+    patient_assignments = booking_data['patient_assignments']  # List of (patient_id, room_id) tuples
 
     if request.method == 'POST':
         form = BookingConfirmationForm(request.POST)
         if form.is_valid():
             try:
                 # TASK-007: Validate room capacity before creating booking
-                booking_details_data = [{'room_id': room_id, 'client_id': patient.id}
-                                       for room_id in selected_room_ids]
+                # Use patient assignments to validate each patient-room combination
+                booking_details_data = [{'room_id': room_id, 'client_id': patient_id}
+                                       for patient_id, room_id in patient_assignments]
                 is_valid, capacity_errors = validate_booking_capacity(
                     booking_details_data, start_date, end_date
                 )
@@ -134,10 +190,10 @@ def booking_confirm(request):
                     for error in capacity_errors:
                         messages.error(request, error)
                     logger.warning(
-                        f"Booking capacity validation failed for patient {patient.id}: {capacity_errors}"
+                        f"Booking capacity validation failed: {capacity_errors}"
                     )
-                    # Redirect back to room selection
-                    return redirect('logus:booking_select_rooms')
+                    # Redirect back to patient assignment
+                    return redirect('logus:booking_assign_patients')
 
                 # Create the main booking
                 booking = Booking.objects.create(
@@ -156,9 +212,10 @@ def booking_confirm(request):
                 if not default_tariff:
                     raise ValueError("Нет доступных тарифов. Пожалуйста, создайте тариф в административной панели.")
 
-                # Create booking details for each room
-                for room_id in selected_room_ids:
+                # Create booking details for each patient-room assignment
+                for patient_id, room_id in patient_assignments:
                     room = Room.objects.get(id=room_id)
+                    assigned_patient = PatientModel.objects.get(id=patient_id)
 
                     # Calculate price based on tariff and room type
                     try:
@@ -173,7 +230,7 @@ def booking_confirm(request):
 
                     BookingDetail.objects.create(
                         booking=booking,
-                        client=patient,
+                        client=assigned_patient,  # Use assigned patient, not primary patient
                         room=room,
                         tariff=default_tariff,
                         price=price,  # Set the price explicitly
@@ -196,14 +253,25 @@ def booking_confirm(request):
     else:
         form = BookingConfirmationForm()
 
+    # Prepare patient-room assignments for display
+    assignments_display = []
+    for patient_id, room_id in patient_assignments:
+        assigned_patient = PatientModel.objects.get(id=patient_id)
+        assigned_room = Room.objects.get(id=room_id)
+        assignments_display.append({
+            'patient': assigned_patient,
+            'room': assigned_room
+        })
+
     return render(request, 'logus/booking/booking_confirm.html', {  # Fixed template path
         'form': form,
-        'step': 3,
-        'total_steps': 3,
+        'step': 4,
+        'total_steps': 4,
         'patient': patient,
         'start_date': start_date,
         'end_date': end_date,
-        'selected_rooms': selected_rooms
+        'selected_rooms': selected_rooms,
+        'assignments_display': assignments_display
     })
 
 
@@ -318,7 +386,10 @@ def get_available_rooms(start_date, end_date):
     """
     Get rooms that have available capacity in the given date range.
     Updated to check room capacity instead of binary availability (TASK-007).
+    Updated to exclude rooms under maintenance (TASK-033).
     """
+    from core.models.rooms import RoomMaintenance
+
     # Use the capacity-aware utility function
     rooms_with_capacity = get_rooms_with_capacity(start_date, end_date)
 
@@ -326,8 +397,18 @@ def get_available_rooms(start_date, end_date):
     # Extract room IDs that have capacity
     room_ids_with_capacity = [room.id for room in rooms_with_capacity]
 
-    # Return as queryset
-    available_rooms = Room.objects.filter(id__in=room_ids_with_capacity, is_active=True)
+    # Get rooms that are under maintenance during this period
+    rooms_under_maintenance = RoomMaintenance.objects.filter(
+        status__in=[RoomMaintenance.MaintenanceStatus.SCHEDULED, RoomMaintenance.MaintenanceStatus.IN_PROGRESS],
+        start_date__lt=end_date,
+        end_date__gt=start_date
+    ).values_list('room_id', flat=True)
+
+    # Return as queryset, excluding rooms under maintenance
+    available_rooms = Room.objects.filter(
+        id__in=room_ids_with_capacity,
+        is_active=True
+    ).exclude(id__in=rooms_under_maintenance)
 
     return available_rooms
 
@@ -735,3 +816,117 @@ def record_service_session(request, tracking_id):
         logger.error(f"Error in record_service_session view: {e}", exc_info=True)
         messages.error(request, 'Произошла ошибка при загрузке формы записи сеанса')
         return redirect('logus:booking_list')
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def check_in_view(request, detail_id):
+    """
+    TASK-025: Enhanced check-in view that captures medical screening data and updates booking status.
+    """
+    booking_detail = get_object_or_404(
+        BookingDetail.objects.select_related('booking', 'client', 'room', 'room__room_type'),
+        id=detail_id
+    )
+    booking = booking_detail.booking
+
+    if booking.status in [
+        Booking.BookingStatus.CANCELLED,
+        Booking.BookingStatus.COMPLETED,
+        Booking.BookingStatus.DISCHARGED
+    ]:
+        messages.error(request, 'Заселение недоступно для завершенных или отмененных бронирований.')
+        return redirect('logus:booking_detail', booking_id=booking.id)
+
+    existing_log = getattr(booking_detail, 'check_in_log', None)
+    if not existing_log:
+        existing_log = CheckInLog.objects.filter(booking_detail=booking_detail).first()
+
+    if request.method == 'POST':
+        form = CheckInForm(request.POST, booking_detail=booking_detail, check_in_log=existing_log)
+        if form.is_valid():
+            data = form.cleaned_data
+            log_values = {
+                'check_in_time': data['actual_checkin_time'],
+                'room_condition': data['room_condition'],
+                'temperature': data.get('temperature'),
+                'blood_pressure_systolic': data.get('blood_pressure_systolic'),
+                'blood_pressure_diastolic': data.get('blood_pressure_diastolic'),
+                'pulse': data.get('pulse'),
+                'weight': data.get('weight'),
+                'height': data.get('height'),
+                'allergies': data.get('allergies'),
+                'current_medications': data.get('current_medications'),
+                'medical_conditions': data.get('medical_conditions'),
+                'mobility_status': data.get('mobility_status'),
+                'special_dietary_requirements': data.get('special_dietary_requirements'),
+                'emergency_contact_name': data.get('emergency_contact_name'),
+                'emergency_contact_phone': data.get('emergency_contact_phone'),
+                'emergency_contact_relationship': data.get('emergency_contact_relationship'),
+                'notes': data.get('check_in_notes'),
+                'belongings_checked': data.get('belongings_checked') or False,
+                'room_orientation_completed': data.get('room_orientation_completed') or False,
+                'facility_tour_completed': data.get('facility_tour_completed') or False,
+                'documents_signed': data.get('documents_signed') or False,
+            }
+
+            if existing_log:
+                for field, value in log_values.items():
+                    setattr(existing_log, field, value)
+                existing_log.modified_by = request.user
+                existing_log.save()
+                log_entry = existing_log
+                created = False
+            else:
+                log_entry = CheckInLog.objects.create(
+                    booking=booking,
+                    booking_detail=booking_detail,
+                    created_by=request.user,
+                    modified_by=request.user,
+                    **log_values
+                )
+                created = True
+
+            status_changed = False
+            previous_status = booking.status
+            if booking.status in [
+                Booking.BookingStatus.PENDING,
+                Booking.BookingStatus.CONFIRMED
+            ]:
+                booking.status = Booking.BookingStatus.CHECKED_IN
+                booking.modified_by = request.user
+                booking.save(update_fields=['status', 'modified_by', 'updated_at'])
+                status_changed = True
+
+            description = (
+                f"Данные заселения {'созданы' if created else 'обновлены'} "
+                f"для пациента {booking_detail.client.full_name}"
+            )
+            BookingHistory.log_change(
+                booking=booking,
+                action=BookingHistory.ActionType.STATUS_CHANGED if status_changed else BookingHistory.ActionType.OTHER,
+                changed_by=request.user,
+                field_name='status' if status_changed else 'check_in',
+                old_value=previous_status if status_changed else None,
+                new_value=booking.status if status_changed else None,
+                description=description,
+                booking_detail=booking_detail
+            )
+
+            messages.success(request, 'Данные заселения успешно сохранены.')
+            return redirect('logus:booking_detail', booking_id=booking.id)
+        else:
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
+    else:
+        form = CheckInForm(booking_detail=booking_detail, check_in_log=existing_log)
+
+    context = {
+        'form': form,
+        'booking': booking,
+        'booking_detail': booking_detail,
+        'patient': booking_detail.client,
+        'existing_log': existing_log,
+        'log_entry': existing_log,
+    }
+
+    return render(request, 'logus/booking/check_in.html', context)

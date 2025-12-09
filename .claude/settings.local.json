@@ -14,7 +14,8 @@
       "Bash(python cashbox_diagnostics.py:*)",
       "Bash(sqlite3:*)",
       "Bash(wc:*)",
-      "Bash(python3 -m py_compile:*)"
+      "Bash(python3 -m py_compile:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

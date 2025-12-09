@@ -92,7 +92,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="{{ form.price.id_for_label }}">Цена</label>
+                                        <label for="{{ form.price.id_for_label }}">Цена <span class="text-muted">(авто)</span></label>
                                         {{ form.price }}
                                         {% if form.price.errors %}
                                         <div class="text-danger">
@@ -101,7 +101,7 @@
                                             {% endfor %}
                                         </div>
                                         {% endif %}
-                                        <small class="form-text text-muted">Цена будет рассчитана автоматически на основе тарифа и типа комнаты</small>
+                                        <small class="form-text text-muted">Рассчитывается как: дни проживания × цена тарифа</small>
                                     </div>
                                 </div>
                             </div>
@@ -127,13 +127,67 @@
     $(function() {
         // Initialize Select2 Elements
         $('.select2').select2({
-            theme: 'bootstrap4'
+            theme: 'bootstrap4',
+            allowClear: false  // Prevent clearing required fields
         });
-        
-        // Auto-calculate price when tariff or room changes
-        $('#id_tariff, #id_room').change(function() {
-            // Clear price field to trigger auto-calculation on form submission
-            $('#id_price').val('');
+
+        // Make price field read-only (auto-calculated)
+        $('#id_price').attr('readonly', true).attr('placeholder', 'Авто-расчет');
+
+        // Auto-calculate price when tariff changes
+        $('#id_tariff').change(function() {
+            const tariffId = $('#id_tariff').val();
+
+            console.log('Tariff changed to:', tariffId);
+
+            // Clear price if tariff is selected to trigger auto-calculation
+            if (tariffId) {
+                $('#id_price').val('');
+                console.log('Price cleared for auto-calculation');
+            }
+        });
+
+        // Highlight fields with errors
+        {% if form.errors %}
+            console.log('Form has errors:', {{ form.errors|safe }});
+
+            // Highlight Select2 fields with errors
+            {% if form.client.errors %}
+                $('#id_client').next('.select2-container').addClass('border-danger');
+            {% endif %}
+            {% if form.room.errors %}
+                $('#id_room').next('.select2-container').addClass('border-danger');
+            {% endif %}
+            {% if form.tariff.errors %}
+                $('#id_tariff').next('.select2-container').addClass('border-danger');
+            {% endif %}
+        {% endif %}
+
+        // Remove error highlighting when user makes a selection
+        $('.select2').on('change', function() {
+            $(this).next('.select2-container').removeClass('border-danger');
+            $(this).closest('.form-group').find('.text-danger').fadeOut();
+        });
+
+        // Debug: Log form submission
+        $('form').on('submit', function(e) {
+            console.log('=== Form Submission ===');
+            console.log('Client:', $('#id_client').val());
+            console.log('Room:', $('#id_room').val());
+            console.log('Tariff:', $('#id_tariff').val());
+            console.log('Price:', $('#id_price').val());
+
+            // Check for empty required fields
+            const client = $('#id_client').val();
+            const room = $('#id_room').val();
+            const tariff = $('#id_tariff').val();
+
+            if (!client || !room || !tariff) {
+                console.error('Missing required fields!');
+                if (!client) console.error('  - Client is empty');
+                if (!room) console.error('  - Room is empty');
+                if (!tariff) console.error('  - Tariff is empty');
+            }
         });
     });
 </script>

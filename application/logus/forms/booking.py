@@ -153,6 +153,102 @@ class RoomSelectionForm(forms.Form):
                 )
 
 
+class PatientAssignmentForm(forms.Form):
+    """
+    TASK-051: Form for assigning patients to rooms in multi-guest bookings
+    This form appears between room selection and confirmation
+    """
+
+    def __init__(self, *args, **kwargs):
+        primary_patient = kwargs.pop('primary_patient', None)
+        selected_rooms = kwargs.pop('selected_rooms', [])  # List of Room objects
+        super().__init__(*args, **kwargs)
+
+        # Get all active patients for selection
+        patient_queryset = PatientModel.objects.filter(is_active=True).order_by('f_name', 'l_name')
+        patient_choices = [('', '-- Выберите пациента --')]
+        patient_choices.extend([
+            (p.id, f"{p.full_name} ({p.mobile_phone_number or 'нет телефона'})")
+            for p in patient_queryset
+        ])
+
+        # Create assignment fields for each room
+        for i, room in enumerate(selected_rooms):
+            # Patient selection field
+            field_name = f'patient_{i}'
+            self.fields[field_name] = forms.ChoiceField(
+                choices=patient_choices,
+                label=f"Пациент для комнаты {room.name} ({room.room_type.name})",
+                required=True,
+                widget=forms.Select(attrs={
+                    'class': 'form-control select2',
+                    'data-room-id': room.id,
+                    'data-room-index': i
+                })
+            )
+
+            # Pre-select primary patient for first room
+            if i == 0 and primary_patient:
+                self.fields[field_name].initial = primary_patient.id
+
+            # Store room info as hidden field
+            self.fields[f'room_{i}'] = forms.IntegerField(
+                initial=room.id,
+                widget=forms.HiddenInput()
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Collect all assigned patients and check for empty selections
+        assigned_patients = []
+        patient_fields = [key for key in cleaned_data.keys() if key.startswith('patient_')]
+
+        for field in patient_fields:
+            patient_id = cleaned_data.get(field)
+
+            # Check if patient is not selected (empty string or None)
+            if not patient_id or patient_id == '':
+                # Get the room index from field name (e.g., 'patient_0' -> 0)
+                room_index = int(field.split('_')[1])
+                room_field = f'room_{room_index}'
+                room_id = cleaned_data.get(room_field)
+
+                # Get room name for better error message
+                from core.models import Room
+                try:
+                    room = Room.objects.get(id=room_id)
+                    raise ValidationError(
+                        f"Пожалуйста, выберите пациента для комнаты {room.name}"
+                    )
+                except Room.DoesNotExist:
+                    raise ValidationError(
+                        f"Пожалуйста, выберите пациента для всех комнат"
+                    )
+
+            # Check for duplicate assignments
+            if patient_id in assigned_patients:
+                raise ValidationError(
+                    "Один и тот же пациент не может быть назначен на несколько комнат одновременно"
+                )
+            assigned_patients.append(patient_id)
+
+        return cleaned_data
+
+    def get_assignments(self):
+        """
+        Returns a list of (patient_id, room_id) tuples
+        """
+        assignments = []
+        i = 0
+        while f'patient_{i}' in self.cleaned_data:
+            patient_id = self.cleaned_data[f'patient_{i}']
+            room_id = self.cleaned_data[f'room_{i}']
+            assignments.append((int(patient_id), room_id))
+            i += 1
+        return assignments
+
+
 class BookingConfirmationForm(forms.Form):
     """
     Final form for confirming booking details and adding notes
@@ -189,6 +285,19 @@ class BookingForm(forms.ModelForm):
 class BookingDetailForm(forms.ModelForm):
     """Form for updating a BookingDetail record"""
 
+    # Override price field to make it optional (will be auto-calculated)
+    price = forms.DecimalField(
+        required=False,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'readonly': 'readonly',
+            'placeholder': 'Авто-расчет'
+        }),
+        label='Цена'
+    )
+
     class Meta:
         model = BookingDetail
         fields = ['client', 'room', 'tariff', 'price']
@@ -196,7 +305,6 @@ class BookingDetailForm(forms.ModelForm):
             'client': forms.Select(attrs={'class': 'form-control select2'}),
             'room': forms.Select(attrs={'class': 'form-control select2'}),
             'tariff': forms.Select(attrs={'class': 'form-control select2'}),
-            'price': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, booking=None, **kwargs):
@@ -238,17 +346,23 @@ class BookingDetailForm(forms.ModelForm):
             if overlapping_bookings.exists():
                 self.add_error('room', 'Эта комната уже забронирована на указанный период.')
 
-        # Auto-calculate price based on tariff and room
+        # Auto-calculate price based on tariff and booking duration
         tariff = cleaned_data.get('tariff')
-        if room and tariff and not cleaned_data.get('price'):
-            try:
-                price_record = TariffRoomPrice.objects.get(
-                    tariff=tariff,
-                    room_type=room.room_type
-                )
-                cleaned_data['price'] = price_record.price
-            except TariffRoomPrice.DoesNotExist:
-                self.add_error('tariff', 'Нет цены для данного сочетания тарифа и типа комнаты.')
+        if tariff and self.booking and not cleaned_data.get('price'):
+            # Calculate number of days
+            start_date = self.booking.start_date
+            end_date = self.booking.end_date
+            days_of_stay = (end_date.date() - start_date.date()).days
+
+            # Ensure at least 1 day is charged
+            if days_of_stay < 1:
+                days_of_stay = 1
+
+            # Calculate: days × tariff price
+            if tariff.price:
+                cleaned_data['price'] = days_of_stay * tariff.price
+            else:
+                self.add_error('tariff', 'У выбранного тарифа не указана цена.')
 
         return cleaned_data
 
@@ -725,11 +839,38 @@ class CheckInForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.booking_detail = kwargs.pop('booking_detail', None)
+        self.check_in_log = kwargs.pop('check_in_log', None)
         super().__init__(*args, **kwargs)
 
-        # Set initial check-in time to now
         if not self.is_bound:
-            self.initial['actual_checkin_time'] = timezone.now().strftime('%Y-%m-%dT%H:%M')
+            # Pre-fill from existing check-in log when editing
+            if self.check_in_log:
+                self.initial.update({
+                    'actual_checkin_time': self.check_in_log.check_in_time.strftime('%Y-%m-%dT%H:%M'),
+                    'room_condition': self.check_in_log.room_condition,
+                    'temperature': self.check_in_log.temperature,
+                    'blood_pressure_systolic': self.check_in_log.blood_pressure_systolic,
+                    'blood_pressure_diastolic': self.check_in_log.blood_pressure_diastolic,
+                    'pulse': self.check_in_log.pulse,
+                    'weight': self.check_in_log.weight,
+                    'height': self.check_in_log.height,
+                    'allergies': self.check_in_log.allergies,
+                    'current_medications': self.check_in_log.current_medications,
+                    'medical_conditions': self.check_in_log.medical_conditions,
+                    'mobility_status': self.check_in_log.mobility_status,
+                    'special_dietary_requirements': self.check_in_log.special_dietary_requirements,
+                    'emergency_contact_name': self.check_in_log.emergency_contact_name,
+                    'emergency_contact_phone': self.check_in_log.emergency_contact_phone,
+                    'emergency_contact_relationship': self.check_in_log.emergency_contact_relationship,
+                    'check_in_notes': self.check_in_log.notes,
+                    'belongings_checked': self.check_in_log.belongings_checked,
+                    'room_orientation_completed': self.check_in_log.room_orientation_completed,
+                    'facility_tour_completed': self.check_in_log.facility_tour_completed,
+                    'documents_signed': self.check_in_log.documents_signed,
+                })
+            else:
+                # Set initial check-in time to now
+                self.initial['actual_checkin_time'] = timezone.now().strftime('%Y-%m-%dT%H:%M')
 
     def clean_actual_checkin_time(self):
         """Validate check-in time"""

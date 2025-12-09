@@ -117,6 +117,12 @@
                                 </div>
                                 <div class="step-text">Выбор комнаты</div>
                             </div>
+                            <div class="step completed">
+                                <div class="step-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="step-text">Назначение пациентов</div>
+                            </div>
                             <div class="step active">
                                 <div class="step-icon">
                                     <i class="fas fa-check-circle"></i>
@@ -172,10 +178,14 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="booking-summary-item">
-                                    <strong><i class="fas fa-door-open mr-1"></i> Выбранные комнаты:</strong>
+                                    <strong><i class="fas fa-users mr-1"></i> Назначение пациентов по комнатам:</strong>
                                     <ul class="text-muted">
-                                        {% for room in selected_rooms %}
-                                        <li>{{ room.name }} ({{ room.room_type.name }})</li>
+                                        {% for assignment in assignments_display %}
+                                        <li>
+                                            <i class="fas fa-bed mr-1"></i>
+                                            <strong>{{ assignment.room.name }}</strong> ({{ assignment.room.room_type.name }})
+                                            - {{ assignment.patient.full_name }}
+                                        </li>
                                         {% endfor %}
                                     </ul>
                                 </div>
@@ -218,7 +228,9 @@
                                 <button type="submit" class="btn btn-success btn-lg btn-block">
                                     <i class="fas fa-check mr-1"></i> Подтвердить бронирование
                                 </button>
-                                <a href="{% url 'logus:booking_select_rooms' %}" class="btn btn-default btn-block mt-2">Назад</a>
+                                <a href="{% url 'logus:booking_assign_patients' %}" class="btn btn-default btn-block mt-2">
+                                    <i class="fas fa-arrow-left mr-1"></i> Назад
+                                </a>
                             </div>
                         </form>
                     </div>

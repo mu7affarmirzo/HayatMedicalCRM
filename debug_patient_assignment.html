@@ -1,0 +1,55 @@
+<!-- DEBUGGING INSTRUCTIONS -->
+<!-- Open browser console (F12) and paste this script to debug the form submission: -->
+
+<script>
+// Debug script - paste in browser console
+$(function() {
+    console.log('=== Patient Assignment Debug ===');
+
+    // Check all select2 fields
+    $('.select2').each(function(index) {
+        const $select = $(this);
+        console.log(`Field ${index}:`, {
+            name: $select.attr('name'),
+            value: $select.val(),
+            html_value: this.value,
+            selectedIndex: this.selectedIndex,
+            selectedOption: this.options[this.selectedIndex]?.text
+        });
+    });
+
+    // Monitor form submission
+    $('form').on('submit', function(e) {
+        console.log('=== Form Submission ===');
+        const formData = new FormData(this);
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('patient_')) {
+                console.log(`${key}: "${value}" (type: ${typeof value}, empty: ${value === ''})`);
+            }
+        }
+    });
+
+    // Monitor select2 changes
+    $('.select2').on('change', function() {
+        console.log('Select2 changed:', {
+            name: $(this).attr('name'),
+            value: $(this).val(),
+            rawValue: this.value
+        });
+    });
+});
+</script>
+
+<!-- COMMON ISSUES AND FIXES -->
+<!--
+1. Select2 not updating underlying select element
+   - Check if allowClear is interfering
+   - Verify Select2 version compatibility
+
+2. Empty string being submitted
+   - Initial placeholder value not being cleared
+   - Select2 not triggering change event properly
+
+3. Form validation firing prematurely
+   - JavaScript validation running before Select2 commits value
+-->

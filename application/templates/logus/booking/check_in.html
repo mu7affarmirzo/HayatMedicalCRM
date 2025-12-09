@@ -1,0 +1,318 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+
+{% block title %}Заселение - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Заселение гостя</h1>
+                    <p class="text-muted mb-0">Бронирование #{{ booking.booking_number }} · {{ patient.full_name }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'logus:booking_list' %}">Бронирования</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'logus:booking_detail' booking.id %}">#{{ booking.booking_number }}</a></li>
+                        <li class="breadcrumb-item active">Заселение</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card card-outline card-info">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-user mr-1"></i> Информация о госте</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="mb-0">
+                                <dt>Пациент</dt>
+                                <dd>{{ patient.full_name }}</dd>
+
+                                <dt>Комната</dt>
+                                <dd>{{ booking_detail.room.name }} ({{ booking_detail.room.room_type.name }})</dd>
+
+                                <dt>Даты проживания</dt>
+                                <dd>{{ booking.start_date|date:"d.m.Y H:i" }} — {{ booking.end_date|date:"d.m.Y H:i" }}</dd>
+
+                                <dt>Тариф</dt>
+                                <dd>{{ booking_detail.tariff.name }}</dd>
+
+                                {% if log_entry %}
+                                    <dt class="mt-2 text-success">Последнее заселение</dt>
+                                    <dd>
+                                        {{ log_entry.check_in_time|date:"d.m.Y H:i" }}<br>
+                                        <small class="text-muted">{{ log_entry.get_room_condition_display }}</small>
+                                    </dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Чек-лист заселения</h3>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.non_field_errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.actual_checkin_time.id_for_label }}">{{ form.actual_checkin_time.label }}</label>
+                                            {{ form.actual_checkin_time }}
+                                            {% if form.actual_checkin_time.help_text %}
+                                                <small class="form-text text-muted">{{ form.actual_checkin_time.help_text }}</small>
+                                            {% endif %}
+                                            {% for error in form.actual_checkin_time.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.room_condition.id_for_label }}">{{ form.room_condition.label }}</label>
+                                            {{ form.room_condition }}
+                                            {% for error in form.room_condition.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.mobility_status.id_for_label }}">{{ form.mobility_status.label }}</label>
+                                            {{ form.mobility_status }}
+                                            {% for error in form.mobility_status.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="{{ form.check_in_notes.id_for_label }}">{{ form.check_in_notes.label }}</label>
+                                            {{ form.check_in_notes }}
+                                            {% for error in form.check_in_notes.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.temperature.id_for_label }}">{{ form.temperature.label }}</label>
+                                            {{ form.temperature }}
+                                            {% for error in form.temperature.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6">
+                                                <label for="{{ form.blood_pressure_systolic.id_for_label }}">{{ form.blood_pressure_systolic.label }}</label>
+                                                {{ form.blood_pressure_systolic }}
+                                                {% for error in form.blood_pressure_systolic.errors %}
+                                                    <div class="text-danger small">{{ error }}</div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <label for="{{ form.blood_pressure_diastolic.id_for_label }}">{{ form.blood_pressure_diastolic.label }}</label>
+                                                {{ form.blood_pressure_diastolic }}
+                                                {% for error in form.blood_pressure_diastolic.errors %}
+                                                    <div class="text-danger small">{{ error }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-4">
+                                                <label for="{{ form.pulse.id_for_label }}">{{ form.pulse.label }}</label>
+                                                {{ form.pulse }}
+                                                {% for error in form.pulse.errors %}
+                                                    <div class="text-danger small">{{ error }}</div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label for="{{ form.weight.id_for_label }}">{{ form.weight.label }}</label>
+                                                {{ form.weight }}
+                                                {% for error in form.weight.errors %}
+                                                    <div class="text-danger small">{{ error }}</div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label for="{{ form.height.id_for_label }}">{{ form.height.label }}</label>
+                                                {{ form.height }}
+                                                {% for error in form.height.errors %}
+                                                    <div class="text-danger small">{{ error }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.allergies.id_for_label }}">{{ form.allergies.label }}</label>
+                                            {{ form.allergies }}
+                                            {% for error in form.allergies.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.current_medications.id_for_label }}">{{ form.current_medications.label }}</label>
+                                            {{ form.current_medications }}
+                                            {% for error in form.current_medications.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.medical_conditions.id_for_label }}">{{ form.medical_conditions.label }}</label>
+                                            {{ form.medical_conditions }}
+                                            {% for error in form.medical_conditions.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.special_dietary_requirements.id_for_label }}">{{ form.special_dietary_requirements.label }}</label>
+                                            {{ form.special_dietary_requirements }}
+                                            {% for error in form.special_dietary_requirements.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.emergency_contact_name.id_for_label }}">{{ form.emergency_contact_name.label }}</label>
+                                            {{ form.emergency_contact_name }}
+                                            {% for error in form.emergency_contact_name.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.emergency_contact_phone.id_for_label }}">{{ form.emergency_contact_phone.label }}</label>
+                                            {{ form.emergency_contact_phone }}
+                                            {% for error in form.emergency_contact_phone.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.emergency_contact_relationship.id_for_label }}">{{ form.emergency_contact_relationship.label }}</label>
+                                            {{ form.emergency_contact_relationship }}
+                                            {% for error in form.emergency_contact_relationship.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-0">
+                                            <div class="form-check">
+                                                {{ form.belongings_checked }}
+                                                <label class="form-check-label" for="{{ form.belongings_checked.id_for_label }}">
+                                                    {{ form.belongings_checked.label }}
+                                                </label>
+                                            </div>
+                                            {% for error in form.belongings_checked.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-0">
+                                            <div class="form-check">
+                                                {{ form.room_orientation_completed }}
+                                                <label class="form-check-label" for="{{ form.room_orientation_completed.id_for_label }}">
+                                                    {{ form.room_orientation_completed.label }}
+                                                </label>
+                                            </div>
+                                            {% for error in form.room_orientation_completed.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-0">
+                                            <div class="form-check">
+                                                {{ form.facility_tour_completed }}
+                                                <label class="form-check-label" for="{{ form.facility_tour_completed.id_for_label }}">
+                                                    {{ form.facility_tour_completed.label }}
+                                                </label>
+                                            </div>
+                                            {% for error in form.facility_tour_completed.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-0">
+                                            <div class="form-check">
+                                                {{ form.documents_signed }}
+                                                <label class="form-check-label" for="{{ form.documents_signed.id_for_label }}">
+                                                    {{ form.documents_signed.label }}
+                                                </label>
+                                            </div>
+                                            {% for error in form.documents_signed.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer d-flex justify-content-between">
+                                <a href="{% url 'logus:booking_detail' booking.id %}" class="btn btn-default">
+                                    <i class="fas fa-arrow-left mr-1"></i> Назад к бронированию
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save mr-1"></i> Сохранить заселение
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

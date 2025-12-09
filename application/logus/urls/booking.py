@@ -12,6 +12,7 @@ urlpatterns = [
     # Booking process
     path('start/', booking.booking_start, name='booking_start'),
     path('select-rooms/', booking.booking_select_rooms, name='booking_select_rooms'),
+    path('assign-patients/', booking.booking_assign_patients, name='booking_assign_patients'),  # TASK-050
     path('confirm/', booking.booking_confirm, name='booking_confirm'),
 
     # AJAX endpoints
@@ -33,6 +34,7 @@ urlpatterns = [
     path('booking-details/<int:detail_id>/', booking_detail_view_detail, name='booking_detail_view'),
     path('booking-details/<int:detail_id>/edit/', booking_detail_edit_view, name='booking_detail_edit'),
     path('booking-details/<int:detail_id>/delete/', booking_detail_delete_view, name='booking_detail_delete'),
+    path('booking-details/<int:detail_id>/check-in/', booking.check_in_view, name='booking_check_in'),
 
     # Service views
     path('booking-details/<int:detail_id>/add-service/', booking_add_service_view, name='booking_add_service'),

@@ -203,6 +203,17 @@
                                                                 <i class="fas fa-phone mr-1"></i> {{ detail.client.mobile_phone_number }}
                                                             </small>
                                                         {% endif %}
+                                                        {% if detail.check_in_log %}
+                                                            <div class="mt-1">
+                                                                <span class="badge badge-success">
+                                                                    Заселен {{ detail.check_in_log.check_in_time|date:"d.m.Y H:i" }}
+                                                                </span>
+                                                            </div>
+                                                        {% elif booking.status == 'confirmed' %}
+                                                            <div class="mt-1">
+                                                                <span class="badge badge-warning">Ожидает заселения</span>
+                                                            </div>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                             </td>
@@ -237,6 +248,13 @@
                                                            data-toggle="tooltip"
                                                            title="Редактировать">
                                                             <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="{% url 'logus:booking_check_in' detail.id %}"
+                                                           class="btn btn-sm {% if detail.check_in_log %}btn-outline-success{% else %}btn-success{% endif %}"
+                                                           data-toggle="tooltip"
+                                                           title="{% if detail.check_in_log %}Просмотр/обновление данных заселения{% else %}Заполнить чек-лист заселения{% endif %}">
+                                                            <i class="fas fa-door-open"></i>
+                                                            {% if detail.check_in_log %}Заселено{% else %}Заселить{% endif %}
                                                         </a>
                                                         <button type="button" class="btn btn-sm btn-danger"
                                                                 data-toggle="modal"

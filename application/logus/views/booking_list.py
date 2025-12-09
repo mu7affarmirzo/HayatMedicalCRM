@@ -8,7 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from core.models import Booking, BookingDetail, TariffService, IllnessHistory
+from core.models import Booking, BookingDetail, TariffService, IllnessHistory, CheckInLog
 from core.models.booking import BookingHistory
 from core.models.tariffs import ServiceSessionTracking
 
@@ -33,10 +33,10 @@ def booking_detail_view(request, booking_id):
             messages.success(request, f'Бронирование #{booking.booking_number} успешно отменено.')
 
         elif action == 'checkin':
-            booking.status = 'checked_in'
-            booking.modified_by = request.user
-            booking.save()
-            messages.success(request, f'Заселение для бронирования #{booking.booking_number} выполнено успешно.')
+            messages.info(
+                request,
+                'Используйте кнопку "Заселить" возле гостя, чтобы заполнить чек-лист заселения.'
+            )
 
         elif action == 'complete':
             booking.status = 'completed'
@@ -85,6 +85,16 @@ def booking_detail_view(request, booking_id):
             booking_detail__is_current=True
         ).select_related('service', 'tariff_service').order_by('service__name')
 
+    # Build a mapping of check-in logs for quick access in templates (TASK-026)
+    booking_details = list(booking_details)
+    check_in_logs = CheckInLog.objects.filter(
+        booking_detail_id__in=[detail.id for detail in booking_details]
+    ).select_related('booking_detail', 'booking_detail__client')
+    check_in_log_map = {log.booking_detail_id: log for log in check_in_logs}
+
+    for detail in booking_details:
+        detail.check_in_log = check_in_log_map.get(detail.id)
+
     # Calculate stay duration
     stay_duration = (booking.end_date - booking.start_date).days
     if stay_duration == 0:  # Handle same-day stays
@@ -100,8 +110,8 @@ def booking_detail_view(request, booking_id):
     if booking.status == 'pending':
         available_actions = ['confirm', 'cancel']
     elif booking.status == 'confirmed':
-        available_actions = ['checkin', 'cancel']
-    elif booking.status == 'checked_in':
+        available_actions = ['cancel']
+    elif booking.status == 'checked_in' or booking.status == 'in_progress':
         available_actions = ['complete']
 
     # TASK-023: Get booking history
@@ -260,5 +270,3 @@ def update_booking_status(request, booking_id):
         return JsonResponse({'success': False, 'error': 'Booking not found'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-

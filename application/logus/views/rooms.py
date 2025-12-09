@@ -105,8 +105,6 @@ def available_room_view(request):
 
             available_rooms = get_available_rooms(start_date, end_date, room_type_id)
 
-            print(available_rooms)
-
             # Get tariff pricing for the selected room type
             room_type = RoomType.objects.get(id=room_type_id)
             tariff_prices = {}

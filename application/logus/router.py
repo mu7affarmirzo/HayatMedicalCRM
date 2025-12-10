@@ -17,4 +17,7 @@ urlpatterns = [
     path('illness-histories/', include('application.logus.urls.illness_histories')),
     path('payments/', include('application.logus.urls.payments')),
 
+    # RM2 - Room Availability V2
+    path('rooms/availability-v2/', include('application.logus.urls.room_availability_v2')),
+
 ]

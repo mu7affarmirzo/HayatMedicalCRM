@@ -15,7 +15,9 @@
       "Bash(sqlite3:*)",
       "Bash(wc:*)",
       "Bash(python3 -m py_compile:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(find:*)",
+      "Bash(.venv/bin/python:*)"
     ],
     "deny": [],
     "ask": []

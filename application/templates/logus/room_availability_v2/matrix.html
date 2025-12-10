@@ -1,0 +1,649 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Room Availability Matrix V2 - Hayat Medical Center{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+<style>
+    /* Critical inline styles */
+    .availability-matrix {
+        overflow-x: auto;
+        margin-top: 20px;
+    }
+
+    .matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 13px;
+    }
+
+    .matrix-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .sticky-col {
+        position: sticky;
+        left: 0;
+        background-color: #fff;
+        z-index: 5;
+        font-weight: 600;
+    }
+
+    .matrix-cell {
+        cursor: pointer;
+        transition: all 0.2s;
+        min-width: 80px;
+    }
+
+    .matrix-cell:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Occupancy color coding */
+    .occupancy-high { background-color: #d4edda; color: #155724; } /* 0-40% - Green */
+    .occupancy-medium { background-color: #fff3cd; color: #856404; } /* 41-75% - Yellow */
+    .occupancy-low { background-color: #ffeaa7; color: #856404; } /* 76-99% - Orange */
+    .occupancy-full { background-color: #f8d7da; color: #721c24; } /* 100% - Red */
+    .occupancy-inactive { background-color: #e9ecef; color: #6c757d; } /* Inactive - Gray */
+
+    /* Room timeline styles */
+    .room-timeline {
+        display: flex;
+        gap: 2px;
+        margin: 10px 0;
+        overflow-x: auto;
+    }
+
+    .timeline-day {
+        flex: 1;
+        min-width: 30px;
+        height: 40px;
+        border: 1px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .timeline-day.available { background-color: #28a745; color: white; }
+    .timeline-day.occupied { background-color: #dc3545; color: white; }
+    .timeline-day.partial {
+        background: linear-gradient(135deg, #28a745 50%, #ffc107 50%);
+        color: white;
+    }
+    .timeline-day.maintenance { background-color: #6c757d; color: white; }
+    .timeline-day.checkin { background-color: #17a2b8; color: white; }
+    .timeline-day.checkout { background-color: #20c997; color: white; }
+
+    /* Dropdown styles */
+    .room-details-dropdown {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .room-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #fafafa;
+    }
+
+    /* Statistics cards */
+    .availability-statistics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #007bff;
+        margin: 10px 0;
+    }
+
+    .occupancy-fraction {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .maintenance-badge {
+        font-size: 10px;
+        color: #6c757d;
+    }
+
+    .occupancy-percent {
+        font-size: 11px;
+        color: #666;
+    }
+
+    .room-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .room-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Room Availability Matrix V2 (RM2)</h1>
+                <p class="text-muted">Visual room availability and occupancy management</p>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'logus:logus_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Room Availability V2</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Period Selector -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">Period Selection</h3>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{% url 'logus:room_availability_v2' %}" id="periodForm">
+                    <div class="row align-items-end">
+                        <div class="col-md-3">
+                            <label for="start_date">Start Date</label>
+                            <input type="text"
+                                   class="form-control datepicker"
+                                   id="start_date"
+                                   name="start_date"
+                                   value="{{ start_date_str }}"
+                                   placeholder="DD.MM.YYYY"
+                                   required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="end_date">End Date</label>
+                            <input type="text"
+                                   class="form-control datepicker"
+                                   id="end_date"
+                                   name="end_date"
+                                   value="{{ end_date_str }}"
+                                   placeholder="DD.MM.YYYY"
+                                   required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="room_type_id">Room Type (Optional)</label>
+                            <select class="form-control" id="room_type_id" name="room_type_id">
+                                <option value="">All Types</option>
+                                {% for rt in all_room_types %}
+                                <option value="{{ rt.id }}" {% if rt.id == selected_room_type_id %}selected{% endif %}>
+                                    {{ rt.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="quick-periods mt-3">
+                        <label>Quick Select:</label>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary quick-period-btn" data-days="0">Today</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary quick-period-btn" data-days="7">7 Days</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary quick-period-btn" data-days="14">14 Days</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary quick-period-btn" data-days="30">30 Days</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistics Panel -->
+        <div class="availability-statistics">
+            <div class="stat-card">
+                <h6>Total Rooms</h6>
+                <div class="stat-value">{{ matrix_data.statistics.total_rooms }}</div>
+                <small>active rooms</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Avg Occupancy</h6>
+                <div class="stat-value">{{ matrix_data.statistics.average_occupancy }}%</div>
+                <small>for selected period</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Check-ins Today</h6>
+                <div class="stat-value">{{ matrix_data.statistics.upcoming_checkins }}</div>
+                <small>in next 24 hours</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Check-outs Today</h6>
+                <div class="stat-value">{{ matrix_data.statistics.upcoming_checkouts }}</div>
+                <small>in next 24 hours</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Maintenance</h6>
+                <div class="stat-value">{{ matrix_data.statistics.maintenance_count }}</div>
+                <small>rooms under maintenance</small>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6>Status Legend:</h6>
+                <div class="d-flex flex-wrap gap-3" style="gap: 15px;">
+                    <span class="badge badge-success">0-40% (High Availability)</span>
+                    <span class="badge badge-warning">41-75% (Moderate)</span>
+                    <span class="badge" style="background-color: #ffc107;">76-99% (Low Availability)</span>
+                    <span class="badge badge-danger">100% (Fully Booked)</span>
+                    <span class="badge badge-secondary">Under Maintenance</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Matrix -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Availability Matrix</h5>
+                    <div>
+                        <button class="btn btn-sm btn-success" onclick="location.reload();">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                        <a href="{% url 'logus:export_matrix_excel_v2' %}?start_date={{ start_date_str }}&end_date={{ end_date_str }}"
+                           class="btn btn-sm btn-info">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col">Room Type</th>
+                                {% for day in matrix_data.period.days %}
+                                <th>
+                                    {{ day|date:"d.m" }}<br>
+                                    <small>{{ day|date:"D" }}</small>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_type in matrix_data.room_types %}
+                            <tr>
+                                <td class="sticky-col">
+                                    <strong>{{ room_type.name }}</strong><br>
+                                    <small>{{ room_type.total_rooms }} rooms</small>
+                                </td>
+
+                                {% for day_data in room_type.daily_availability %}
+                                <td class="matrix-cell
+                                    {% if day_data.occupancy_percentage <= 40 %}occupancy-high
+                                    {% elif day_data.occupancy_percentage <= 75 %}occupancy-medium
+                                    {% elif day_data.occupancy_percentage < 100 %}occupancy-low
+                                    {% elif day_data.occupancy_percentage >= 100 %}occupancy-full
+                                    {% else %}occupancy-inactive{% endif %}"
+                                    data-room-type-id="{{ room_type.id }}"
+                                    data-date="{{ day_data.date|date:'d.m.Y' }}"
+                                    onclick="showRoomDetails({{ room_type.id }}, '{{ day_data.date|date:'d.m.Y' }}')">
+
+                                    <div class="occupancy-fraction">
+                                        {{ day_data.occupied }}/{{ day_data.total }}
+                                    </div>
+
+                                    {% if day_data.under_maintenance > 0 %}
+                                    <div class="maintenance-badge">
+                                        <i class="fas fa-wrench"></i> {{ day_data.under_maintenance }}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="occupancy-percent">
+                                        {{ day_data.occupancy_percentage|floatformat:0 }}%
+                                    </div>
+                                </td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Room Details Dropdown (initially hidden) -->
+                            <tr id="room-details-{{ room_type.id }}" class="room-details-row" style="display: none;">
+                                <td colspan="{{ matrix_data.period.total_days|add:1 }}">
+                                    <div class="room-details-dropdown">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5>{{ room_type.name }} - Individual Rooms</h5>
+                                            <button class="btn btn-sm btn-secondary" onclick="hideRoomDetails({{ room_type.id }})">
+                                                <i class="fas fa-times"></i> Close
+                                            </button>
+                                        </div>
+
+                                        <div id="room-details-content-{{ room_type.id }}">
+                                            <!-- AJAX content loaded here -->
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Guest Details Modal -->
+<div class="modal fade" id="guestDetailsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Guest Details</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="guestDetailsContent">
+                <!-- AJAX content loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Booking Modal -->
+<div class="modal fade" id="quickBookingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Booking</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="quickBookingForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="quick_room_id" name="room_id">
+
+                    <div class="form-group">
+                        <label>Period</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control datepicker"
+                                       id="quick_start_date" name="start_date"
+                                       placeholder="DD.MM.YYYY" required>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control datepicker"
+                                       id="quick_end_date" name="end_date"
+                                       placeholder="DD.MM.YYYY" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Patient</label>
+                        <select class="form-control select2" id="quick_patient_id"
+                                name="patient_id" required>
+                            <option value="">Search patient...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tariff Package</label>
+                        <select class="form-control" id="quick_tariff_id"
+                                name="tariff_id" required>
+                            <option value="">Select tariff...</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes (Optional)</label>
+                        <textarea class="form-control" id="quick_notes" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickBooking()">
+                    Create Booking
+                </button>
+                <a href="#" id="fullBookingFormLink" class="btn btn-info">
+                    Use Full Booking Form
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script>
+    // Initialize datepickers
+    $(document).ready(function() {
+        $('.datepicker').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            locale: {
+                format: 'DD.MM.YYYY'
+            }
+        });
+
+        // Quick period buttons
+        $('.quick-period-btn').click(function() {
+            const days = parseInt($(this).data('days'));
+            const today = moment();
+            const endDate = moment().add(days, 'days');
+
+            $('#start_date').val(today.format('DD.MM.YYYY'));
+            $('#end_date').val(endDate.format('DD.MM.YYYY'));
+        });
+
+        // Initialize Select2 for patient search if available
+        if ($.fn.select2) {
+            $('#quick_patient_id').select2({
+                placeholder: 'Search patient...',
+                minimumInputLength: 2
+            });
+        }
+    });
+
+    function showRoomDetails(roomTypeId, date) {
+        const detailsRow = $(`#room-details-${roomTypeId}`);
+        const contentDiv = $(`#room-details-content-${roomTypeId}`);
+
+        // Toggle visibility
+        if (detailsRow.is(':visible')) {
+            detailsRow.hide();
+            return;
+        }
+
+        // Hide other open dropdowns
+        $('.room-details-row').hide();
+
+        // Show this dropdown
+        detailsRow.show();
+
+        // Load room details via AJAX
+        $.ajax({
+            url: '{% url "logus:room_details_ajax_v2" %}',
+            data: {
+                room_type_id: roomTypeId,
+                start_date: '{{ start_date_str }}',
+                end_date: '{{ end_date_str }}',
+                selected_date: date
+            },
+            success: function(response) {
+                if (response.success) {
+                    renderRoomDetails(contentDiv, response.rooms, '{{ start_date_str }}', '{{ end_date_str }}');
+                } else {
+                    contentDiv.html(`<div class="alert alert-danger">${response.error}</div>`);
+                }
+            },
+            error: function() {
+                contentDiv.html('<div class="alert alert-danger">Error loading room details</div>');
+            }
+        });
+    }
+
+    function hideRoomDetails(roomTypeId) {
+        $(`#room-details-${roomTypeId}`).hide();
+    }
+
+    function renderRoomDetails(container, rooms, startDate, endDate) {
+        let html = '<div class="rooms-list">';
+
+        rooms.forEach(room => {
+            html += `
+                <div class="room-item">
+                    <div class="room-info mb-2">
+                        <strong>${room.name}</strong>
+                        <span class="badge badge-secondary ml-2">Capacity: ${room.capacity}</span>
+                        <span class="badge badge-info ml-2">₸${room.price}/day</span>
+                        ${!room.is_active ? '<span class="badge badge-danger ml-2">Inactive</span>' : ''}
+                    </div>
+
+                    <div class="room-timeline">
+                        ${renderTimeline(room.daily_status)}
+                    </div>
+
+                    <div class="room-actions mt-2">
+                        <button class="btn btn-sm btn-primary" onclick="openQuickBooking(${room.id}, '${startDate}', '${endDate}')">
+                            <i class="fas fa-calendar-plus"></i> Book This Room
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        container.html(html);
+    }
+
+    function renderTimeline(dailyStatus) {
+        let html = '';
+
+        dailyStatus.forEach(day => {
+            const statusClass = day.status;
+            const date = new Date(day.date);
+            const dayNum = date.getDate();
+
+            html += `
+                <div class="timeline-day ${statusClass}"
+                     data-toggle="tooltip"
+                     title="${day.status} - Occupancy: ${day.occupancy.current}/${day.occupancy.capacity}">
+                    ${dayNum}
+                </div>
+            `;
+        });
+
+        return html;
+    }
+
+    function openQuickBooking(roomId, startDate, endDate) {
+        $('#quick_room_id').val(roomId);
+        $('#quick_start_date').val(startDate);
+        $('#quick_end_date').val(endDate);
+
+        // Update full booking form link
+        $('#fullBookingFormLink').attr('href',
+            `/logus/booking/start/?room_id=${roomId}&start_date=${startDate}&end_date=${endDate}`);
+
+        $('#quickBookingModal').modal('show');
+    }
+
+    function submitQuickBooking() {
+        const formData = {
+            room_id: $('#quick_room_id').val(),
+            start_date: $('#quick_start_date').val(),
+            end_date: $('#quick_end_date').val(),
+            patient_id: $('#quick_patient_id').val(),
+            tariff_id: $('#quick_tariff_id').val(),
+            notes: $('#quick_notes').val()
+        };
+
+        $.ajax({
+            url: '{% url "logus:quick_book_from_matrix" %}',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    alert('Booking created successfully!');
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error';
+                alert('Error creating booking: ' + error);
+            }
+        });
+    }
+</script>
+{% endblock %}

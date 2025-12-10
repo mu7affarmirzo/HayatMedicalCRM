@@ -1,5 +1,6 @@
 {% extends "logus/snippets/base.html" %}
 {% load static %}
+{% load humanize %}
 {% load custom_filters %}
 
 {% block content %}
@@ -129,7 +130,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Цена:</label>
-                                    <p class="text-success font-weight-bold">{{ booking_detail.price }} ₸</p>
+                                    <p class="text-success font-weight-bold">{{ booking_detail.price }} сум</p>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -285,7 +286,7 @@
                                         <td>{{ usage.service.name }}</td>
                                         <td>{{ usage.date_used|date:"d.m.Y H:i" }}</td>
                                         <td class="text-center">{{ usage.quantity }}</td>
-                                        <td class="text-right">{{ usage.price }} ₸</td>
+                                        <td class="text-right">{{ usage.price|intcomma }} сум</td>
                                         <td>{{ usage.notes|default:"-" }}</td>
                                     </tr>
                                 {% endfor %}
@@ -296,10 +297,10 @@
                                     <th class="text-right">
                                         {% with total_additional=0 %}
                                             {% for usage in service_usages %}
-                                                {% with total_additional=total_additional|add:usage.price %}
+                                                {% with total_additional=total_additional|add:usage.price|intcomma %}
                                                 {% endwith %}
                                             {% endfor %}
-                                            {{ total_additional }} ₸
+                                            {{ total_additional }} сум
                                         {% endwith %}
                                     </th>
                                     <th></th>
@@ -384,7 +385,7 @@
                             {% for service in all_services %}
                                 <option value="{{ service.id }}"
                                         data-price="{{ service.base_price }}">{{ service.name }}
-                                    ({{ service.base_price }} ₸)
+                                    ({{ service.base_price }} сум)
                                 </option>
                             {% endfor %}
                         </select>
@@ -402,7 +403,7 @@
                             <input type="number" class="form-control" id="price" name="price" min="0" step="0.01"
                                    required>
                             <div class="input-group-append">
-                                <span class="input-group-text">₸</span>
+                                <span class="input-group-text">сум</span>
                             </div>
                         </div>
                     </div>

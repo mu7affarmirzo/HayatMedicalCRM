@@ -61,8 +61,11 @@ def booking_start(request):
 @login_required
 def booking_select_rooms(request):
     """
-    Second step of booking process - select rooms based on availability
+    Second step of booking process - select rooms using RM2 Matrix V2
+    Now uses the advanced Room Availability Matrix for better visualization
     """
+    from application.logus.services.room_availability_v2 import get_availability_matrix_v2
+
     # Check if we have the necessary data from step 1
     booking_data = request.session.get('booking_data')
     if not booking_data:
@@ -70,40 +73,83 @@ def booking_select_rooms(request):
         return redirect('logus:booking_start')
 
     # Convert session data back to Python objects
-    start_date = timezone.datetime.fromisoformat(booking_data['start_date'])
-    end_date = timezone.datetime.fromisoformat(booking_data['end_date'])
+    start_date = timezone.datetime.fromisoformat(booking_data['start_date']).date()
+    end_date = timezone.datetime.fromisoformat(booking_data['end_date']).date()
     guests_count = booking_data['guests_count']
+    patient_id = booking_data.get('patient_id')
 
-    # Get available rooms for the date range
-    available_rooms = get_available_rooms(start_date, end_date)
+    # Get patient info for display
+    patient = get_object_or_404(PatientModel, id=patient_id) if patient_id else None
 
+    # Handle room selection from matrix
     if request.method == 'POST':
-        form = RoomSelectionForm(request.POST, available_rooms=available_rooms, guests_count=guests_count)
-        if form.is_valid():
-            # Store room selections in session
-            selected_rooms = []
-            for i in range(guests_count):
-                field_name = f'room_{i}'
-                if field_name in form.cleaned_data:
-                    selected_rooms.append(form.cleaned_data[field_name])
+        selected_room_ids = request.POST.getlist('selected_rooms[]')
 
-            booking_data['selected_rooms'] = selected_rooms
-            request.session['booking_data'] = booking_data
-            return redirect('logus:booking_assign_patients')
-    else:
-        form = RoomSelectionForm(available_rooms=available_rooms, guests_count=guests_count)
+        logger.info(f"Room selection POST: received {len(selected_room_ids)} rooms: {selected_room_ids}")
+        logger.info(f"Expected guests_count: {guests_count}")
 
-    # Get room type availability data for the table display
-    room_type_availability = get_room_type_availability(start_date, end_date)
+        if not selected_room_ids:
+            logger.warning("No rooms selected in POST data")
+            messages.error(request, 'Не выбрано ни одной комнаты. Пожалуйста, выберите комнаты из матрицы.')
+        elif len(selected_room_ids) != guests_count:
+            logger.warning(f"Room count mismatch: got {len(selected_room_ids)}, expected {guests_count}")
+            messages.error(request, f'Пожалуйста, выберите {guests_count} комнат(ы). Сейчас выбрано: {len(selected_room_ids)}')
+        else:
+            # Validate that rooms exist
+            try:
+                room_ids = [int(room_id) for room_id in selected_room_ids]
+                existing_rooms = Room.objects.filter(id__in=room_ids, is_active=True)
 
-    return render(request, 'logus/booking/booking_select_rooms.html', {
-        'form': form,
+                if existing_rooms.count() != len(room_ids):
+                    messages.error(request, 'Некоторые выбранные комнаты недоступны')
+                    logger.error(f"Room validation failed: {room_ids} vs {list(existing_rooms.values_list('id', flat=True))}")
+                else:
+                    # Store room selections in session
+                    booking_data['selected_rooms'] = room_ids
+                    request.session['booking_data'] = booking_data
+                    request.session.modified = True  # Ensure session is saved
+
+                    logger.info(f"Successfully selected {len(room_ids)} rooms: {room_ids}")
+                    logger.info(f"Updated session data: {booking_data}")
+
+                    messages.success(request, f'Успешно выбрано {len(room_ids)} комнат(ы)')
+                    return redirect('logus:booking_assign_patients')
+
+            except (ValueError, TypeError) as e:
+                logger.error(f"Error processing room IDs: {e}")
+                messages.error(request, 'Ошибка обработки выбранных комнат')
+
+    # Get matrix data using RM2 service
+    matrix_data = get_availability_matrix_v2(
+        start_date=start_date,
+        end_date=end_date,
+        include_inactive=False
+    )
+
+    # Get all room types for filter
+    all_room_types = RoomType.objects.all()
+
+    # Pre-selected rooms from session (if going back)
+    pre_selected_rooms = booking_data.get('selected_rooms', [])
+
+    # JSON encode for JavaScript
+    import json
+    pre_selected_rooms_json = json.dumps(pre_selected_rooms)
+
+    return render(request, 'logus/booking/booking_select_rooms_v2.html', {
         'step': 2,
         'total_steps': 4,
-        'room_type_availability': room_type_availability,
+        'matrix_data': matrix_data,
+        'all_room_types': all_room_types,
         'start_date': start_date,
         'end_date': end_date,
-        'date_range': get_date_range(start_date, end_date)
+        'start_date_str': start_date.strftime('%d.%m.%Y'),
+        'end_date_str': end_date.strftime('%d.%m.%Y'),
+        'guests_count': guests_count,
+        'patient': patient,
+        'pre_selected_rooms': pre_selected_rooms,
+        'pre_selected_rooms_json': pre_selected_rooms_json,
+        'booking_mode': True,  # Flag to indicate we're in booking mode
     })
 
 
@@ -384,6 +430,9 @@ def booking_detail(request, booking_id):
 
 def get_available_rooms(start_date, end_date):
     """
+    DEPRECATED: Use get_availability_matrix_v2() from room_availability_v2 service instead.
+    This function is kept for backward compatibility with old views.
+
     Get rooms that have available capacity in the given date range.
     Updated to check room capacity instead of binary availability (TASK-007).
     Updated to exclude rooms under maintenance (TASK-033).
@@ -415,6 +464,9 @@ def get_available_rooms(start_date, end_date):
 
 def get_room_type_availability(start_date, end_date):
     """
+    DEPRECATED: Use get_availability_matrix_v2() from room_availability_v2 service instead.
+    This function is kept for backward compatibility with old views.
+
     Get availability counts for each room type for the date range
     """
     date_range = get_date_range(start_date, end_date)

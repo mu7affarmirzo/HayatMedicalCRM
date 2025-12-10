@@ -1,0 +1,530 @@
+{% extends "logus/snippets/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Выбор комнат - Бронирование{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/room_availability_v2.css' %}">
+<style>
+    /* Additional booking-specific styles */
+    .booking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .booking-info-card {
+        background: white;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .room-selection-status {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        min-width: 250px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+
+    .selected-room-badge {
+        display: inline-block;
+        background: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin: 3px;
+        font-size: 0.9em;
+    }
+
+    .room-item.selectable {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .room-item.selectable:hover {
+        background: #e8f4f8;
+        border-color: #007bff;
+    }
+
+    .room-item.selected {
+        background: #d4edda;
+        border-color: #28a745;
+        border-width: 2px;
+    }
+
+    .room-item.selected::before {
+        content: "✓ ";
+        color: #28a745;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .select-room-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .timeline-day.selectable {
+        cursor: pointer;
+    }
+
+    .booking-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        padding: 0;
+        list-style: none;
+    }
+
+    .booking-steps li {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding: 10px;
+    }
+
+    .booking-steps li::before {
+        content: attr(data-step);
+        display: block;
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        margin: 0 auto 10px;
+        font-weight: bold;
+    }
+
+    .booking-steps li.active::before {
+        background: #667eea;
+        color: white;
+    }
+
+    .booking-steps li.completed::before {
+        background: #28a745;
+        color: white;
+        content: "✓";
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-12">
+                <h1 class="m-0">Бронирование - Шаг {{ step }} из {{ total_steps }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Booking Progress Steps -->
+        <ul class="booking-steps">
+            <li class="completed" data-step="1">
+                <span>Данные</span>
+            </li>
+            <li class="active" data-step="2">
+                <span>Выбор комнат</span>
+            </li>
+            <li data-step="3">
+                <span>Назначение пациентов</span>
+            </li>
+            <li data-step="4">
+                <span>Подтверждение</span>
+            </li>
+        </ul>
+
+        <!-- Booking Info Card -->
+        <div class="booking-info-card">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Период:</strong><br>
+                    {{ start_date_str }} - {{ end_date_str }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Количество гостей:</strong><br>
+                    {{ guests_count }}
+                </div>
+                {% if patient %}
+                <div class="col-md-3">
+                    <strong>Основной пациент:</strong><br>
+                    {{ patient.f_name }} {{ patient.l_name }}
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <strong>Необходимо выбрать:</strong><br>
+                    <span class="badge badge-warning">{{ guests_count }} комнат(ы)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {% if message.tags == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                    {% elif message.tags == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Instructions -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Инструкция:</strong> Нажмите на ячейку матрицы, чтобы увидеть доступные комнаты.
+            Затем нажмите кнопку "Выбрать комнату" рядом с нужной комнатой.
+            Необходимо выбрать <strong>{{ guests_count }}</strong> комнат(ы).
+        </div>
+
+        <!-- Statistics Panel -->
+        <div class="availability-statistics">
+            <div class="stat-card">
+                <h6>Всего комнат</h6>
+                <div class="stat-value">{{ matrix_data.statistics.total_rooms }}</div>
+                <small>активных комнат</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Средняя заполняемость</h6>
+                <div class="stat-value">{{ matrix_data.statistics.average_occupancy }}%</div>
+                <small>за выбранный период</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Заезды сегодня</h6>
+                <div class="stat-value">{{ matrix_data.statistics.upcoming_checkins }}</div>
+                <small>в ближайшие 24 часа</small>
+            </div>
+
+            <div class="stat-card">
+                <h6>Выезды сегодня</h6>
+                <div class="stat-value">{{ matrix_data.statistics.upcoming_checkouts }}</div>
+                <small>в ближайшие 24 часа</small>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6>Легенда статусов:</h6>
+                <div class="d-flex flex-wrap gap-3" style="gap: 15px;">
+                    <span class="badge badge-success">0-40% (Высокая доступность)</span>
+                    <span class="badge badge-warning">41-75% (Средняя)</span>
+                    <span class="badge" style="background-color: #ffc107;">76-99% (Низкая доступность)</span>
+                    <span class="badge badge-danger">100% (Полностью занято)</span>
+                    <span class="badge badge-secondary">На обслуживании</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Matrix -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Матрица доступности комнат</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col">Тип комнаты</th>
+                                {% for day in matrix_data.period.days %}
+                                <th>
+                                    {{ day|date:"d.m" }}<br>
+                                    <small>{{ day|date:"D" }}</small>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room_type in matrix_data.room_types %}
+                            <tr>
+                                <td class="sticky-col">
+                                    <strong>{{ room_type.name }}</strong><br>
+                                    <small>{{ room_type.total_rooms }} комнат</small>
+                                </td>
+
+                                {% for day_data in room_type.daily_availability %}
+                                <td class="matrix-cell
+                                    {% if day_data.occupancy_percentage <= 40 %}occupancy-high
+                                    {% elif day_data.occupancy_percentage <= 75 %}occupancy-medium
+                                    {% elif day_data.occupancy_percentage < 100 %}occupancy-low
+                                    {% elif day_data.occupancy_percentage >= 100 %}occupancy-full
+                                    {% else %}occupancy-inactive{% endif %}"
+                                    data-room-type-id="{{ room_type.id }}"
+                                    data-date="{{ day_data.date|date:'d.m.Y' }}"
+                                    onclick="showRoomDetails({{ room_type.id }}, '{{ day_data.date|date:'d.m.Y' }}')">
+
+                                    <div class="occupancy-fraction">
+                                        {{ day_data.occupied }}/{{ day_data.total }}
+                                    </div>
+
+                                    {% if day_data.under_maintenance > 0 %}
+                                    <div class="maintenance-badge">
+                                        <i class="fas fa-wrench"></i> {{ day_data.under_maintenance }}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="occupancy-percent">
+                                        {{ day_data.occupancy_percentage|floatformat:0 }}%
+                                    </div>
+                                </td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Room Details Dropdown -->
+                            <tr id="room-details-{{ room_type.id }}" class="room-details-row" style="display: none;">
+                                <td colspan="{{ matrix_data.period.total_days|add:1 }}">
+                                    <div class="room-details-dropdown">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5>{{ room_type.name }} - Доступные комнаты</h5>
+                                            <button class="btn btn-sm btn-secondary" onclick="hideRoomDetails({{ room_type.id }})">
+                                                <i class="fas fa-times"></i> Закрыть
+                                            </button>
+                                        </div>
+
+                                        <div id="room-details-content-{{ room_type.id }}">
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="sr-only">Загрузка...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mt-4 mb-5 pb-3">
+            <div class="col-md-12">
+                <a href="{% url 'logus:booking_start' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад
+                </a>
+                <button type="button" class="btn btn-primary float-right" onclick="submitRoomSelection()" id="continueBtn" disabled>
+                    Продолжить <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Room Selection Status (Floating) -->
+<div class="room-selection-status">
+    <h6>Выбранные комнаты (<span id="selected-count">0</span>/{{ guests_count }})</h6>
+    <div id="selected-rooms-list">
+        <p class="text-muted">Пока не выбрано комнат</p>
+    </div>
+</div>
+
+<!-- Hidden form for submission -->
+<form method="POST" id="roomSelectionForm" action="{% url 'logus:booking_select_rooms' %}">
+    {% csrf_token %}
+    <div id="selected-rooms-inputs"></div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedRooms = {{ pre_selected_rooms_json|safe }};
+    const maxRooms = {{ guests_count }};
+
+    $(document).ready(function() {
+        console.log('Booking mode initialized');
+        console.log('Pre-selected rooms:', selectedRooms);
+        console.log('Required rooms:', maxRooms);
+        updateSelectionStatus();
+    });
+
+    function showRoomDetails(roomTypeId, date) {
+        const detailsRow = $(`#room-details-${roomTypeId}`);
+        const contentDiv = $(`#room-details-content-${roomTypeId}`);
+
+        if (detailsRow.is(':visible')) {
+            detailsRow.hide();
+            return;
+        }
+
+        $('.room-details-row').hide();
+        detailsRow.show();
+
+        $.ajax({
+            url: '{% url "logus:room_details_ajax_v2" %}',
+            data: {
+                room_type_id: roomTypeId,
+                start_date: '{{ start_date_str }}',
+                end_date: '{{ end_date_str }}',
+                selected_date: date
+            },
+            success: function(response) {
+                if (response.success) {
+                    renderRoomDetailsForBooking(contentDiv, response.rooms);
+                } else {
+                    contentDiv.html(`<div class="alert alert-danger">${response.error}</div>`);
+                }
+            },
+            error: function() {
+                contentDiv.html('<div class="alert alert-danger">Ошибка загрузки данных</div>');
+            }
+        });
+    }
+
+    function hideRoomDetails(roomTypeId) {
+        $(`#room-details-${roomTypeId}`).hide();
+    }
+
+    function renderRoomDetailsForBooking(container, rooms) {
+        let html = '<div class="rooms-list">';
+
+        rooms.forEach(room => {
+            const isSelected = selectedRooms.includes(room.id);
+            const selectionClass = isSelected ? 'selected' : 'selectable';
+
+            html += `
+                <div class="room-item ${selectionClass}" id="room-item-${room.id}">
+                    <div class="room-info mb-2">
+                        <strong>${room.name}</strong>
+                        <span class="badge badge-secondary ml-2">Вместимость: ${room.capacity}</span>
+                        <span class="badge badge-info ml-2">₸${room.price}/день</span>
+                        ${!room.is_active ? '<span class="badge badge-danger ml-2">Неактивна</span>' : ''}
+                    </div>
+
+                    <div class="room-timeline">
+                        ${renderTimeline(room.daily_status)}
+                    </div>
+
+                    <button class="btn btn-sm ${isSelected ? 'btn-success' : 'btn-primary'} select-room-btn"
+                            onclick="toggleRoomSelection(${room.id}, '${room.name}')"
+                            id="select-btn-${room.id}">
+                        <i class="fas fa-${isSelected ? 'check' : 'plus'}"></i>
+                        ${isSelected ? 'Выбрано' : 'Выбрать комнату'}
+                    </button>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        container.html(html);
+    }
+
+    function renderTimeline(dailyStatus) {
+        let html = '';
+        dailyStatus.forEach(day => {
+            const statusClass = day.status;
+            const date = new Date(day.date);
+            const dayNum = date.getDate();
+
+            html += `
+                <div class="timeline-day ${statusClass}"
+                     data-toggle="tooltip"
+                     title="${day.status} - Занято: ${day.occupancy.current}/${day.occupancy.capacity}">
+                    ${dayNum}
+                </div>
+            `;
+        });
+        return html;
+    }
+
+    function toggleRoomSelection(roomId, roomName) {
+        const index = selectedRooms.indexOf(roomId);
+
+        if (index > -1) {
+            // Deselect
+            selectedRooms.splice(index, 1);
+            $(`#room-item-${roomId}`).removeClass('selected').addClass('selectable');
+            $(`#select-btn-${roomId}`).removeClass('btn-success').addClass('btn-primary')
+                .html('<i class="fas fa-plus"></i> Выбрать комнату');
+        } else {
+            // Select
+            if (selectedRooms.length >= maxRooms) {
+                alert(`Вы можете выбрать максимум ${maxRooms} комнат(ы)`);
+                return;
+            }
+            selectedRooms.push(roomId);
+            $(`#room-item-${roomId}`).removeClass('selectable').addClass('selected');
+            $(`#select-btn-${roomId}`).removeClass('btn-primary').addClass('btn-success')
+                .html('<i class="fas fa-check"></i> Выбрано');
+        }
+
+        updateSelectionStatus();
+    }
+
+    function updateSelectionStatus() {
+        const count = selectedRooms.length;
+        $('#selected-count').text(count);
+
+        if (count === 0) {
+            $('#selected-rooms-list').html('<p class="text-muted">Пока не выбрано комнат</p>');
+            $('#continueBtn').prop('disabled', true);
+        } else {
+            let html = '';
+            selectedRooms.forEach(roomId => {
+                html += `<span class="selected-room-badge">Комната ID: ${roomId}</span>`;
+            });
+            $('#selected-rooms-list').html(html);
+            $('#continueBtn').prop('disabled', count !== maxRooms);
+        }
+    }
+
+    function submitRoomSelection() {
+        console.log('Submitting room selection:', selectedRooms);
+
+        if (selectedRooms.length !== maxRooms) {
+            alert(`Пожалуйста, выберите ${maxRooms} комнат(ы)`);
+            return;
+        }
+
+        // Disable button and show loading
+        const btn = $('#continueBtn');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Обработка...');
+
+        // Add hidden inputs for selected rooms
+        let inputsHtml = '';
+        selectedRooms.forEach(roomId => {
+            console.log('Adding room to form:', roomId);
+            inputsHtml += `<input type="hidden" name="selected_rooms[]" value="${roomId}">`;
+        });
+        $('#selected-rooms-inputs').html(inputsHtml);
+
+        console.log('Form inputs:', inputsHtml);
+        console.log('Submitting form to:', $('#roomSelectionForm').attr('action'));
+
+        // Submit the form
+        $('#roomSelectionForm').submit();
+    }
+</script>
+{% endblock %}

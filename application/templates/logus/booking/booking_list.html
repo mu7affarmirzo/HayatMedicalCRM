@@ -1,5 +1,6 @@
 {% extends "logus/snippets/base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Список бронирований - Hayat Medical Center{% endblock %}
 
@@ -328,7 +329,7 @@
                                             {% endfor %}
                                         </td>
                                         <td>
-                                            <strong class="text-success">{{ booking.total_price }} Сум</strong>
+                                            <strong class="text-success">{{ booking.total_price|intcomma }} Сум</strong>
                                         </td>
                                         <td class="booking-actions">
                                             <div class="btn-group">
